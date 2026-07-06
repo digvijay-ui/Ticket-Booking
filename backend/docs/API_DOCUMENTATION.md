@@ -29,6 +29,15 @@ JWT_EXPIRES_IN=7d
 
 The backend also supports `MONGODB_URI` for MongoDB connections.
 
+## Postman Environment Variables
+
+```txt
+baseUrl = http://localhost:5000
+token =
+adminToken =
+eventId =
+```
+
 ## APIs
 
 ### 1. Health Check
@@ -264,6 +273,182 @@ Sample response:
 }
 ```
 
+### 9. Create Event
+
+`POST /api/admin/events`
+
+Headers:
+
+```txt
+Authorization: Bearer <admin_token>
+```
+
+Request body:
+
+```json
+{
+  "title": "Coldplay Concert",
+  "description": "Live music concert event",
+  "location": "Ahmedabad Stadium",
+  "startDate": "2026-08-10T18:00:00.000Z",
+  "endDate": "2026-08-10T22:00:00.000Z",
+  "seatPriceInPaise": 50000,
+  "status": "PUBLISHED"
+}
+```
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Event created successfully",
+  "data": {
+    "event": {
+      "id": "event_id",
+      "title": "Coldplay Concert",
+      "description": "Live music concert event",
+      "location": "Ahmedabad Stadium",
+      "status": "PUBLISHED",
+      "seatPriceInPaise": 50000,
+      "totalSeats": 0,
+      "availableSeats": 0,
+      "reservedSeats": 0,
+      "bookedSeats": 0
+    }
+  }
+}
+```
+
+### 10. Update Event
+
+`PATCH /api/admin/events/:eventId`
+
+Headers:
+
+```txt
+Authorization: Bearer <admin_token>
+```
+
+Request body:
+
+```json
+{
+  "location": "Ahmedabad Stadium Gate 2",
+  "status": "PUBLISHED"
+}
+```
+
+### 11. Cancel Event
+
+`DELETE /api/admin/events/:eventId`
+
+Headers:
+
+```txt
+Authorization: Bearer <admin_token>
+```
+
+This is a soft delete. It sets event `status` to `CANCELLED`.
+
+### 12. Bulk Create Seats
+
+`POST /api/admin/events/:eventId/seats/bulk`
+
+Headers:
+
+```txt
+Authorization: Bearer <admin_token>
+```
+
+Request body:
+
+```json
+{
+  "rows": ["A", "B", "C"],
+  "seatsPerRow": 10,
+  "priceInPaise": 50000
+}
+```
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Seats created successfully",
+  "data": {
+    "createdCount": 30,
+    "eventSeatCounts": {
+      "totalSeats": 30,
+      "availableSeats": 30,
+      "reservedSeats": 0,
+      "bookedSeats": 0
+    }
+  }
+}
+```
+
+### 13. List Events
+
+`GET /api/events`
+
+Returns `PUBLISHED` events sorted by `startDate` ascending.
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Events fetched successfully",
+  "data": {
+    "events": []
+  }
+}
+```
+
+### 14. Get Event Details
+
+`GET /api/events/:eventId`
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Event fetched successfully",
+  "data": {
+    "event": {}
+  }
+}
+```
+
+### 15. Get Event Seats
+
+`GET /api/events/:eventId/seats`
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Seats fetched successfully",
+  "data": {
+    "seats": []
+  }
+}
+```
+
+### 16. Admin View Event Seats
+
+`GET /api/admin/events/:eventId/seats`
+
+Headers:
+
+```txt
+Authorization: Bearer <admin_token>
+```
+
 ## Error Responses
 
 Validation error:
@@ -329,6 +514,24 @@ Duplicate idempotency key:
 }
 ```
 
+Duplicate seats:
+
+```json
+{
+  "success": false,
+  "message": "Duplicate seats already exist for this event"
+}
+```
+
+Invalid event date range:
+
+```json
+{
+  "success": false,
+  "message": "endDate must be after startDate"
+}
+```
+
 ## Postman Testing Flow
 
 1. Start backend using `npm start`.
@@ -360,4 +563,20 @@ Duplicate idempotency key:
     - `amountInPaise: 10.5`
 13. Confirm validation errors are returned.
 
-More CRUD APIs will be added later for wallet, events, seats, reservations, bookings, refunds, and admin dashboard.
+## Event And Seat Testing Flow
+
+1. Start backend using `npm start`.
+2. Login as admin and save `adminToken`.
+3. Create event using `POST /api/admin/events`.
+4. Save `eventId` in Postman environment.
+5. Bulk create seats using `POST /api/admin/events/{{eventId}}/seats/bulk`.
+6. Check `GET /api/events`.
+7. Check `GET /api/events/{{eventId}}`.
+8. Check `GET /api/events/{{eventId}}/seats`.
+9. Check `GET /api/admin/events/{{eventId}}/seats` using admin token.
+10. Try create event with normal user token and confirm `403`.
+11. Try duplicate bulk seat create and confirm `409`.
+12. Try invalid price like `10.5` and confirm validation error.
+13. Try invalid date where `endDate` is before `startDate` and confirm validation error.
+
+More CRUD APIs will be added later for reservations, bookings, payments, refunds, idempotency flows, and admin dashboard.

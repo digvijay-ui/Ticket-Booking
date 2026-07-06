@@ -146,6 +146,20 @@
     },
     {
       "name": "Admin Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData?.data?.token) {",
+              "  pm.environment.set(\"adminToken\", jsonData.data.token);",
+              "}"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
@@ -367,6 +381,233 @@
           "code": 200,
           "_postman_previewlanguage": "json",
           "body": "{\n  \"success\": true,\n  \"message\": \"Wallet transactions fetched successfully\",\n  \"data\": {\n    \"transactions\": [\n      {\n        \"id\": \"transaction_id\",\n        \"type\": \"CREDIT\",\n        \"amountInPaise\": 10000,\n        \"balanceAfterInPaise\": 10000,\n        \"description\": \"Money added to wallet\",\n        \"referenceType\": \"ADD_MONEY\",\n        \"createdAt\": \"date\"\n      }\n    ]\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Create Event",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData?.data?.event?.id) {",
+              "  pm.environment.set(\"eventId\", jsonData.data.event.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Coldplay Concert\",\n  \"description\": \"Live music concert event\",\n  \"location\": \"Ahmedabad Stadium\",\n  \"startDate\": \"2026-08-10T18:00:00.000Z\",\n  \"endDate\": \"2026-08-10T22:00:00.000Z\",\n  \"seatPriceInPaise\": 50000,\n  \"status\": \"PUBLISHED\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/events",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "events"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Event created successfully\",\n  \"data\": {\n    \"event\": {\n      \"id\": \"event_id\",\n      \"title\": \"Coldplay Concert\",\n      \"description\": \"Live music concert event\",\n      \"location\": \"Ahmedabad Stadium\",\n      \"status\": \"PUBLISHED\",\n      \"seatPriceInPaise\": 50000,\n      \"totalSeats\": 0,\n      \"availableSeats\": 0,\n      \"reservedSeats\": 0,\n      \"bookedSeats\": 0\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update Event",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"location\": \"Ahmedabad Stadium Gate 2\",\n  \"status\": \"PUBLISHED\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "events", "{{eventId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cancel Event",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "events", "{{eventId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Bulk Create Seats",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rows\": [\"A\", \"B\", \"C\"],\n  \"seatsPerRow\": 10,\n  \"priceInPaise\": 50000\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}/seats/bulk",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "events", "{{eventId}}", "seats", "bulk"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Seats created successfully\",\n  \"data\": {\n    \"createdCount\": 30,\n    \"eventSeatCounts\": {\n      \"totalSeats\": 30,\n      \"availableSeats\": 30,\n      \"reservedSeats\": 0,\n      \"bookedSeats\": 0\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Admin View Event Seats",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}/seats",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "events", "{{eventId}}", "seats"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Events",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/events",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "events"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Events fetched successfully\",\n  \"data\": {\n    \"events\": []\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Event Details",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/events/{{eventId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "events", "{{eventId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Event Seats",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/events/{{eventId}}/seats",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "events", "{{eventId}}", "seats"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Seats fetched successfully\",\n  \"data\": {\n    \"seats\": []\n  }\n}"
         }
       ]
     }

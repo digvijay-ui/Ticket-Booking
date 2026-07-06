@@ -1,6 +1,8 @@
 import cors from "cors";
 import express from "express";
+import { eventRoutes } from "./modules/event/event.routes";
 import { healthRoutes } from "./modules/health/health.routes";
+import { seatRoutes } from "./modules/seat/seat.routes";
 import { userRoutes } from "./modules/user/user.routes";
 import { walletRoutes } from "./modules/wallet/wallet.routes";
 
@@ -12,5 +14,7 @@ app.use(express.json());
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", userRoutes);
 app.use("/api/wallet", walletRoutes);
+app.use("/api", seatRoutes);
+app.use("/api", eventRoutes);
 
 export { app };
