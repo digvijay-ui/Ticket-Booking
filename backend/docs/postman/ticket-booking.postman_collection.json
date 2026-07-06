@@ -592,6 +592,24 @@
     },
     {
       "name": "Get Event Seats",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "const seats = jsonData?.data?.seats || [];",
+              "if (seats[0]?.id) {",
+              "  pm.environment.set(\"seatId1\", seats[0].id);",
+              "}",
+              "if (seats[1]?.id) {",
+              "  pm.environment.set(\"seatId2\", seats[1].id);",
+              "}"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "GET",
         "header": [],
@@ -608,6 +626,117 @@
           "code": 200,
           "_postman_previewlanguage": "json",
           "body": "{\n  \"success\": true,\n  \"message\": \"Seats fetched successfully\",\n  \"data\": {\n    \"seats\": []\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Reserve Seats",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData?.data?.reservation?.id) {",
+              "  pm.environment.set(\"reservationId\", jsonData.data.reservation.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"seatIds\": [\"{{seatId1}}\", \"{{seatId2}}\"]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/reserve",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "bookings", "reserve"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Seats reserved successfully\",\n  \"data\": {\n    \"reservation\": {\n      \"id\": \"reservation_id\",\n      \"eventId\": \"event_id\",\n      \"seatIds\": [\"seat_id_1\", \"seat_id_2\"],\n      \"status\": \"ACTIVE\",\n      \"totalAmountInPaise\": 100000,\n      \"expiresAt\": \"2026-08-10T18:05:00.000Z\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Confirm Booking",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const jsonData = pm.response.json();",
+              "if (jsonData?.data?.booking?.id) {",
+              "  pm.environment.set(\"bookingId\", jsonData.data.booking.id);",
+              "}",
+              "if (jsonData?.data?.booking?.idempotencyKey) {",
+              "  pm.environment.set(\"idempotencyKey\", jsonData.data.booking.idempotencyKey);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reservationId\": \"{{reservationId}}\",\n  \"idempotencyKey\": \"confirm-booking-{{$timestamp}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/confirm",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "bookings", "confirm"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Booking confirmed successfully\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"booking_id\",\n      \"userId\": \"user_id\",\n      \"eventId\": \"event_id\",\n      \"seatIds\": [\"seat_id_1\", \"seat_id_2\"],\n      \"reservationId\": \"reservation_id\",\n      \"status\": \"CONFIRMED\",\n      \"paymentStatus\": \"PAID\",\n      \"totalAmountInPaise\": 100000,\n      \"walletTransactionId\": \"wallet_transaction_id\",\n      \"idempotencyKey\": \"unique-key\",\n      \"createdAt\": \"date\"\n    }\n  }\n}"
         }
       ]
     }

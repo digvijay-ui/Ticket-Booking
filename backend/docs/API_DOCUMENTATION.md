@@ -36,6 +36,11 @@ baseUrl = http://localhost:5000
 token =
 adminToken =
 eventId =
+seatId1 =
+seatId2 =
+reservationId =
+bookingId =
+idempotencyKey =
 ```
 
 ## APIs
@@ -449,6 +454,91 @@ Headers:
 Authorization: Bearer <admin_token>
 ```
 
+### 17. Reserve Seats
+
+`POST /api/bookings/reserve`
+
+Headers:
+
+```txt
+Authorization: Bearer <token>
+```
+
+Request body:
+
+```json
+{
+  "eventId": "{{eventId}}",
+  "seatIds": ["{{seatId1}}", "{{seatId2}}"]
+}
+```
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Seats reserved successfully",
+  "data": {
+    "reservation": {
+      "id": "reservation_id",
+      "eventId": "event_id",
+      "seatIds": ["seat_id_1", "seat_id_2"],
+      "status": "ACTIVE",
+      "totalAmountInPaise": 100000,
+      "expiresAt": "2026-08-10T18:05:00.000Z"
+    }
+  }
+}
+```
+
+Reservations expire after 5 minutes. Expired reserved seats are released lazily when event seats are viewed.
+
+### 18. Confirm Booking
+
+`POST /api/bookings/confirm`
+
+Headers:
+
+```txt
+Authorization: Bearer <token>
+```
+
+Request body:
+
+```json
+{
+  "reservationId": "{{reservationId}}",
+  "idempotencyKey": "confirm-booking-{{$timestamp}}"
+}
+```
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Booking confirmed successfully",
+  "data": {
+    "booking": {
+      "id": "booking_id",
+      "userId": "user_id",
+      "eventId": "event_id",
+      "seatIds": ["seat_id_1", "seat_id_2"],
+      "reservationId": "reservation_id",
+      "status": "CONFIRMED",
+      "paymentStatus": "PAID",
+      "totalAmountInPaise": 100000,
+      "walletTransactionId": "wallet_transaction_id",
+      "idempotencyKey": "unique-key",
+      "createdAt": "date"
+    }
+  }
+}
+```
+
+This API validates the reservation, debits the wallet, creates the wallet transaction, creates the booking, marks seats as `BOOKED`, and marks the reservation as `CONFIRMED` in one MongoDB transaction.
+
 ## Error Responses
 
 Validation error:
@@ -532,6 +622,42 @@ Invalid event date range:
 }
 ```
 
+Seat no longer available:
+
+```json
+{
+  "success": false,
+  "message": "Some seats are no longer available"
+}
+```
+
+Duplicate seat ids:
+
+```json
+{
+  "success": false,
+  "message": "seatIds must not contain duplicate ids"
+}
+```
+
+Insufficient wallet balance:
+
+```json
+{
+  "success": false,
+  "message": "Insufficient wallet balance"
+}
+```
+
+Expired reservation:
+
+```json
+{
+  "success": false,
+  "message": "Reservation expired"
+}
+```
+
 ## Postman Testing Flow
 
 1. Start backend using `npm start`.
@@ -579,4 +705,51 @@ Invalid event date range:
 12. Try invalid price like `10.5` and confirm validation error.
 13. Try invalid date where `endDate` is before `startDate` and confirm validation error.
 
-More CRUD APIs will be added later for reservations, bookings, payments, refunds, idempotency flows, and admin dashboard.
+## Reservation Testing Flow
+
+1. Start backend using `npm start`.
+2. Login as admin.
+3. Create event.
+4. Bulk create seats.
+5. Login as user.
+6. Get event seats.
+7. Copy two available seat ids into Postman variables `seatId1` and `seatId2`.
+8. Call `POST /api/bookings/reserve`.
+9. Confirm reservation status is `ACTIVE`.
+10. Confirm `expiresAt` is 5 minutes ahead.
+11. Call `GET /api/events/{{eventId}}/seats`.
+12. Confirm selected seats are `RESERVED`.
+13. Try reserving same seats again with another user immediately.
+14. Confirm error: `Some seats are no longer available`.
+15. Wait 5 minutes or manually change `reservationExpiresAt` and `expiresAt` in DB to a past time.
+16. Call `GET /api/events/{{eventId}}/seats`.
+17. Confirm expired reserved seats become `AVAILABLE` again.
+18. Reserve same seats again successfully.
+
+## Booking Confirm Testing Flow
+
+1. Start backend using `npm start`.
+2. Login as user.
+3. Add money to wallet using `POST /api/wallet/add-money`.
+4. Confirm wallet balance using `GET /api/wallet/balance`.
+5. Get event seats using `GET /api/events/{{eventId}}/seats`.
+6. Reserve seats using `POST /api/bookings/reserve`.
+7. Save `reservationId`.
+8. Confirm booking using `POST /api/bookings/confirm`.
+9. Confirm booking status is `CONFIRMED`.
+10. Confirm `paymentStatus` is `PAID`.
+11. Confirm `walletTransactionId` is returned.
+12. Check `GET /api/wallet/balance`.
+13. Balance should be reduced.
+14. Check `GET /api/wallet/transactions`.
+15. A `DEBIT` transaction should exist with `referenceType` `BOOKING`.
+16. Check `GET /api/events/{{eventId}}/seats`.
+17. Selected seats should be `BOOKED`.
+18. Retry same confirm API with the same `idempotencyKey`.
+19. It should return the same booking and should not debit wallet again.
+20. Try confirm after reservation expiry.
+21. It should reject payment and release seats.
+22. Try confirm with insufficient wallet balance.
+23. It should return insufficient balance and not create booking.
+
+More CRUD APIs will be added later for cancellation, refunds, admin monitoring, and expanded idempotency flows.

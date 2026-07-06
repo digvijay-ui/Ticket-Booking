@@ -5,6 +5,7 @@ import {
   refreshEventSeatCounts
 } from "../event/event.service";
 import { EventModel } from "../event/event.model";
+import { ReservationModel } from "../reservation/reservation.model";
 import { BulkCreateSeatsInput } from "./seat.contract";
 import { ISeat, SeatModel, SeatStatus } from "./seat.model";
 
@@ -79,17 +80,32 @@ const sortSeats = (seats: SafeSeat[]): SafeSeat[] =>
 const releaseExpiredReservations = async (
   eventId: Types.ObjectId
 ): Promise<void> => {
+  const now = new Date();
+
   await SeatModel.updateMany(
     {
       eventId,
       status: "RESERVED",
-      reservationExpiresAt: { $lt: new Date() }
+      reservationExpiresAt: { $lt: now }
     },
     {
       $set: {
         status: "AVAILABLE",
         reservedBy: null,
         reservationExpiresAt: null
+      }
+    }
+  );
+
+  await ReservationModel.updateMany(
+    {
+      eventId,
+      status: "ACTIVE",
+      expiresAt: { $lt: now }
+    },
+    {
+      $set: {
+        status: "EXPIRED"
       }
     }
   );
