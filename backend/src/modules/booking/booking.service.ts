@@ -35,6 +35,18 @@ export interface SafeBooking {
   createdAt: Date;
 }
 
+export interface BookingListFilters {
+  userId?: string;
+  eventId?: string;
+  status?: BookingStatus;
+}
+
+export interface TransactionListFilters {
+  userId?: string;
+  type?: "CREDIT" | "DEBIT" | "REFUND";
+  referenceType?: "ADD_MONEY" | "BOOKING" | "REFUND";
+}
+
 const toObjectId = (id: string, label: string): Types.ObjectId => {
   if (!Types.ObjectId.isValid(id)) {
     throw new BookingError(`Invalid ${label}`, 400);
@@ -62,6 +74,124 @@ const isDuplicateKeyError = (error: unknown): boolean =>
   error !== null &&
   "code" in error &&
   (error as { code?: number }).code === 11000;
+
+const toObjectIdIfPresent = (
+  id: string | undefined,
+  label: string
+): Types.ObjectId | undefined => {
+  if (!id) {
+    return undefined;
+  }
+
+  return toObjectId(id, label);
+};
+
+const sanitizePopulatedBooking = (booking: Record<string, any>): Record<string, any> => ({
+  id: String(booking._id),
+  userId: typeof booking.userId === "object" && booking.userId !== null
+    ? {
+        id: String(booking.userId._id),
+        name: booking.userId.name,
+        email: booking.userId.email,
+        role: booking.userId.role
+      }
+    : String(booking.userId),
+  event: booking.eventId && typeof booking.eventId === "object"
+    ? {
+        id: String(booking.eventId._id),
+        title: booking.eventId.title,
+        location: booking.eventId.location,
+        startDate: booking.eventId.startDate,
+        endDate: booking.eventId.endDate,
+        status: booking.eventId.status
+      }
+    : String(booking.eventId),
+  seats: Array.isArray(booking.seatIds)
+    ? booking.seatIds.map((seat: Record<string, any>) =>
+        seat && typeof seat === "object"
+          ? {
+              id: String(seat._id),
+              seatNumber: seat.seatNumber,
+              row: seat.row,
+              priceInPaise: seat.priceInPaise,
+              status: seat.status
+            }
+          : String(seat)
+      )
+    : [],
+  reservationId: String(booking.reservationId),
+  status: booking.status,
+  paymentStatus: booking.paymentStatus,
+  totalAmountInPaise: booking.totalAmountInPaise,
+  walletTransactionId: String(booking.walletTransactionId),
+  idempotencyKey: booking.idempotencyKey,
+  createdAt: booking.createdAt,
+  updatedAt: booking.updatedAt
+});
+
+const sanitizeTransaction = (
+  transaction: Record<string, any>
+): Record<string, any> => ({
+  id: String(transaction._id),
+  userId:
+    transaction.userId && typeof transaction.userId === "object"
+      ? {
+          id: String(transaction.userId._id),
+          name: transaction.userId.name,
+          email: transaction.userId.email,
+          role: transaction.userId.role
+        }
+      : String(transaction.userId),
+  type: transaction.type,
+  amountInPaise: transaction.amountInPaise,
+  balanceAfterInPaise: transaction.balanceAfterInPaise,
+  description: transaction.description,
+  referenceType: transaction.referenceType,
+  referenceId: transaction.referenceId,
+  idempotencyKey: transaction.idempotencyKey,
+  createdAt: transaction.createdAt,
+  updatedAt: transaction.updatedAt
+});
+
+const createRefundTransaction = async (
+  booking: IBooking & { _id: unknown },
+  description: string,
+  session: mongoose.ClientSession
+): Promise<Record<string, any>> => {
+  const updatedUser = await UserModel.findByIdAndUpdate(
+    booking.userId,
+    {
+      $inc: {
+        walletBalanceInPaise: booking.totalAmountInPaise
+      }
+    },
+    {
+      new: true,
+      session
+    }
+  );
+
+  if (!updatedUser) {
+    throw new BookingError("User not found", 404);
+  }
+
+  const [refundTransaction] = await WalletTransactionModel.create(
+    [
+      {
+        userId: booking.userId,
+        type: "REFUND",
+        amountInPaise: booking.totalAmountInPaise,
+        balanceAfterInPaise: updatedUser.walletBalanceInPaise,
+        description,
+        referenceType: "REFUND",
+        referenceId: String(booking._id)
+      }
+    ],
+    { session }
+  );
+
+  return sanitizeTransaction(refundTransaction.toObject());
+};
 
 export const confirmBooking = async (
   userId: string,
@@ -280,6 +410,167 @@ export const confirmBooking = async (
       throw new BookingError("Duplicate booking conflict", 409);
     }
 
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+};
+
+export const getMyBookings = async (
+  userId: string
+): Promise<Record<string, any>[]> => {
+  const userObjectId = toObjectId(userId, "user id");
+  const bookings = await BookingModel.find({ userId: userObjectId })
+    .populate("eventId", "title location startDate endDate status")
+    .populate("seatIds", "seatNumber row priceInPaise status")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return bookings.map((booking) => sanitizePopulatedBooking(booking));
+};
+
+export const getAdminBookings = async (
+  filters: BookingListFilters
+): Promise<Record<string, any>[]> => {
+  const query: Record<string, unknown> = {};
+
+  const userObjectId = toObjectIdIfPresent(filters.userId, "user id");
+  const eventObjectId = toObjectIdIfPresent(filters.eventId, "event id");
+
+  if (userObjectId) query.userId = userObjectId;
+  if (eventObjectId) query.eventId = eventObjectId;
+  if (filters.status) query.status = filters.status;
+
+  const bookings = await BookingModel.find(query)
+    .populate("userId", "name email role")
+    .populate("eventId", "title location startDate endDate status")
+    .populate("seatIds", "seatNumber row priceInPaise status")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return bookings.map((booking) => sanitizePopulatedBooking(booking));
+};
+
+export const getAdminTransactions = async (
+  filters: TransactionListFilters
+): Promise<Record<string, any>[]> => {
+  const query: Record<string, unknown> = {};
+  const userObjectId = toObjectIdIfPresent(filters.userId, "user id");
+
+  if (userObjectId) query.userId = userObjectId;
+  if (filters.type) query.type = filters.type;
+  if (filters.referenceType) query.referenceType = filters.referenceType;
+
+  const transactions = await WalletTransactionModel.find(query)
+    .populate("userId", "name email role")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return transactions.map((transaction) => sanitizeTransaction(transaction));
+};
+
+export const cancelBooking = async (
+  bookingId: string
+): Promise<{ booking: SafeBooking; refundTransaction: Record<string, any> }> => {
+  const bookingObjectId = toObjectId(bookingId, "booking id");
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const booking = await BookingModel.findById(bookingObjectId).session(session);
+
+    if (!booking) {
+      throw new BookingError("Booking not found", 404);
+    }
+
+    if (booking.status === "CANCELLED") {
+      throw new BookingError("Booking already cancelled", 409);
+    }
+
+    if (booking.paymentStatus === "REFUNDED") {
+      throw new BookingError("Booking already refunded", 409);
+    }
+
+    const refundTransaction = await createRefundTransaction(
+      booking,
+      "Refund for cancelled booking",
+      session
+    );
+
+    booking.status = "CANCELLED";
+    booking.paymentStatus = "REFUNDED";
+    await booking.save({ session });
+
+    await SeatModel.updateMany(
+      {
+        _id: { $in: booking.seatIds },
+        bookingId: booking._id,
+        status: "BOOKED"
+      },
+      {
+        $set: {
+          status: "AVAILABLE",
+          bookedBy: null,
+          bookingId: null,
+          reservedBy: null,
+          reservationExpiresAt: null
+        }
+      },
+      { session }
+    );
+
+    await refreshEventSeatCounts(booking.eventId, session);
+    await session.commitTransaction();
+
+    return {
+      booking: toSafeBooking(booking),
+      refundTransaction
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+};
+
+export const refundBooking = async (
+  bookingId: string
+): Promise<{ booking: SafeBooking; refundTransaction: Record<string, any> }> => {
+  const bookingObjectId = toObjectId(bookingId, "booking id");
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const booking = await BookingModel.findById(bookingObjectId).session(session);
+
+    if (!booking) {
+      throw new BookingError("Booking not found", 404);
+    }
+
+    if (booking.paymentStatus === "REFUNDED") {
+      throw new BookingError("Booking already refunded", 409);
+    }
+
+    const refundTransaction = await createRefundTransaction(
+      booking,
+      "Refund for ticket booking",
+      session
+    );
+
+    booking.status = "REFUNDED";
+    booking.paymentStatus = "REFUNDED";
+    await booking.save({ session });
+    await session.commitTransaction();
+
+    return {
+      booking: toSafeBooking(booking),
+      refundTransaction
+    };
+  } catch (error) {
+    await session.abortTransaction();
     throw error;
   } finally {
     await session.endSession();

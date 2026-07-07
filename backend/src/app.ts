@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { bookingRoutes } from "./modules/booking/booking.routes";
+import { adminBookingRoutes, bookingRoutes } from "./modules/booking/booking.routes";
 import { eventRoutes } from "./modules/event/event.routes";
 import { healthRoutes } from "./modules/health/health.routes";
 import { reservationRoutes } from "./modules/reservation/reservation.routes";
@@ -18,6 +18,7 @@ app.use("/api/auth", userRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/bookings", reservationRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/admin", adminBookingRoutes);
 app.use("/api", seatRoutes);
 app.use("/api", eventRoutes);
 

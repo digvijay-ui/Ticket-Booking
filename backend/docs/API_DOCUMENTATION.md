@@ -539,6 +539,169 @@ Sample response:
 
 This API validates the reservation, debits the wallet, creates the wallet transaction, creates the booking, marks seats as `BOOKED`, and marks the reservation as `CONFIRMED` in one MongoDB transaction.
 
+Booking confirmation uses an idempotency record for retry safety. If the same user sends the same `idempotencyKey` to `POST /api/bookings/confirm` after a successful request, the API returns the saved response without debiting the wallet again. If another request with the same key is still processing, the API returns `409`.
+
+### 19. Get My Bookings
+
+`GET /api/bookings/my-bookings`
+
+Headers:
+
+```txt
+Authorization: Bearer <token>
+```
+
+Returns the current user's bookings latest first. Event and seat basic details are populated.
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Bookings fetched successfully",
+  "data": {
+    "bookings": [
+      {
+        "id": "booking_id",
+        "event": {
+          "id": "event_id",
+          "title": "Coldplay Concert"
+        },
+        "seats": [
+          {
+            "id": "seat_id",
+            "seatNumber": "A1",
+            "row": "A"
+          }
+        ],
+        "status": "CONFIRMED",
+        "paymentStatus": "PAID",
+        "totalAmountInPaise": 50000,
+        "createdAt": "date"
+      }
+    ]
+  }
+}
+```
+
+### 20. Admin Get Bookings
+
+`GET /api/admin/bookings`
+
+Headers:
+
+```txt
+Authorization: Bearer <adminToken>
+```
+
+Optional query filters:
+
+```txt
+userId
+eventId
+status
+```
+
+Example:
+
+```txt
+GET /api/admin/bookings?eventId={{eventId}}&status=CONFIRMED
+```
+
+Returns all matching bookings latest first.
+
+### 21. Admin Get Transactions
+
+`GET /api/admin/transactions`
+
+Headers:
+
+```txt
+Authorization: Bearer <adminToken>
+```
+
+Optional query filters:
+
+```txt
+userId
+type
+referenceType
+```
+
+Example:
+
+```txt
+GET /api/admin/transactions?type=REFUND&referenceType=REFUND
+```
+
+Returns all matching wallet transactions latest first.
+
+### 22. Admin Cancel Booking
+
+`POST /api/admin/bookings/:bookingId/cancel`
+
+Headers:
+
+```txt
+Authorization: Bearer <adminToken>
+```
+
+Cancels a confirmed booking in a MongoDB transaction. It marks the booking `CANCELLED`, marks payment `REFUNDED`, releases booked seats back to `AVAILABLE`, creates a `REFUND` wallet transaction, and adds money back to the user's wallet.
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Booking cancelled successfully",
+  "data": {
+    "booking": {
+      "id": "booking_id",
+      "status": "CANCELLED",
+      "paymentStatus": "REFUNDED"
+    },
+    "refundTransaction": {
+      "id": "transaction_id",
+      "type": "REFUND",
+      "referenceType": "REFUND"
+    }
+  }
+}
+```
+
+### 23. Admin Refund Booking
+
+`POST /api/admin/bookings/:bookingId/refund`
+
+Headers:
+
+```txt
+Authorization: Bearer <adminToken>
+```
+
+Refunds a booking in a MongoDB transaction. It marks booking status `REFUNDED`, marks payment `REFUNDED`, creates a `REFUND` wallet transaction, and adds money back to the user's wallet. Seats are not released by this endpoint.
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Booking refunded successfully",
+  "data": {
+    "booking": {
+      "id": "booking_id",
+      "status": "REFUNDED",
+      "paymentStatus": "REFUNDED"
+    },
+    "refundTransaction": {
+      "id": "transaction_id",
+      "type": "REFUND",
+      "referenceType": "REFUND"
+    }
+  }
+}
+```
+
 ## Error Responses
 
 Validation error:
@@ -658,6 +821,33 @@ Expired reservation:
 }
 ```
 
+Idempotency request still processing:
+
+```json
+{
+  "success": false,
+  "message": "Request already processing"
+}
+```
+
+Already cancelled booking:
+
+```json
+{
+  "success": false,
+  "message": "Booking already cancelled"
+}
+```
+
+Already refunded booking:
+
+```json
+{
+  "success": false,
+  "message": "Booking already refunded"
+}
+```
+
 ## Postman Testing Flow
 
 1. Start backend using `npm start`.
@@ -752,4 +942,28 @@ Expired reservation:
 22. Try confirm with insufficient wallet balance.
 23. It should return insufficient balance and not create booking.
 
-More CRUD APIs will be added later for cancellation, refunds, admin monitoring, and expanded idempotency flows.
+## Booking History And Admin Monitoring Testing Flow
+
+1. Login as user and save `token`.
+2. Login as admin and save `adminToken`.
+3. Create a confirmed booking using the booking confirm flow.
+4. Save the returned `bookingId`.
+5. Call `GET /api/bookings/my-bookings` with the user token.
+6. Confirm the newest booking appears first.
+7. Confirm event and seat details are populated.
+8. Call `GET /api/admin/bookings` with the admin token.
+9. Test filters like `?eventId={{eventId}}`, `?status=CONFIRMED`, or `?userId=<user_id>`.
+10. Call `GET /api/admin/transactions` with the admin token.
+11. Test filters like `?type=REFUND` or `?referenceType=REFUND`.
+12. Call `POST /api/admin/bookings/{{bookingId}}/cancel` with the admin token.
+13. Confirm booking status is `CANCELLED` and payment status is `REFUNDED`.
+14. Confirm seats become `AVAILABLE`.
+15. Confirm wallet balance increases and a `REFUND` transaction is created.
+16. Call the same cancel API again.
+17. Confirm it returns `409` with `Booking already cancelled` or `Booking already refunded`.
+18. Create another confirmed booking for refund testing.
+19. Call `POST /api/admin/bookings/{{bookingId}}/refund` with the admin token.
+20. Confirm booking status is `REFUNDED` and payment status is `REFUNDED`.
+21. Confirm wallet balance increases and a `REFUND` transaction is created.
+22. Call the same refund API again.
+23. Confirm it returns `409` with `Booking already refunded`.

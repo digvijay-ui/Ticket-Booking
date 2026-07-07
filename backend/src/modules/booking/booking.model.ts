@@ -1,6 +1,6 @@
 import { Schema, Types, model } from "mongoose";
 
-export type BookingStatus = "CONFIRMED" | "CANCELLED";
+export type BookingStatus = "CONFIRMED" | "CANCELLED" | "REFUNDED";
 export type BookingPaymentStatus = "PAID" | "REFUNDED";
 
 export interface IBooking {
@@ -43,7 +43,7 @@ const bookingSchema = new Schema<IBooking>(
     },
     status: {
       type: String,
-      enum: ["CONFIRMED", "CANCELLED"],
+      enum: ["CONFIRMED", "CANCELLED", "REFUNDED"],
       default: "CONFIRMED"
     },
     totalAmountInPaise: {

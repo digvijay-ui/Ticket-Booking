@@ -739,6 +739,195 @@
           "body": "{\n  \"success\": true,\n  \"message\": \"Booking confirmed successfully\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"booking_id\",\n      \"userId\": \"user_id\",\n      \"eventId\": \"event_id\",\n      \"seatIds\": [\"seat_id_1\", \"seat_id_2\"],\n      \"reservationId\": \"reservation_id\",\n      \"status\": \"CONFIRMED\",\n      \"paymentStatus\": \"PAID\",\n      \"totalAmountInPaise\": 100000,\n      \"walletTransactionId\": \"wallet_transaction_id\",\n      \"idempotencyKey\": \"unique-key\",\n      \"createdAt\": \"date\"\n    }\n  }\n}"
         }
       ]
+    },
+    {
+      "name": "Get My Bookings",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/bookings/my-bookings",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "bookings", "my-bookings"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Bookings fetched successfully\",\n  \"data\": {\n    \"bookings\": [\n      {\n        \"id\": \"booking_id\",\n        \"event\": {\n          \"id\": \"event_id\",\n          \"title\": \"Concert Night\"\n        },\n        \"seats\": [\n          {\n            \"id\": \"seat_id\",\n            \"seatNumber\": \"A1\",\n            \"row\": \"A\"\n          }\n        ],\n        \"status\": \"CONFIRMED\",\n        \"paymentStatus\": \"PAID\",\n        \"totalAmountInPaise\": 50000,\n        \"createdAt\": \"date\"\n      }\n    ]\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Admin Get Bookings",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/bookings",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "bookings"],
+          "query": [
+            {
+              "key": "userId",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "eventId",
+              "value": "{{eventId}}",
+              "disabled": true
+            },
+            {
+              "key": "status",
+              "value": "CONFIRMED",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Admin bookings fetched successfully\",\n  \"data\": {\n    \"bookings\": []\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Admin Get Transactions",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/transactions",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "transactions"],
+          "query": [
+            {
+              "key": "userId",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "type",
+              "value": "REFUND",
+              "disabled": true
+            },
+            {
+              "key": "referenceType",
+              "value": "REFUND",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Admin transactions fetched successfully\",\n  \"data\": {\n    \"transactions\": []\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Admin Cancel Booking",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/bookings/{{bookingId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "bookings", "{{bookingId}}", "cancel"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Booking cancelled successfully\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"booking_id\",\n      \"status\": \"CANCELLED\",\n      \"paymentStatus\": \"REFUNDED\"\n    },\n    \"refundTransaction\": {\n      \"id\": \"transaction_id\",\n      \"type\": \"REFUND\",\n      \"referenceType\": \"REFUND\"\n    }\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Admin Refund Booking",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{adminToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/admin/bookings/{{bookingId}}/refund",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "admin", "bookings", "{{bookingId}}", "refund"]
+        }
+      },
+      "response": [
+        {
+          "name": "Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"success\": true,\n  \"message\": \"Booking refunded successfully\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"booking_id\",\n      \"status\": \"REFUNDED\",\n      \"paymentStatus\": \"REFUNDED\"\n    },\n    \"refundTransaction\": {\n      \"id\": \"transaction_id\",\n      \"type\": \"REFUND\",\n      \"referenceType\": \"REFUND\"\n    }\n  }\n}"
+        }
+      ]
     }
   ]
 }
