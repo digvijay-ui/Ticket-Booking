@@ -90,6 +90,62 @@ export const signupUser = async (
   };
 };
 
+export const signupFirstAdmin = async (
+  input: SignupInput
+): Promise<{ user: SafeUser; token: string }> => {
+  const existingAdmin = await UserModel.findOne({ role: "ADMIN" });
+
+  if (existingAdmin) {
+    throw new AppError("Admin account already exists. Please login as admin.", 409);
+  }
+
+  const email = input.email.toLowerCase();
+  const existingUser = await UserModel.findOne({ email });
+
+  if (existingUser) {
+    throw new AppError("Email already exists", 409);
+  }
+
+  const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
+
+  const user = await UserModel.create({
+    name: input.name,
+    email,
+    passwordHash,
+    role: "ADMIN",
+    walletBalanceInPaise: 0
+  });
+
+  const safeUser = toSafeUser(user);
+  const token = generateToken({ userId: safeUser.id, role: safeUser.role });
+
+  return {
+    user: safeUser,
+    token
+  };
+};
+
+export const createAdminUser = async (input: SignupInput): Promise<SafeUser> => {
+  const email = input.email.toLowerCase();
+  const existingUser = await UserModel.findOne({ email });
+
+  if (existingUser) {
+    throw new AppError("Email already exists", 409);
+  }
+
+  const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
+
+  const user = await UserModel.create({
+    name: input.name,
+    email,
+    passwordHash,
+    role: "ADMIN",
+    walletBalanceInPaise: 0
+  });
+
+  return toSafeUser(user);
+};
+
 export const loginUser = async (
   input: LoginInput
 ): Promise<{ user: SafeUser; token: string }> => loginWithRoleCheck(input);

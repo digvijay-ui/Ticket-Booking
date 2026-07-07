@@ -157,6 +157,84 @@ Sample response:
 
 Admin login requires an existing user with `role` set to `ADMIN`.
 
+### 4.1 First Admin Signup
+
+`POST /api/auth/admin-signup`
+
+Creates the first admin account for a fresh database. If an admin already exists,
+this endpoint returns `409`.
+
+Request body:
+
+```json
+{
+  "name": "Admin User",
+  "email": "admin@example.com",
+  "password": "password123"
+}
+```
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Admin registered successfully",
+  "data": {
+    "user": {
+      "id": "admin_user_id",
+      "name": "Admin User",
+      "email": "admin@example.com",
+      "role": "ADMIN",
+      "walletBalanceInPaise": 0
+    },
+    "token": "jwt_token"
+  }
+}
+```
+
+### 4.2 Create Admin As Existing Admin
+
+`POST /api/auth/admin/users/admins`
+
+Headers:
+
+```txt
+Authorization: Bearer <admin_token>
+```
+
+Creates another admin account. This route is protected and requires an existing
+admin token.
+
+Request body:
+
+```json
+{
+  "name": "Second Admin",
+  "email": "second-admin@example.com",
+  "password": "password123"
+}
+```
+
+Sample response:
+
+```json
+{
+  "success": true,
+  "message": "Admin created successfully",
+  "data": {
+    "user": {
+      "id": "admin_user_id",
+      "name": "Second Admin",
+      "email": "second-admin@example.com",
+      "role": "ADMIN",
+      "walletBalanceInPaise": 0
+    }
+  }
+}
+
+```
+
 ### 5. Get Current User
 
 `GET /api/auth/me`

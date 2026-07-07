@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color: #f7f1e3;
+    background: #1b1030;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background:
+      linear-gradient(90deg, rgba(255, 201, 74, 0.07) 1px, transparent 1px),
+      linear-gradient(rgba(247, 241, 227, 0.04) 1px, transparent 1px),
+      #1b1030;
+    background-size: 46px 46px;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .focus-ticket {
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed focus-visible:outline-ticketGold;
+  }
+
+  .marquee-panel {
+    background:
+      radial-gradient(circle at 16px 16px, rgba(255, 201, 74, 0.72) 0 3px, transparent 4px),
+      linear-gradient(135deg, rgba(74, 25, 66, 0.94), rgba(27, 16, 48, 0.98));
+    background-size: 36px 36px, auto;
+  }
+
+  .ticket-perforation {
+    background-image: linear-gradient(to bottom, rgba(43, 33, 48, 0.42) 50%, transparent 0);
+    background-position: right center;
+    background-repeat: repeat-y;
+    background-size: 2px 14px;
+  }
+
+  .receipt-lines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(43, 33, 48, 0.12) 0,
+      rgba(43, 33, 48, 0.12) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+  }
+}

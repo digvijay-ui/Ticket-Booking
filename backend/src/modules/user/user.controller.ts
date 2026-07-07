@@ -2,7 +2,15 @@ import { Request, Response } from "express";
 import { ZodError } from "zod";
 import { AuthenticatedRequest } from "../../middleware/auth.middleware";
 import { loginSchema, signupSchema } from "./user.contract";
-import { adminLogin, AppError, getCurrentUser, loginUser, signupUser } from "./user.service";
+import {
+  adminLogin,
+  AppError,
+  createAdminUser,
+  getCurrentUser,
+  loginUser,
+  signupFirstAdmin,
+  signupUser
+} from "./user.service";
 
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof ZodError) {
@@ -73,6 +81,50 @@ export const adminLoginController = async (req: Request, res: Response): Promise
       success: true,
       message: "Admin login successful",
       data
+    });
+  } catch (error) {
+    res.status(getStatusCode(error)).json({
+      success: false,
+      message: getErrorMessage(error)
+    });
+  }
+};
+
+export const adminSignupController = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const input = signupSchema.parse(req.body);
+    const data = await signupFirstAdmin(input);
+
+    res.status(201).json({
+      success: true,
+      message: "Admin registered successfully",
+      data
+    });
+  } catch (error) {
+    res.status(getStatusCode(error)).json({
+      success: false,
+      message: getErrorMessage(error)
+    });
+  }
+};
+
+export const createAdminController = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const input = signupSchema.parse(req.body);
+    const user = await createAdminUser(input);
+
+    res.status(201).json({
+      success: true,
+      message: "Admin created successfully",
+      data: {
+        user
+      }
     });
   } catch (error) {
     res.status(getStatusCode(error)).json({
