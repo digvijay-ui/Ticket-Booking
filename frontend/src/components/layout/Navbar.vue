@@ -29,10 +29,6 @@
           <Icon icon="mdi:account-plus" class="h-4 w-4" aria-hidden="true" />
           Signup
         </RouterLink>
-        <RouterLink :to="adminLink" class="focus-ticket inline-flex items-center gap-2 rounded-sm px-3 py-2 text-paperCream/80 hover:bg-ticketGold hover:text-stubCharcoal">
-          <Icon icon="mdi:shield-account" class="h-4 w-4" aria-hidden="true" />
-          Admin
-        </RouterLink>
       </nav>
     </div>
   </header>
@@ -58,7 +54,6 @@ const protectedLinks = [
 const publicLinks = [{ to: '/events', label: 'Events' }];
 
 const visibleLinks = computed(() => (auth.isAuthenticated ? protectedLinks : publicLinks));
-const adminLink = computed(() => (auth.isAdminAuthenticated ? '/admin/dashboard' : '/admin/login'));
 
 function logout() {
   auth.logout();

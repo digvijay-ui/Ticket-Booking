@@ -1,134 +1,91 @@
 <template>
-  <div class="space-y-8 text-white">
-    <div class="space-y-5">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p class="text-sm font-semibold text-white/60">Select Location</p>
-          <h1 class="text-4xl font-black tracking-normal sm:text-5xl">Events near you</h1>
-        </div>
-        <label class="focus-within:ring-2 focus-within:ring-ticketGold flex min-h-12 w-full items-center gap-3 rounded-full bg-white px-4 text-black lg:max-w-md">
-          <Icon icon="mdi:magnify" class="h-5 w-5 text-black/50" aria-hidden="true" />
-          <span class="sr-only">Search events</span>
-          <input v-model="search" class="w-full bg-transparent text-sm font-semibold outline-none placeholder:text-black/45" placeholder="Search for events" />
-        </label>
-      </div>
-
-      <div class="flex gap-2 overflow-x-auto pb-1">
-        <button
-          v-for="filter in filters"
-          :key="filter"
-          type="button"
-          class="focus-ticket shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition"
-          :class="selectedFilter === filter ? 'border-white bg-white text-black' : 'border-white/15 bg-white/5 text-white hover:border-white/35'"
-          @click="selectedFilter = filter"
-        >
-          {{ filter }}
-        </button>
-      </div>
+  <div class="space-y-6">
+    <div>
+      <p class="font-mono text-xs uppercase text-ticketGold">Public counter</p>
+      <h1 class="font-display text-6xl leading-none text-paperCream">LIVE EVENTS</h1>
+      <p class="max-w-2xl text-paperCream/70">Published events from the backend, styled as box-office ticket stubs.</p>
     </div>
 
-    <section class="rounded-2xl bg-white/[0.03] p-4 sm:p-5">
-      <div class="mb-5 flex items-center justify-between">
-        <div>
-          <h2 class="text-2xl font-black">All events</h2>
-          <p class="text-sm text-white/55">{{ filteredEvents.length }} events available</p>
+    <div v-if="eventStore.loading" class="flex min-h-60 items-center justify-center rounded-md bg-deepPlum/70">
+      <LoadingSpinner size="lg" />
+    </div>
+
+    <div v-else-if="eventStore.error" class="rounded-md border border-marqueeRed bg-marqueeRed/10 p-5 text-sm font-semibold text-paperCream">
+      {{ eventStore.error }}
+    </div>
+
+    <div v-else-if="eventStore.events.length" class="grid gap-5 xl:grid-cols-2">
+      <TicketStubCard
+        v-for="event in eventStore.events"
+        :key="event.id"
+        :title="event.title"
+        :subtitle="event.description"
+        :status="event.status"
+      >
+        <div class="space-y-5">
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-sm bg-stubCharcoal/5 p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Location</p>
+              <p class="font-bold">{{ event.location }}</p>
+            </div>
+            <div class="rounded-sm bg-stubCharcoal/5 p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Price</p>
+              <p class="font-bold text-marqueeRed">{{ formatINR(event.seatPriceInPaise) }}</p>
+            </div>
+            <div class="rounded-sm bg-stubCharcoal/5 p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Starts</p>
+              <p class="font-bold">{{ formatDateTime(event.startDate) }}</p>
+            </div>
+            <div class="rounded-sm bg-stubCharcoal/5 p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Ends</p>
+              <p class="font-bold">{{ formatDateTime(event.endDate) }}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 font-mono text-xs uppercase sm:grid-cols-4">
+            <span class="rounded-sm bg-stubCharcoal/5 px-2 py-2">Total {{ event.totalSeats }}</span>
+            <span class="rounded-sm bg-electricTeal/20 px-2 py-2 text-stubCharcoal">Available {{ event.availableSeats }}</span>
+            <span class="rounded-sm bg-ticketGold/25 px-2 py-2">Reserved {{ event.reservedSeats }}</span>
+            <span class="rounded-sm bg-marqueeRed/10 px-2 py-2 text-marqueeRed">Booked {{ event.bookedSeats }}</span>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <RouterLink
+              :to="`/events/${event.id}`"
+              class="focus-ticket rounded-sm border-2 border-ticketGold bg-ticketGold px-4 py-2 text-sm font-bold uppercase text-stubCharcoal hover:bg-paperCream"
+            >
+              View Details
+            </RouterLink>
+            <RouterLink
+              :to="`/events/${event.id}/seats`"
+              class="focus-ticket rounded-sm border-2 border-marqueeRed bg-marqueeRed px-4 py-2 text-sm font-bold uppercase text-paperCream hover:bg-paperCream hover:text-marqueeRed"
+            >
+              Select Seats
+            </RouterLink>
+          </div>
         </div>
-        <AppBadge variant="published" label="Live" />
-      </div>
+      </TicketStubCard>
+    </div>
 
-      <div v-if="loading" class="flex min-h-60 items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-
-      <div v-else-if="error" class="rounded-xl border border-marqueeRed/50 bg-marqueeRed/10 p-5 text-sm font-semibold text-white">
-        {{ error }}
-      </div>
-
-      <div v-else-if="filteredEvents.length" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        <EventCard v-for="(event, index) in filteredEvents" :key="event.id" :event="event" :index="index" />
-      </div>
-
-      <div v-else class="rounded-xl border border-white/10 bg-black/20 p-8 text-center">
-        <Icon icon="mdi:calendar-search" class="mx-auto h-10 w-10 text-white/45" aria-hidden="true" />
-        <p class="mt-3 font-bold">No published events found.</p>
-        <p class="text-sm text-white/55">Create and publish events from the admin panel to see them here.</p>
-      </div>
-    </section>
+    <div v-else class="rounded-md border-2 border-paperCream/10 bg-deepPlum p-8 text-center">
+      <p class="font-display text-4xl leading-none text-ticketGold">NO EVENTS</p>
+      <p class="mt-2 text-sm text-paperCream/70">No published events are available yet.</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
-import { computed, onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 
-import AppBadge from '@/components/common/AppBadge.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import EventCard from '@/components/events/EventCard.vue';
-import type { EventItem } from '@/services/apiTypes';
-import { getApiErrorMessage } from '@/utils/apiError';
-import { getEvents } from './event.api';
+import TicketStubCard from '@/components/common/TicketStubCard.vue';
+import { formatDateTime } from '@/utils/date';
+import { formatINR } from '@/utils/money';
+import { useEventStore } from './event.store';
 
-const events = ref<EventItem[]>([]);
-const loading = ref(true);
-const error = ref('');
-const search = ref('');
-const selectedFilter = ref('All');
-const filters = ['All', 'Today', 'This Weekend', 'Music', 'Comedy', 'Under 10 km'];
+const eventStore = useEventStore();
 
-const filteredEvents = computed(() => {
-  const query = search.value.trim().toLowerCase();
-
-  return events.value.filter((event) => {
-    const matchesSearch =
-      !query ||
-      event.title.toLowerCase().includes(query) ||
-      event.description.toLowerCase().includes(query) ||
-      event.location.toLowerCase().includes(query);
-
-    if (!matchesSearch) {
-      return false;
-    }
-
-    if (selectedFilter.value === 'All' || selectedFilter.value === 'Under 10 km') {
-      return true;
-    }
-
-    const text = `${event.title} ${event.description}`.toLowerCase();
-
-    if (selectedFilter.value === 'Music') {
-      return text.includes('music') || text.includes('concert') || text.includes('live');
-    }
-
-    if (selectedFilter.value === 'Comedy') {
-      return text.includes('comedy') || text.includes('laugh');
-    }
-
-    if (selectedFilter.value === 'Today') {
-      return new Date(event.startDate).toDateString() === new Date().toDateString();
-    }
-
-    if (selectedFilter.value === 'This Weekend') {
-      const day = new Date(event.startDate).getDay();
-      return day === 0 || day === 6;
-    }
-
-    return true;
-  });
+onMounted(() => {
+  eventStore.fetchEvents();
 });
-
-async function loadEvents() {
-  loading.value = true;
-  error.value = '';
-
-  try {
-    const response = await getEvents();
-    events.value = response.data.data.events;
-  } catch (err) {
-    error.value = getApiErrorMessage(err);
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(loadEvents);
 </script>

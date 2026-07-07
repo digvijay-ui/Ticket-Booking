@@ -3,7 +3,11 @@ export function paiseToRupees(amountInPaise: number) {
 }
 
 export function rupeesToPaise(amountInRupees: number) {
-  return Math.round(amountInRupees * 100);
+  if (!Number.isInteger(amountInRupees)) {
+    throw new Error('Amount must be a whole number of rupees');
+  }
+
+  return amountInRupees * 100;
 }
 
 export function formatINR(amountInPaise: number) {

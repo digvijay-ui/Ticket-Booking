@@ -1,96 +1,84 @@
 <template>
-  <div class="space-y-6 text-white">
-    <div v-if="loading" class="flex min-h-80 items-center justify-center">
+  <div class="space-y-6">
+    <div v-if="eventStore.loading" class="flex min-h-80 items-center justify-center rounded-md bg-deepPlum/70">
       <LoadingSpinner size="lg" />
     </div>
 
-    <div v-else-if="error" class="rounded-xl border border-marqueeRed/50 bg-marqueeRed/10 p-5 text-sm font-semibold">
-      {{ error }}
+    <div v-else-if="eventStore.error" class="rounded-md border border-marqueeRed bg-marqueeRed/10 p-5 text-sm font-semibold text-paperCream">
+      {{ eventStore.error }}
     </div>
 
     <template v-else-if="event">
-      <section class="overflow-hidden rounded-2xl bg-[#171717] shadow-2xl">
-        <div class="relative min-h-[360px] bg-[#242424]">
-          <div class="absolute inset-0 bg-[radial-gradient(circle_at_72%_22%,rgba(255,255,255,0.25),transparent_24%),linear-gradient(135deg,#6d28d9,#111827_45%,#e11d48)]" />
-          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
-          <div class="absolute bottom-0 left-0 right-0 p-5 sm:p-8">
-            <div class="mb-4 flex flex-wrap gap-2">
-              <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-black">Events</span>
-              <span class="rounded-full bg-black/60 px-3 py-1 text-xs font-bold text-white">{{ event.availableSeats }} seats left</span>
-            </div>
-            <h1 class="max-w-4xl text-4xl font-black leading-tight sm:text-6xl">{{ event.title }}</h1>
-            <p class="mt-4 max-w-3xl text-base text-white/75">{{ event.description }}</p>
-          </div>
-        </div>
-      </section>
+      <div>
+        <p class="font-mono text-xs uppercase text-ticketGold">Event details</p>
+        <h1 class="font-display text-6xl leading-none text-paperCream">{{ event.title }}</h1>
+        <p class="mt-2 max-w-3xl text-paperCream/70">{{ event.description }}</p>
+      </div>
 
-      <section class="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <div class="space-y-4 rounded-2xl bg-white/[0.04] p-5">
-          <h2 class="text-2xl font-black">About the event</h2>
-          <p class="leading-7 text-white/75">{{ event.description }}</p>
-
-          <div class="grid gap-3 sm:grid-cols-3">
-            <div class="rounded-xl bg-black/25 p-4">
-              <Icon icon="mdi:calendar-clock" class="mb-3 h-6 w-6 text-white/50" aria-hidden="true" />
-              <p class="text-xs font-bold uppercase text-white/45">Date and time</p>
-              <p class="mt-1 font-semibold">{{ formatDateTime(event.startDate) }}</p>
+      <TicketStubCard :title="event.title" :subtitle="event.description" :status="event.status">
+        <div class="space-y-5">
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Location</p>
+              <p class="mt-1 font-bold">{{ event.location }}</p>
             </div>
-            <div class="rounded-xl bg-black/25 p-4">
-              <Icon icon="mdi:map-marker" class="mb-3 h-6 w-6 text-white/50" aria-hidden="true" />
-              <p class="text-xs font-bold uppercase text-white/45">Venue</p>
-              <p class="mt-1 font-semibold">{{ event.location }}</p>
+            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Starts</p>
+              <p class="mt-1 font-bold">{{ formatDateTime(event.startDate) }}</p>
             </div>
-            <div class="rounded-xl bg-black/25 p-4">
-              <Icon icon="mdi:seat" class="mb-3 h-6 w-6 text-white/50" aria-hidden="true" />
-              <p class="text-xs font-bold uppercase text-white/45">Availability</p>
-              <p class="mt-1 font-semibold">{{ event.availableSeats }} / {{ event.totalSeats }} seats</p>
+            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Ends</p>
+              <p class="mt-1 font-bold">{{ formatDateTime(event.endDate) }}</p>
+            </div>
+            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Price</p>
+              <p class="mt-1 font-bold text-marqueeRed">{{ formatINR(event.seatPriceInPaise) }}</p>
             </div>
           </div>
-        </div>
 
-        <aside class="h-fit rounded-2xl bg-white p-5 text-black">
-          <p class="text-sm font-bold text-black/55">Starts from</p>
-          <p class="mt-1 text-3xl font-black">{{ formatINR(event.seatPriceInPaise) }}</p>
-          <RouterLink :to="`/events/${event.id}/seats`" class="mt-5 block">
-            <AppButton class="w-full" icon="mdi:ticket-confirmation">Book tickets</AppButton>
+          <div class="grid gap-3 sm:grid-cols-4">
+            <div class="rounded-sm border border-stubCharcoal/15 p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Total</p>
+              <p class="font-display text-3xl leading-none">{{ event.totalSeats }}</p>
+            </div>
+            <div class="rounded-sm border border-electricTeal p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Available</p>
+              <p class="font-display text-3xl leading-none text-electricTeal">{{ event.availableSeats }}</p>
+            </div>
+            <div class="rounded-sm border border-ticketGold p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Reserved</p>
+              <p class="font-display text-3xl leading-none text-ticketGold">{{ event.reservedSeats }}</p>
+            </div>
+            <div class="rounded-sm border border-marqueeRed p-3">
+              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Booked</p>
+              <p class="font-display text-3xl leading-none text-marqueeRed">{{ event.bookedSeats }}</p>
+            </div>
+          </div>
+
+          <RouterLink :to="`/events/${event.id}/seats`" class="focus-ticket inline-flex rounded-sm border-2 border-marqueeRed bg-marqueeRed px-4 py-2 text-sm font-bold uppercase text-paperCream hover:bg-paperCream hover:text-marqueeRed">
+            Select Seats
           </RouterLink>
-        </aside>
-      </section>
+        </div>
+      </TicketStubCard>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 
-import AppButton from '@/components/common/AppButton.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import type { EventItem } from '@/services/apiTypes';
-import { getApiErrorMessage } from '@/utils/apiError';
+import TicketStubCard from '@/components/common/TicketStubCard.vue';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { getEvent } from './event.api';
+import { useEventStore } from './event.store';
 
 const route = useRoute();
-const event = ref<EventItem | null>(null);
-const loading = ref(true);
-const error = ref('');
+const eventStore = useEventStore();
+const event = computed(() => eventStore.selectedEvent);
 
-async function loadEvent() {
-  loading.value = true;
-  error.value = '';
-
-  try {
-    const response = await getEvent(String(route.params.eventId));
-    event.value = response.data.data.event;
-  } catch (err) {
-    error.value = getApiErrorMessage(err);
-  } finally {
-    loading.value = false;
-  }
-}
-
-onMounted(loadEvent);
+onMounted(() => {
+  eventStore.fetchEventById(String(route.params.eventId));
+});
 </script>

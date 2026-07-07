@@ -13,7 +13,7 @@
       {{ error }}
     </div>
     <TicketStubCard v-else title="Seat Inventory" subtitle="Read-only admin seat status view." status="available" :show-barcode="false">
-      <SeatGrid v-model="selectedSeatIds" :seats="seats" />
+      <SeatGrid :seats="seats" :selected-seat-ids="selectedSeatIds" @toggle-seat="toggleSeat" />
     </TicketStubCard>
   </div>
 </template>
@@ -34,6 +34,12 @@ const seats = ref<Seat[]>([]);
 const selectedSeatIds = ref<string[]>([]);
 const loading = ref(true);
 const error = ref('');
+
+function toggleSeat(seat: Seat) {
+  selectedSeatIds.value = selectedSeatIds.value.includes(seat.id)
+    ? selectedSeatIds.value.filter((seatId) => seatId !== seat.id)
+    : [...selectedSeatIds.value, seat.id];
+}
 
 async function loadSeats() {
   loading.value = true;

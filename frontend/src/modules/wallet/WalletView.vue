@@ -1,62 +1,104 @@
 <template>
-  <div class="space-y-6 text-white">
+  <div class="space-y-6 text-paperCream">
     <div>
-      <p class="text-sm font-semibold text-white/55">Receipt desk</p>
-      <h1 class="text-4xl font-black sm:text-5xl">Wallet ledger</h1>
-      <p class="max-w-2xl text-white/70">Balance and transactions are connected to the backend wallet APIs.</p>
+      <p class="font-mono text-xs font-semibold uppercase text-ticketGold">Receipt desk</p>
+      <h1 class="font-display text-6xl leading-none text-paperCream">WALLET LEDGER</h1>
+      <p class="max-w-2xl text-paperCream/70">Load your wallet in rupees. The backend receives paise only.</p>
     </div>
 
     <section class="grid gap-5 lg:grid-cols-[360px_1fr]">
-      <div class="h-fit rounded-2xl bg-white p-5 text-black">
-        <p class="text-sm font-bold text-black/55">Available balance</p>
-        <p class="mt-1 text-4xl font-black">{{ formatINR(balanceInPaise) }}</p>
+      <div class="h-fit rounded-md border-2 border-stubCharcoal bg-paperCream p-5 text-stubCharcoal shadow-ticket">
+        <p class="font-mono text-xs font-bold uppercase text-stubCharcoal/55">Available balance</p>
+        <p class="mt-1 font-display text-6xl leading-none text-stubCharcoal">{{ formatINR(wallet.walletBalanceInPaise) }}</p>
 
-        <form class="mt-6 space-y-4" @submit.prevent="submitTopUp">
-          <AppInput v-model="topUpAmount" label="Add amount in rupees" type="number" placeholder="1000" :error="amountError" />
-          <p v-if="submitError" class="rounded-sm bg-marqueeRed/10 px-3 py-2 text-sm font-semibold text-marqueeRed">
-            {{ submitError }}
+        <div class="mt-6 grid grid-cols-3 gap-2">
+          <button
+            v-for="amount in quickAmounts"
+            :key="amount"
+            type="button"
+            class="focus-ticket rounded-sm border-2 border-stubCharcoal/20 bg-ticketGold px-3 py-2 font-mono text-xs font-bold text-stubCharcoal hover:bg-stubCharcoal hover:text-paperCream"
+            @click="setQuickAmount(amount)"
+          >
+            ₹{{ amount }}
+          </button>
+        </div>
+
+        <form class="mt-5 space-y-4" @submit.prevent="submitTopUp">
+          <label class="block">
+            <span class="mb-2 block font-mono text-xs font-semibold uppercase text-stubCharcoal/70">Add amount in rupees</span>
+            <input
+              v-model="topUpAmount"
+              class="focus-ticket w-full rounded-sm border-2 border-stubCharcoal/25 bg-white px-4 py-3 text-stubCharcoal placeholder:text-stubCharcoal/45"
+              :class="{ 'border-marqueeRed': amountError }"
+              inputmode="numeric"
+              placeholder="1000"
+              type="text"
+            />
+            <span v-if="amountError" class="mt-2 block font-mono text-xs font-semibold text-marqueeRed">{{ amountError }}</span>
+          </label>
+
+          <p v-if="successMessage" class="rounded-sm bg-electricTeal/15 px-3 py-2 text-sm font-semibold text-stubCharcoal">
+            {{ successMessage }}
           </p>
-          <AppButton class="w-full" type="submit" icon="mdi:wallet-plus" :loading="submitting">
-            {{ submitting ? 'Please wait...' : 'Add money' }}
+          <p v-if="wallet.error && !wallet.loading" class="rounded-sm bg-marqueeRed/10 px-3 py-2 text-sm font-semibold text-marqueeRed">
+            {{ wallet.error }}
+          </p>
+
+          <AppButton class="w-full" type="submit" icon="mdi:wallet-plus" :loading="wallet.addingMoney">
+            {{ wallet.addingMoney ? 'Please wait...' : 'Add money' }}
           </AppButton>
         </form>
       </div>
 
-      <div class="rounded-2xl bg-white/[0.04] p-5">
+      <div class="rounded-md border-2 border-paperCream/10 bg-deepPlum p-5">
         <div class="mb-5 flex items-center justify-between">
-          <h2 class="text-2xl font-black">Transactions</h2>
-          <button type="button" class="focus-ticket rounded-full bg-white/10 px-3 py-1 text-sm font-bold hover:bg-white hover:text-black" @click="loadWallet">
+          <div>
+            <p class="font-mono text-xs font-bold uppercase text-ticketGold">Receipt roll</p>
+            <h2 class="font-display text-4xl leading-none">Transactions</h2>
+          </div>
+          <button type="button" class="focus-ticket rounded-sm bg-paperCream/10 px-3 py-2 font-mono text-xs font-bold uppercase hover:bg-paperCream hover:text-stubCharcoal" @click="wallet.fetchWallet">
             Refresh
           </button>
         </div>
 
-        <div v-if="loading" class="flex min-h-44 items-center justify-center">
+        <div v-if="wallet.loading" class="flex min-h-44 items-center justify-center">
           <LoadingSpinner size="lg" />
         </div>
 
-        <div v-else-if="loadError" class="rounded-xl border border-marqueeRed/50 bg-marqueeRed/10 p-5 text-sm font-semibold">
-          {{ loadError }}
+        <div v-else-if="wallet.error" class="rounded-sm border border-marqueeRed/50 bg-marqueeRed/10 p-5 text-sm font-semibold">
+          {{ wallet.error }}
         </div>
 
-        <div v-else-if="transactions.length" class="space-y-3">
-          <article v-for="transaction in transactions" :key="transaction.id" class="rounded-xl bg-black/25 p-4">
-            <div class="flex items-start justify-between gap-4">
+        <div v-else-if="wallet.transactions.length" class="space-y-3">
+          <article
+            v-for="transaction in wallet.transactions"
+            :key="transaction.id"
+            class="relative overflow-hidden rounded-md bg-paperCream p-4 text-stubCharcoal shadow-ticket"
+          >
+            <span class="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-deepPlum" aria-hidden="true" />
+            <span class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-deepPlum" aria-hidden="true" />
+
+            <div class="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
               <div>
-                <p class="font-bold">{{ transaction.description }}</p>
-                <p class="mt-1 text-xs text-white/50">{{ formatDateTime(transaction.createdAt) }} · {{ transaction.referenceType }}</p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <AppBadge :variant="transactionVariant(transaction.type)" :label="transaction.type" />
+                  <span class="font-mono text-xs font-bold uppercase text-stubCharcoal/50">{{ transaction.referenceType }}</span>
+                </div>
+                <p class="mt-3 font-bold">{{ transaction.description }}</p>
+                <p class="mt-1 font-mono text-xs text-stubCharcoal/55">{{ formatDateTime(transaction.createdAt) }}</p>
               </div>
-              <div class="text-right">
-                <p class="font-black" :class="transaction.type === 'DEBIT' ? 'text-marqueeRed' : 'text-electricTeal'">
-                  {{ transaction.type === 'DEBIT' ? '-' : '+' }} {{ formatINR(transaction.amountInPaise) }}
+              <div class="sm:text-right">
+                <p class="font-display text-3xl leading-none" :class="amountClass(transaction.type)">
+                  {{ transaction.type === 'DEBIT' ? '-' : '+' }}{{ formatINR(transaction.amountInPaise) }}
                 </p>
-                <p class="mt-1 text-xs text-white/50">Bal {{ formatINR(transaction.balanceAfterInPaise) }}</p>
+                <p class="mt-1 font-mono text-xs text-stubCharcoal/55">Balance {{ formatINR(transaction.balanceAfterInPaise) }}</p>
               </div>
             </div>
           </article>
         </div>
 
-        <div v-else class="rounded-xl bg-black/20 p-8 text-center">
-          <Icon icon="mdi:receipt-text-outline" class="mx-auto h-10 w-10 text-white/45" aria-hidden="true" />
+        <div v-else class="rounded-md border border-paperCream/10 bg-inkNight/35 p-8 text-center">
+          <Icon icon="mdi:receipt-text-outline" class="mx-auto h-10 w-10 text-paperCream/45" aria-hidden="true" />
           <p class="mt-3 font-bold">No wallet transactions yet.</p>
         </div>
       </div>
@@ -68,61 +110,79 @@
 import { Icon } from '@iconify/vue';
 import { onMounted, ref } from 'vue';
 
+import AppBadge from '@/components/common/AppBadge.vue';
 import AppButton from '@/components/common/AppButton.vue';
-import AppInput from '@/components/common/AppInput.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import type { WalletTransaction } from '@/services/apiTypes';
-import { getApiErrorMessage } from '@/utils/apiError';
 import { formatDateTime } from '@/utils/date';
-import { rupeesToPaise, formatINR } from '@/utils/money';
-import { addMoney, getWalletBalance, getWalletTransactions } from './wallet.api';
+import { formatINR } from '@/utils/money';
+import { useWalletStore } from './wallet.store';
 
-const balanceInPaise = ref(0);
-const transactions = ref<WalletTransaction[]>([]);
+const wallet = useWalletStore();
 const topUpAmount = ref('');
-const loading = ref(true);
-const submitting = ref(false);
-const loadError = ref('');
-const submitError = ref('');
 const amountError = ref('');
+const successMessage = ref('');
+const quickAmounts = [500, 1000, 2000];
 
-async function loadWallet() {
-  loading.value = true;
-  loadError.value = '';
+function setQuickAmount(amount: number) {
+  topUpAmount.value = String(amount);
+  amountError.value = '';
+  successMessage.value = '';
+}
 
-  try {
-    const [balanceResponse, transactionResponse] = await Promise.all([getWalletBalance(), getWalletTransactions()]);
-    balanceInPaise.value = balanceResponse.data.data.walletBalanceInPaise;
-    transactions.value = transactionResponse.data.data.transactions;
-  } catch (err) {
-    loadError.value = getApiErrorMessage(err);
-  } finally {
-    loading.value = false;
+function validateAmount() {
+  amountError.value = '';
+  const trimmedAmount = topUpAmount.value.trim();
+
+  if (!trimmedAmount) {
+    amountError.value = 'Amount is required';
+    return null;
   }
+
+  if (!/^\d+$/.test(trimmedAmount)) {
+    amountError.value = 'Amount must be a whole number';
+    return null;
+  }
+
+  const amount = Number(trimmedAmount);
+
+  if (!Number.isSafeInteger(amount) || amount <= 0) {
+    amountError.value = 'Amount must be greater than 0';
+    return null;
+  }
+
+  return amount;
 }
 
 async function submitTopUp() {
-  amountError.value = '';
-  submitError.value = '';
-  const amount = Number(topUpAmount.value);
+  successMessage.value = '';
+  const amount = validateAmount();
 
-  if (!Number.isFinite(amount) || amount <= 0) {
-    amountError.value = 'Enter an amount greater than 0';
+  if (amount === null) {
     return;
   }
 
-  submitting.value = true;
-
   try {
-    await addMoney(rupeesToPaise(amount));
+    await wallet.addMoney(amount);
     topUpAmount.value = '';
-    await loadWallet();
-  } catch (err) {
-    submitError.value = getApiErrorMessage(err);
-  } finally {
-    submitting.value = false;
+    successMessage.value = `Added ${formatINR(amount * 100)} to your wallet`;
+  } catch {
+    // The store already exposes the backend error message.
   }
 }
 
-onMounted(loadWallet);
+function transactionVariant(type: 'CREDIT' | 'DEBIT' | 'REFUND') {
+  if (type === 'CREDIT') return 'paid';
+  if (type === 'REFUND') return 'refunded';
+  return 'cancelled';
+}
+
+function amountClass(type: 'CREDIT' | 'DEBIT' | 'REFUND') {
+  if (type === 'CREDIT') return 'text-electricTeal';
+  if (type === 'REFUND') return 'text-ticketGold';
+  return 'text-marqueeRed';
+}
+
+onMounted(() => {
+  wallet.fetchWallet();
+});
 </script>
