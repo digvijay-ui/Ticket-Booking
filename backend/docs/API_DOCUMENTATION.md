@@ -1,55 +1,47 @@
-# Ticket Booking Backend API
+# Ticket Booking API Documentation
 
-## Base URL
+Base URL:
 
 ```txt
 http://localhost:5000
 ```
 
-## Authentication
-
-Protected APIs use JWT bearer authentication.
-
-Send the token in the `Authorization` header:
+Protected user routes require:
 
 ```txt
 Authorization: Bearer <token>
 ```
 
-The token is returned by the signup and login APIs.
-
-## Environment Variables
-
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/ticket-booking
-JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES_IN=7d
-```
-
-The backend also supports `MONGODB_URI` for MongoDB connections.
-
-## Postman Environment Variables
+Protected admin routes require an admin JWT:
 
 ```txt
-baseUrl = http://localhost:5000
-token =
-adminToken =
-eventId =
-seatId1 =
-seatId2 =
-reservationId =
-bookingId =
-idempotencyKey =
+Authorization: Bearer <adminToken>
 ```
 
-## APIs
+Amounts are always stored and sent to the backend in paise. Example: INR 500 = `50000`.
 
-### 1. Health Check
+Common error response:
 
-`GET /api/health`
+```json
+{
+  "success": false,
+  "message": "Something went wrong"
+}
+```
 
-Sample response:
+## Health
+
+### Health Check
+
+Method: `GET`
+
+URL: `/api/health`
+
+Auth required: No
+
+Request body: None
+
+Success response:
 
 ```json
 {
@@ -58,9 +50,24 @@ Sample response:
 }
 ```
 
-### 2. User Signup
+Error response:
 
-`POST /api/auth/signup`
+```json
+{
+  "success": false,
+  "message": "Something went wrong"
+}
+```
+
+## Auth
+
+### User Signup
+
+Method: `POST`
+
+URL: `/api/auth/signup`
+
+Auth required: No
 
 Request body:
 
@@ -72,7 +79,7 @@ Request body:
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -91,9 +98,22 @@ Sample response:
 }
 ```
 
-### 3. User Login
+Error response:
 
-`POST /api/auth/login`
+```json
+{
+  "success": false,
+  "message": "Valid email is required"
+}
+```
+
+### User Login
+
+Method: `POST`
+
+URL: `/api/auth/login`
+
+Auth required: No
 
 Request body:
 
@@ -104,7 +124,7 @@ Request body:
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -123,9 +143,22 @@ Sample response:
 }
 ```
 
-### 4. Admin Login
+Error response:
 
-`POST /api/auth/admin-login`
+```json
+{
+  "success": false,
+  "message": "Invalid email or password"
+}
+```
+
+### Admin Login
+
+Method: `POST`
+
+URL: `/api/auth/admin-login`
+
+Auth required: No
 
 Request body:
 
@@ -136,7 +169,7 @@ Request body:
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -150,19 +183,27 @@ Sample response:
       "role": "ADMIN",
       "walletBalanceInPaise": 0
     },
-    "token": "jwt_token"
+    "token": "admin_jwt_token"
   }
 }
 ```
 
-Admin login requires an existing user with `role` set to `ADMIN`.
+Error response:
 
-### 4.1 First Admin Signup
+```json
+{
+  "success": false,
+  "message": "Only admin users can login here"
+}
+```
 
-`POST /api/auth/admin-signup`
+### First Admin Signup
 
-Creates the first admin account for a fresh database. If an admin already exists,
-this endpoint returns `409`.
+Method: `POST`
+
+URL: `/api/auth/admin-signup`
+
+Auth required: No
 
 Request body:
 
@@ -174,7 +215,7 @@ Request body:
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -188,23 +229,27 @@ Sample response:
       "role": "ADMIN",
       "walletBalanceInPaise": 0
     },
-    "token": "jwt_token"
+    "token": "admin_jwt_token"
   }
 }
 ```
 
-### 4.2 Create Admin As Existing Admin
+Error response:
 
-`POST /api/auth/admin/users/admins`
-
-Headers:
-
-```txt
-Authorization: Bearer <admin_token>
+```json
+{
+  "success": false,
+  "message": "Admin account already exists. Please login as admin."
+}
 ```
 
-Creates another admin account. This route is protected and requires an existing
-admin token.
+### Create Admin User
+
+Method: `POST`
+
+URL: `/api/auth/admin/users/admins`
+
+Auth required: Admin
 
 Request body:
 
@@ -216,7 +261,7 @@ Request body:
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -232,20 +277,28 @@ Sample response:
     }
   }
 }
-
 ```
 
-### 5. Get Current User
+Error response:
 
-`GET /api/auth/me`
-
-Headers:
-
-```txt
-Authorization: Bearer <token>
+```json
+{
+  "success": false,
+  "message": "Forbidden: Admin access required"
+}
 ```
 
-Sample response:
+### Current User
+
+Method: `GET`
+
+URL: `/api/auth/me`
+
+Auth required: User
+
+Request body: None
+
+Success response:
 
 ```json
 {
@@ -257,84 +310,111 @@ Sample response:
       "name": "Test User",
       "email": "user@example.com",
       "role": "USER",
-      "walletBalanceInPaise": 0
+      "walletBalanceInPaise": 50000
     }
   }
 }
 ```
 
-### 6. Add Money
+Error response:
 
-`POST /api/wallet/add-money`
-
-Headers:
-
-```txt
-Authorization: Bearer <token>
+```json
+{
+  "success": false,
+  "message": "Unauthorized"
+}
 ```
+
+## Wallet
+
+### Add Money
+
+Method: `POST`
+
+URL: `/api/wallet/add-money`
+
+Auth required: User
 
 Request body:
 
 ```json
 {
-  "amountInPaise": 10000
+  "amountInPaise": 50000
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
   "success": true,
   "message": "Money added to wallet successfully",
   "data": {
-    "walletBalanceInPaise": 10000,
+    "walletBalanceInPaise": 50000,
     "transaction": {
       "id": "transaction_id",
       "type": "CREDIT",
-      "amountInPaise": 10000,
-      "balanceAfterInPaise": 10000,
+      "amountInPaise": 50000,
+      "balanceAfterInPaise": 50000,
       "description": "Money added to wallet",
       "referenceType": "ADD_MONEY",
-      "createdAt": "date"
+      "createdAt": "2026-07-07T10:00:00.000Z"
     }
   }
 }
 ```
 
-### 7. Get Wallet Balance
+Error response:
 
-`GET /api/wallet/balance`
-
-Headers:
-
-```txt
-Authorization: Bearer <token>
+```json
+{
+  "success": false,
+  "message": "amountInPaise must be greater than 0"
+}
 ```
 
-Sample response:
+### Wallet Balance
+
+Method: `GET`
+
+URL: `/api/wallet/balance`
+
+Auth required: User
+
+Request body: None
+
+Success response:
 
 ```json
 {
   "success": true,
   "message": "Wallet balance fetched successfully",
   "data": {
-    "walletBalanceInPaise": 10000
+    "walletBalanceInPaise": 50000
   }
 }
 ```
 
-### 8. Get Wallet Transactions
+Error response:
 
-`GET /api/wallet/transactions`
-
-Headers:
-
-```txt
-Authorization: Bearer <token>
+```json
+{
+  "success": false,
+  "message": "Unauthorized"
+}
 ```
 
-Sample response:
+### Wallet Transactions
+
+Method: `GET`
+
+URL: `/api/wallet/transactions`
+
+Auth required: User
+
+Request body: None
+
+Success response:
 
 ```json
 {
@@ -345,26 +425,172 @@ Sample response:
       {
         "id": "transaction_id",
         "type": "CREDIT",
-        "amountInPaise": 10000,
-        "balanceAfterInPaise": 10000,
+        "amountInPaise": 50000,
+        "balanceAfterInPaise": 50000,
         "description": "Money added to wallet",
         "referenceType": "ADD_MONEY",
-        "createdAt": "date"
+        "referenceId": "wallet_add_money",
+        "createdAt": "2026-07-07T10:00:00.000Z"
       }
     ]
   }
 }
 ```
 
-### 9. Create Event
+Error response:
 
-`POST /api/admin/events`
-
-Headers:
-
-```txt
-Authorization: Bearer <admin_token>
+```json
+{
+  "success": false,
+  "message": "Unauthorized"
+}
 ```
+
+## Events
+
+### List Published Events
+
+Method: `GET`
+
+URL: `/api/events`
+
+Auth required: No
+
+Request body: None
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Events fetched successfully",
+  "data": {
+    "events": [
+      {
+        "id": "event_id",
+        "title": "Coldplay Concert",
+        "description": "Live music concert event",
+        "location": "Ahmedabad Stadium",
+        "startDate": "2026-08-10T18:00:00.000Z",
+        "endDate": "2026-08-10T22:00:00.000Z",
+        "status": "PUBLISHED",
+        "seatPriceInPaise": 50000,
+        "totalSeats": 100,
+        "availableSeats": 100,
+        "reservedSeats": 0,
+        "bookedSeats": 0
+      }
+    ]
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Something went wrong"
+}
+```
+
+### Get Event
+
+Method: `GET`
+
+URL: `/api/events/:eventId`
+
+Auth required: No
+
+Request body: None
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Event fetched successfully",
+  "data": {
+    "event": {
+      "id": "event_id",
+      "title": "Coldplay Concert",
+      "description": "Live music concert event",
+      "location": "Ahmedabad Stadium",
+      "startDate": "2026-08-10T18:00:00.000Z",
+      "endDate": "2026-08-10T22:00:00.000Z",
+      "status": "PUBLISHED",
+      "seatPriceInPaise": 50000,
+      "totalSeats": 100,
+      "availableSeats": 100,
+      "reservedSeats": 0,
+      "bookedSeats": 0
+    }
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Event not found"
+}
+```
+
+### Get Event Seats
+
+Method: `GET`
+
+URL: `/api/events/:eventId/seats`
+
+Auth required: No
+
+Request body: None
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Seats fetched successfully",
+  "data": {
+    "seats": [
+      {
+        "id": "seat_id_1",
+        "eventId": "event_id",
+        "seatNumber": "A1",
+        "row": "A",
+        "priceInPaise": 50000,
+        "status": "AVAILABLE",
+        "reservedBy": null,
+        "reservationExpiresAt": null,
+        "bookedBy": null,
+        "bookingId": null
+      }
+    ]
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Invalid event id"
+}
+```
+
+## Admin Events
+
+### Create Event
+
+Method: `POST`
+
+URL: `/api/admin/events`
+
+Auth required: Admin
 
 Request body:
 
@@ -380,7 +606,7 @@ Request body:
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -390,8 +616,6 @@ Sample response:
     "event": {
       "id": "event_id",
       "title": "Coldplay Concert",
-      "description": "Live music concert event",
-      "location": "Ahmedabad Stadium",
       "status": "PUBLISHED",
       "seatPriceInPaise": 50000,
       "totalSeats": 0,
@@ -403,46 +627,142 @@ Sample response:
 }
 ```
 
-### 10. Update Event
+Error response:
 
-`PATCH /api/admin/events/:eventId`
-
-Headers:
-
-```txt
-Authorization: Bearer <admin_token>
+```json
+{
+  "success": false,
+  "message": "endDate must be after startDate"
+}
 ```
+
+### Update Event
+
+Method: `PATCH`
+
+URL: `/api/admin/events/:eventId`
+
+Auth required: Admin
 
 Request body:
 
 ```json
 {
-  "location": "Ahmedabad Stadium Gate 2",
-  "status": "PUBLISHED"
+  "title": "Coldplay Concert Updated",
+  "status": "PUBLISHED",
+  "seatPriceInPaise": 75000
 }
 ```
 
-### 11. Cancel Event
+Success response:
 
-`DELETE /api/admin/events/:eventId`
-
-Headers:
-
-```txt
-Authorization: Bearer <admin_token>
+```json
+{
+  "success": true,
+  "message": "Event updated successfully",
+  "data": {
+    "event": {
+      "id": "event_id",
+      "title": "Coldplay Concert Updated",
+      "status": "PUBLISHED",
+      "seatPriceInPaise": 75000
+    }
+  }
+}
 ```
 
-This is a soft delete. It sets event `status` to `CANCELLED`.
+Error response:
 
-### 12. Bulk Create Seats
-
-`POST /api/admin/events/:eventId/seats/bulk`
-
-Headers:
-
-```txt
-Authorization: Bearer <admin_token>
+```json
+{
+  "success": false,
+  "message": "Event not found"
+}
 ```
+
+### Cancel Event
+
+Method: `DELETE`
+
+URL: `/api/admin/events/:eventId`
+
+Auth required: Admin
+
+Request body: None
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Event cancelled successfully",
+  "data": {
+    "event": {
+      "id": "event_id",
+      "status": "CANCELLED"
+    }
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Event not found"
+}
+```
+
+## Admin Seats
+
+### Get Admin Event Seats
+
+Method: `GET`
+
+URL: `/api/admin/events/:eventId/seats`
+
+Auth required: Admin
+
+Request body: None
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Seats fetched successfully",
+  "data": {
+    "seats": [
+      {
+        "id": "seat_id_1",
+        "eventId": "event_id",
+        "seatNumber": "A1",
+        "row": "A",
+        "priceInPaise": 50000,
+        "status": "AVAILABLE"
+      }
+    ]
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Invalid event id"
+}
+```
+
+### Bulk Create Seats
+
+Method: `POST`
+
+URL: `/api/admin/events/:eventId/seats/bulk`
+
+Auth required: Admin
 
 Request body:
 
@@ -454,104 +774,47 @@ Request body:
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
   "success": true,
   "message": "Seats created successfully",
   "data": {
-    "createdCount": 30,
-    "eventSeatCounts": {
-      "totalSeats": 30,
-      "availableSeats": 30,
-      "reservedSeats": 0,
-      "bookedSeats": 0
-    }
+    "createdCount": 30
   }
 }
 ```
 
-### 13. List Events
-
-`GET /api/events`
-
-Returns `PUBLISHED` events sorted by `startDate` ascending.
-
-Sample response:
+Error response:
 
 ```json
 {
-  "success": true,
-  "message": "Events fetched successfully",
-  "data": {
-    "events": []
-  }
+  "success": false,
+  "message": "Duplicate seats already exist for this event"
 }
 ```
 
-### 14. Get Event Details
+## Reservation
 
-`GET /api/events/:eventId`
+### Reserve Seats
 
-Sample response:
+Method: `POST`
 
-```json
-{
-  "success": true,
-  "message": "Event fetched successfully",
-  "data": {
-    "event": {}
-  }
-}
-```
+URL: `/api/bookings/reserve`
 
-### 15. Get Event Seats
-
-`GET /api/events/:eventId/seats`
-
-Sample response:
-
-```json
-{
-  "success": true,
-  "message": "Seats fetched successfully",
-  "data": {
-    "seats": []
-  }
-}
-```
-
-### 16. Admin View Event Seats
-
-`GET /api/admin/events/:eventId/seats`
-
-Headers:
-
-```txt
-Authorization: Bearer <admin_token>
-```
-
-### 17. Reserve Seats
-
-`POST /api/bookings/reserve`
-
-Headers:
-
-```txt
-Authorization: Bearer <token>
-```
+Auth required: User
 
 Request body:
 
 ```json
 {
-  "eventId": "{{eventId}}",
-  "seatIds": ["{{seatId1}}", "{{seatId2}}"]
+  "eventId": "event_id",
+  "seatIds": ["seat_id_1", "seat_id_2"]
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -564,34 +827,41 @@ Sample response:
       "seatIds": ["seat_id_1", "seat_id_2"],
       "status": "ACTIVE",
       "totalAmountInPaise": 100000,
-      "expiresAt": "2026-08-10T18:05:00.000Z"
+      "expiresAt": "2026-07-07T10:15:00.000Z"
     }
   }
 }
 ```
 
-Reservations expire after 5 minutes. Expired reserved seats are released lazily when event seats are viewed.
+Error response:
 
-### 18. Confirm Booking
-
-`POST /api/bookings/confirm`
-
-Headers:
-
-```txt
-Authorization: Bearer <token>
+```json
+{
+  "success": false,
+  "message": "Selected seats are not available"
+}
 ```
+
+## Booking Confirm
+
+### Confirm Booking
+
+Method: `POST`
+
+URL: `/api/bookings/confirm`
+
+Auth required: User
 
 Request body:
 
 ```json
 {
-  "reservationId": "{{reservationId}}",
-  "idempotencyKey": "confirm-booking-{{$timestamp}}"
+  "reservationId": "reservation_id",
+  "idempotencyKey": "confirm-booking-test-key-001"
 }
 ```
 
-Sample response:
+Success response:
 
 ```json
 {
@@ -608,30 +878,35 @@ Sample response:
       "paymentStatus": "PAID",
       "totalAmountInPaise": 100000,
       "walletTransactionId": "wallet_transaction_id",
-      "idempotencyKey": "unique-key",
-      "createdAt": "date"
+      "idempotencyKey": "confirm-booking-test-key-001",
+      "createdAt": "2026-07-07T10:05:00.000Z"
     }
   }
 }
 ```
 
-This API validates the reservation, debits the wallet, creates the wallet transaction, creates the booking, marks seats as `BOOKED`, and marks the reservation as `CONFIRMED` in one MongoDB transaction.
+Error response:
 
-Booking confirmation uses an idempotency record for retry safety. If the same user sends the same `idempotencyKey` to `POST /api/bookings/confirm` after a successful request, the API returns the saved response without debiting the wallet again. If another request with the same key is still processing, the API returns `409`.
-
-### 19. Get My Bookings
-
-`GET /api/bookings/my-bookings`
-
-Headers:
-
-```txt
-Authorization: Bearer <token>
+```json
+{
+  "success": false,
+  "message": "Insufficient wallet balance"
+}
 ```
 
-Returns the current user's bookings latest first. Event and seat basic details are populated.
+## Booking History
 
-Sample response:
+### My Bookings
+
+Method: `GET`
+
+URL: `/api/bookings/my-bookings`
+
+Auth required: User
+
+Request body: None
+
+Success response:
 
 ```json
 {
@@ -641,92 +916,111 @@ Sample response:
     "bookings": [
       {
         "id": "booking_id",
+        "userId": "user_id",
         "event": {
           "id": "event_id",
-          "title": "Coldplay Concert"
+          "title": "Coldplay Concert",
+          "location": "Ahmedabad Stadium",
+          "startDate": "2026-08-10T18:00:00.000Z"
         },
         "seats": [
           {
-            "id": "seat_id",
+            "id": "seat_id_1",
             "seatNumber": "A1",
             "row": "A"
           }
         ],
+        "reservationId": "reservation_id",
         "status": "CONFIRMED",
         "paymentStatus": "PAID",
-        "totalAmountInPaise": 50000,
-        "createdAt": "date"
+        "totalAmountInPaise": 100000,
+        "walletTransactionId": "wallet_transaction_id",
+        "createdAt": "2026-07-07T10:05:00.000Z"
       }
     ]
   }
 }
 ```
 
-### 20. Admin Get Bookings
+Error response:
 
-`GET /api/admin/bookings`
-
-Headers:
-
-```txt
-Authorization: Bearer <adminToken>
+```json
+{
+  "success": false,
+  "message": "Unauthorized"
+}
 ```
 
-Optional query filters:
+## Admin Bookings
 
-```txt
-userId
-eventId
-status
+### List Admin Bookings
+
+Method: `GET`
+
+URL: `/api/admin/bookings?status=CONFIRMED&eventId=event_id&userId=user_id`
+
+Auth required: Admin
+
+Request body: None
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Admin bookings fetched successfully",
+  "data": {
+    "bookings": [
+      {
+        "id": "booking_id",
+        "userId": {
+          "id": "user_id",
+          "name": "Test User",
+          "email": "user@example.com",
+          "role": "USER"
+        },
+        "event": {
+          "id": "event_id",
+          "title": "Coldplay Concert",
+          "location": "Ahmedabad Stadium",
+          "startDate": "2026-08-10T18:00:00.000Z"
+        },
+        "seats": [
+          {
+            "id": "seat_id_1",
+            "seatNumber": "A1",
+            "row": "A"
+          }
+        ],
+        "status": "CONFIRMED",
+        "paymentStatus": "PAID",
+        "totalAmountInPaise": 100000
+      }
+    ]
+  }
+}
 ```
 
-Example:
+Error response:
 
-```txt
-GET /api/admin/bookings?eventId={{eventId}}&status=CONFIRMED
+```json
+{
+  "success": false,
+  "message": "Forbidden: Admin access required"
+}
 ```
 
-Returns all matching bookings latest first.
+### Cancel Booking
 
-### 21. Admin Get Transactions
+Method: `POST`
 
-`GET /api/admin/transactions`
+URL: `/api/admin/bookings/:bookingId/cancel`
 
-Headers:
+Auth required: Admin
 
-```txt
-Authorization: Bearer <adminToken>
-```
+Request body: None
 
-Optional query filters:
-
-```txt
-userId
-type
-referenceType
-```
-
-Example:
-
-```txt
-GET /api/admin/transactions?type=REFUND&referenceType=REFUND
-```
-
-Returns all matching wallet transactions latest first.
-
-### 22. Admin Cancel Booking
-
-`POST /api/admin/bookings/:bookingId/cancel`
-
-Headers:
-
-```txt
-Authorization: Bearer <adminToken>
-```
-
-Cancels a confirmed booking in a MongoDB transaction. It marks the booking `CANCELLED`, marks payment `REFUNDED`, releases booked seats back to `AVAILABLE`, creates a `REFUND` wallet transaction, and adds money back to the user's wallet.
-
-Sample response:
+Success response:
 
 ```json
 {
@@ -739,27 +1033,34 @@ Sample response:
       "paymentStatus": "REFUNDED"
     },
     "refundTransaction": {
-      "id": "transaction_id",
+      "id": "refund_transaction_id",
       "type": "REFUND",
-      "referenceType": "REFUND"
+      "amountInPaise": 100000
     }
   }
 }
 ```
 
-### 23. Admin Refund Booking
+Error response:
 
-`POST /api/admin/bookings/:bookingId/refund`
-
-Headers:
-
-```txt
-Authorization: Bearer <adminToken>
+```json
+{
+  "success": false,
+  "message": "Booking not found"
+}
 ```
 
-Refunds a booking in a MongoDB transaction. It marks booking status `REFUNDED`, marks payment `REFUNDED`, creates a `REFUND` wallet transaction, and adds money back to the user's wallet. Seats are not released by this endpoint.
+### Refund Booking
 
-Sample response:
+Method: `POST`
+
+URL: `/api/admin/bookings/:bookingId/refund`
+
+Auth required: Admin
+
+Request body: None
+
+Success response:
 
 ```json
 {
@@ -772,152 +1073,15 @@ Sample response:
       "paymentStatus": "REFUNDED"
     },
     "refundTransaction": {
-      "id": "transaction_id",
+      "id": "refund_transaction_id",
       "type": "REFUND",
-      "referenceType": "REFUND"
+      "amountInPaise": 100000
     }
   }
 }
 ```
 
-## Error Responses
-
-Validation error:
-
-```json
-{
-  "success": false,
-  "message": "Valid email is required"
-}
-```
-
-Duplicate email:
-
-```json
-{
-  "success": false,
-  "message": "Email already exists"
-}
-```
-
-Invalid login:
-
-```json
-{
-  "success": false,
-  "message": "Invalid credentials"
-}
-```
-
-Missing token:
-
-```json
-{
-  "success": false,
-  "message": "Authorization token is required"
-}
-```
-
-Non-admin admin login:
-
-```json
-{
-  "success": false,
-  "message": "Only admin users can login here"
-}
-```
-
-Invalid wallet amount:
-
-```json
-{
-  "success": false,
-  "message": "amountInPaise must be an integer"
-}
-```
-
-Duplicate idempotency key:
-
-```json
-{
-  "success": false,
-  "message": "Duplicate idempotencyKey"
-}
-```
-
-Duplicate seats:
-
-```json
-{
-  "success": false,
-  "message": "Duplicate seats already exist for this event"
-}
-```
-
-Invalid event date range:
-
-```json
-{
-  "success": false,
-  "message": "endDate must be after startDate"
-}
-```
-
-Seat no longer available:
-
-```json
-{
-  "success": false,
-  "message": "Some seats are no longer available"
-}
-```
-
-Duplicate seat ids:
-
-```json
-{
-  "success": false,
-  "message": "seatIds must not contain duplicate ids"
-}
-```
-
-Insufficient wallet balance:
-
-```json
-{
-  "success": false,
-  "message": "Insufficient wallet balance"
-}
-```
-
-Expired reservation:
-
-```json
-{
-  "success": false,
-  "message": "Reservation expired"
-}
-```
-
-Idempotency request still processing:
-
-```json
-{
-  "success": false,
-  "message": "Request already processing"
-}
-```
-
-Already cancelled booking:
-
-```json
-{
-  "success": false,
-  "message": "Booking already cancelled"
-}
-```
-
-Already refunded booking:
+Error response:
 
 ```json
 {
@@ -926,122 +1090,51 @@ Already refunded booking:
 }
 ```
 
-## Postman Testing Flow
+## Admin Transactions
 
-1. Start backend using `npm start`.
-2. Test `GET /api/health`.
-3. Register user using `POST /api/auth/signup`.
-4. Login user using `POST /api/auth/login`.
-5. Copy token from login response.
-6. Set token in Postman environment variable `{{token}}`.
-7. Test protected route `GET /api/auth/me` using Bearer token.
-8. Try `GET /api/auth/me` without token and confirm `401` error.
-9. Try admin-login with normal `USER` account and confirm `403` error.
+### List Admin Transactions
 
-## Wallet Testing Flow
+Method: `GET`
 
-1. Start backend using `npm start`.
-2. Register user.
-3. Login user.
-4. Save JWT token in Postman environment variable `{{token}}`.
-5. Call `GET /api/wallet/balance`.
-6. Confirm initial balance is `0`.
-7. Call `POST /api/wallet/add-money` with `amountInPaise` `10000`.
-8. Call `GET /api/wallet/balance` again.
-9. Confirm balance is `10000`.
-10. Call `GET /api/wallet/transactions`.
-11. Confirm `CREDIT` transaction exists.
-12. Test invalid amount:
-    - `amountInPaise: 0`
-    - `amountInPaise: -100`
-    - `amountInPaise: 10.5`
-13. Confirm validation errors are returned.
+URL: `/api/admin/transactions?type=CREDIT&referenceType=ADD_MONEY&userId=user_id`
 
-## Event And Seat Testing Flow
+Auth required: Admin
 
-1. Start backend using `npm start`.
-2. Login as admin and save `adminToken`.
-3. Create event using `POST /api/admin/events`.
-4. Save `eventId` in Postman environment.
-5. Bulk create seats using `POST /api/admin/events/{{eventId}}/seats/bulk`.
-6. Check `GET /api/events`.
-7. Check `GET /api/events/{{eventId}}`.
-8. Check `GET /api/events/{{eventId}}/seats`.
-9. Check `GET /api/admin/events/{{eventId}}/seats` using admin token.
-10. Try create event with normal user token and confirm `403`.
-11. Try duplicate bulk seat create and confirm `409`.
-12. Try invalid price like `10.5` and confirm validation error.
-13. Try invalid date where `endDate` is before `startDate` and confirm validation error.
+Request body: None
 
-## Reservation Testing Flow
+Success response:
 
-1. Start backend using `npm start`.
-2. Login as admin.
-3. Create event.
-4. Bulk create seats.
-5. Login as user.
-6. Get event seats.
-7. Copy two available seat ids into Postman variables `seatId1` and `seatId2`.
-8. Call `POST /api/bookings/reserve`.
-9. Confirm reservation status is `ACTIVE`.
-10. Confirm `expiresAt` is 5 minutes ahead.
-11. Call `GET /api/events/{{eventId}}/seats`.
-12. Confirm selected seats are `RESERVED`.
-13. Try reserving same seats again with another user immediately.
-14. Confirm error: `Some seats are no longer available`.
-15. Wait 5 minutes or manually change `reservationExpiresAt` and `expiresAt` in DB to a past time.
-16. Call `GET /api/events/{{eventId}}/seats`.
-17. Confirm expired reserved seats become `AVAILABLE` again.
-18. Reserve same seats again successfully.
+```json
+{
+  "success": true,
+  "message": "Admin transactions fetched successfully",
+  "data": {
+    "transactions": [
+      {
+        "id": "transaction_id",
+        "userId": {
+          "id": "user_id",
+          "name": "Test User",
+          "email": "user@example.com"
+        },
+        "type": "CREDIT",
+        "amountInPaise": 50000,
+        "balanceAfterInPaise": 50000,
+        "description": "Money added to wallet",
+        "referenceType": "ADD_MONEY",
+        "referenceId": "reference_id",
+        "createdAt": "2026-07-07T10:00:00.000Z"
+      }
+    ]
+  }
+}
+```
 
-## Booking Confirm Testing Flow
+Error response:
 
-1. Start backend using `npm start`.
-2. Login as user.
-3. Add money to wallet using `POST /api/wallet/add-money`.
-4. Confirm wallet balance using `GET /api/wallet/balance`.
-5. Get event seats using `GET /api/events/{{eventId}}/seats`.
-6. Reserve seats using `POST /api/bookings/reserve`.
-7. Save `reservationId`.
-8. Confirm booking using `POST /api/bookings/confirm`.
-9. Confirm booking status is `CONFIRMED`.
-10. Confirm `paymentStatus` is `PAID`.
-11. Confirm `walletTransactionId` is returned.
-12. Check `GET /api/wallet/balance`.
-13. Balance should be reduced.
-14. Check `GET /api/wallet/transactions`.
-15. A `DEBIT` transaction should exist with `referenceType` `BOOKING`.
-16. Check `GET /api/events/{{eventId}}/seats`.
-17. Selected seats should be `BOOKED`.
-18. Retry same confirm API with the same `idempotencyKey`.
-19. It should return the same booking and should not debit wallet again.
-20. Try confirm after reservation expiry.
-21. It should reject payment and release seats.
-22. Try confirm with insufficient wallet balance.
-23. It should return insufficient balance and not create booking.
-
-## Booking History And Admin Monitoring Testing Flow
-
-1. Login as user and save `token`.
-2. Login as admin and save `adminToken`.
-3. Create a confirmed booking using the booking confirm flow.
-4. Save the returned `bookingId`.
-5. Call `GET /api/bookings/my-bookings` with the user token.
-6. Confirm the newest booking appears first.
-7. Confirm event and seat details are populated.
-8. Call `GET /api/admin/bookings` with the admin token.
-9. Test filters like `?eventId={{eventId}}`, `?status=CONFIRMED`, or `?userId=<user_id>`.
-10. Call `GET /api/admin/transactions` with the admin token.
-11. Test filters like `?type=REFUND` or `?referenceType=REFUND`.
-12. Call `POST /api/admin/bookings/{{bookingId}}/cancel` with the admin token.
-13. Confirm booking status is `CANCELLED` and payment status is `REFUNDED`.
-14. Confirm seats become `AVAILABLE`.
-15. Confirm wallet balance increases and a `REFUND` transaction is created.
-16. Call the same cancel API again.
-17. Confirm it returns `409` with `Booking already cancelled` or `Booking already refunded`.
-18. Create another confirmed booking for refund testing.
-19. Call `POST /api/admin/bookings/{{bookingId}}/refund` with the admin token.
-20. Confirm booking status is `REFUNDED` and payment status is `REFUNDED`.
-21. Confirm wallet balance increases and a `REFUND` transaction is created.
-22. Call the same refund API again.
-23. Confirm it returns `409` with `Booking already refunded`.
+```json
+{
+  "success": false,
+  "message": "Forbidden: Admin access required"
+}
+```

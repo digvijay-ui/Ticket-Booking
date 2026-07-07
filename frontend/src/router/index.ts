@@ -34,8 +34,8 @@ const router = createRouter({
         { path: '', name: 'home', component: HomeView },
         { path: 'login', name: 'login', component: LoginView },
         { path: 'signup', name: 'signup', component: SignupView },
-        { path: 'events', name: 'events', component: EventListView, meta: { requiresAuth: true } },
-        { path: 'events/:eventId', name: 'event-detail', component: EventDetailView, meta: { requiresAuth: true } },
+        { path: 'events', name: 'events', component: EventListView },
+        { path: 'events/:eventId', name: 'event-detail', component: EventDetailView },
         { path: 'events/:eventId/seats', name: 'seat-selection', component: SeatSelectionView, meta: { requiresAuth: true } },
         { path: 'wallet', name: 'wallet', component: WalletView, meta: { requiresAuth: true } },
         {

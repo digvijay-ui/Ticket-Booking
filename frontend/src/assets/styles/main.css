@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,8 +7,8 @@
 @layer base {
   :root {
     color: #f7f1e3;
-    background: #1b1030;
-    font-family: "Space Grotesk", system-ui, sans-serif;
+    background: #121221;
+    font-family: "Work Sans", system-ui, sans-serif;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -20,10 +20,28 @@
     min-height: 100vh;
     margin: 0;
     background:
-      linear-gradient(90deg, rgba(255, 201, 74, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(242, 204, 143, 0.07) 1px, transparent 1px),
       linear-gradient(rgba(247, 241, 227, 0.04) 1px, transparent 1px),
-      #1b1030;
+      #121221;
     background-size: 46px 46px;
+    font-family: "Work Sans", system-ui, sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: "Anton", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .font-mono,
+  .label-caps,
+  .ticket-meta,
+  .ticket-id {
+    font-family: "Space Mono", monospace;
+    letter-spacing: 0.08em;
   }
 
   a {
@@ -36,6 +54,13 @@
   select,
   textarea {
     font: inherit;
+  }
+
+  input,
+  select,
+  textarea {
+    font-family: "Work Sans", system-ui, sans-serif;
+    letter-spacing: 0;
   }
 }
 

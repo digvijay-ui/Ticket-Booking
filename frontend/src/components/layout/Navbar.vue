@@ -57,6 +57,6 @@ const visibleLinks = computed(() => (auth.isAuthenticated ? protectedLinks : pub
 
 function logout() {
   auth.logout();
-  router.push('/login');
+  router.push('/');
 }
 </script>

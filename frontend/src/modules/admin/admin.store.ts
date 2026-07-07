@@ -4,13 +4,17 @@ import type { Booking, EventItem, Seat, WalletTransaction } from '@/services/api
 import { getApiErrorMessage } from '@/utils/apiError';
 import {
   bulkCreateSeatsApi,
+  cancelBookingApi,
   cancelEventApi,
   createEventApi,
   getAdminBookingsApi,
   getAdminEventSeatsApi,
   getAdminEventsApi,
   getAdminTransactionsApi,
+  refundBookingApi,
   updateEventApi,
+  type AdminBookingFilters,
+  type AdminTransactionFilters,
   type BulkCreateSeatsPayload,
   type EventFormPayload,
 } from './admin.api';
@@ -29,6 +33,11 @@ interface AdminState {
   seatsLoading: boolean;
   seatsError: string;
   bulkCreating: boolean;
+  bookingsLoading: boolean;
+  bookingsError: string;
+  transactionsLoading: boolean;
+  transactionsError: string;
+  actionLoadingId: string;
 }
 
 function sumTransactions(transactions: WalletTransaction[], type: WalletTransaction['type']) {
@@ -50,6 +59,11 @@ export const useAdminStore = defineStore('admin', {
     seatsLoading: false,
     seatsError: '',
     bulkCreating: false,
+    bookingsLoading: false,
+    bookingsError: '',
+    transactionsLoading: false,
+    transactionsError: '',
+    actionLoadingId: '',
   }),
   getters: {
     totalEvents: (state) => state.events.length,
@@ -205,6 +219,79 @@ export const useAdminStore = defineStore('admin', {
         throw error;
       } finally {
         this.bulkCreating = false;
+      }
+    },
+    async fetchBookings(filters: AdminBookingFilters = {}) {
+      this.bookingsLoading = true;
+      this.bookingsError = '';
+
+      try {
+        const response = await getAdminBookingsApi(filters);
+        const bookings = response.data.data.bookings;
+        this.bookings = filters.paymentStatus ? bookings.filter((booking) => booking.paymentStatus === filters.paymentStatus) : bookings;
+        return this.bookings;
+      } catch (error) {
+        this.bookings = [];
+        this.bookingsError = getApiErrorMessage(error);
+        throw error;
+      } finally {
+        this.bookingsLoading = false;
+      }
+    },
+    async cancelBooking(bookingId: string, filters: AdminBookingFilters = {}) {
+      this.actionLoadingId = bookingId;
+      this.bookingsError = '';
+
+      try {
+        const response = await cancelBookingApi(bookingId);
+        await this.fetchBookings(filters);
+        return response;
+      } catch (error) {
+        this.bookingsError = getApiErrorMessage(error);
+        throw error;
+      } finally {
+        this.actionLoadingId = '';
+      }
+    },
+    async refundBooking(bookingId: string, filters: AdminBookingFilters = {}) {
+      this.actionLoadingId = bookingId;
+      this.bookingsError = '';
+
+      try {
+        const response = await refundBookingApi(bookingId);
+        await this.fetchBookings(filters);
+        return response;
+      } catch (error) {
+        this.bookingsError = getApiErrorMessage(error);
+        throw error;
+      } finally {
+        this.actionLoadingId = '';
+      }
+    },
+    async fetchTransactions(filters: AdminTransactionFilters = {}) {
+      this.transactionsLoading = true;
+      this.transactionsError = '';
+
+      try {
+        const response = await getAdminTransactionsApi(filters);
+        let transactions = response.data.data.transactions;
+
+        if (filters.type) {
+          transactions = transactions.filter((transaction) => transaction.type === filters.type);
+        }
+
+        if (filters.referenceType) {
+          transactions = transactions.filter((transaction) => transaction.referenceType === filters.referenceType);
+        }
+
+        this.transactions = transactions;
+        return this.transactions;
+      } catch (error) {
+        this.transactions = [];
+        this.transactionsError = getApiErrorMessage(error);
+        throw error;
+      } finally {
+        this.transactionsLoading = false;
       }
     },
   },

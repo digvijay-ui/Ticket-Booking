@@ -1,49 +1,51 @@
 <template>
-  <div class="space-y-8 text-white">
-    <section class="overflow-hidden rounded-3xl bg-[#141414] shadow-2xl">
-      <div class="relative min-h-[520px] p-6 sm:p-8 lg:p-10">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_78%_22%,rgba(255,255,255,0.18),transparent_23%),linear-gradient(135deg,#111827,#18181b_42%,#be123c)]" />
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
-        <div class="relative z-10 flex min-h-[440px] flex-col justify-between">
-          <div class="flex flex-wrap gap-2">
-            <span v-for="item in categories" :key="item" class="rounded-full bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
-              {{ item }}
-            </span>
-          </div>
+  <div class="space-y-8">
+    <section class="relative overflow-hidden rounded-md border-2 border-ticketGold/40 bg-deepPlum shadow-marquee">
+      <div class="absolute inset-y-0 left-0 w-2 bg-marqueeRed" aria-hidden="true" />
+      <div class="absolute right-6 top-6 hidden w-40 opacity-80 sm:block">
+        <BarcodeStrip />
+      </div>
 
-          <div class="max-w-3xl">
-            <p class="text-sm font-bold uppercase text-white/60">Events · Seats · Wallet</p>
-            <h1 class="mt-3 text-5xl font-black leading-none sm:text-7xl">Book your next live plan.</h1>
-            <p class="mt-4 max-w-2xl text-lg text-white/75">
-              Events, wallet, reservations, and bookings in one fast event-discovery experience.
-            </p>
-            <RouterLink to="/events" class="mt-7 inline-flex">
-              <AppButton icon="mdi:magnify">Explore Events</AppButton>
-            </RouterLink>
-          </div>
+      <div class="relative px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
+        <p class="font-mono text-xs font-bold uppercase text-ticketGold">Box Office Noir</p>
+        <h1 class="mt-3 max-w-4xl font-display text-6xl leading-none text-paperCream sm:text-7xl lg:text-8xl">
+          BOOK YOUR TICKET
+        </h1> 
+        <p class="mt-5 max-w-2xl text-base text-paperCream/75 sm:text-lg">
+          Discover events, add wallet money, reserve seats, and confirm tickets.
+        </p>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <RouterLink to="/login">
+            <AppButton icon="mdi:login">Login</AppButton>
+          </RouterLink>
+          <RouterLink to="/signup">
+            <AppButton variant="secondary" icon="mdi:account-plus">Signup</AppButton>
+          </RouterLink>
+          <RouterLink to="/events">
+            <AppButton variant="ghost" icon="mdi:ticket-confirmation">Explore Events</AppButton>
+          </RouterLink>
         </div>
       </div>
     </section>
 
-    <section class="grid gap-4 sm:grid-cols-3">
-      <div v-for="feature in features" :key="feature.title" class="rounded-2xl bg-white/[0.04] p-5">
-        <Icon :icon="feature.icon" class="h-8 w-8 text-white/55" aria-hidden="true" />
-        <h2 class="mt-4 text-xl font-black">{{ feature.title }}</h2>
-        <p class="mt-2 text-sm text-white/60">{{ feature.copy }}</p>
-      </div>
+    <section class="grid gap-4 md:grid-cols-3">
+      <article v-for="item in steps" :key="item.title" class="rounded-md border-2 border-stubCharcoal bg-paperCream p-5 text-stubCharcoal shadow-ticket">
+        <p class="font-mono text-[10px] font-bold uppercase text-marqueeRed">{{ item.label }}</p>
+        <h2 class="mt-2 font-display text-3xl leading-none">{{ item.title }}</h2>
+        <p class="mt-3 text-sm font-medium text-stubCharcoal/70">{{ item.copy }}</p>
+      </article>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
-
 import AppButton from '@/components/common/AppButton.vue';
+import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
 
-const categories = ['For you', 'Music', 'Comedy', 'Nightlife', 'Theatre'];
-const features = [
-  { title: 'Discover', copy: 'Browse published events from the backend feed.', icon: 'mdi:calendar-star' },
-  { title: 'Reserve', copy: 'Select live seat inventory and create reservations.', icon: 'mdi:seat' },
-  { title: 'Pay', copy: 'Use wallet balance to confirm your booking.', icon: 'mdi:wallet' },
+const steps = [
+  { label: 'Step 01', title: 'Browse Events', copy: 'Open published events before logging in and choose the show you want.' },
+  { label: 'Step 02', title: 'Reserve Seats', copy: 'Login when you are ready to select seats and create a reservation.' },
+  { label: 'Step 03', title: 'Pay Wallet', copy: 'Add wallet money, confirm the booking, and view your tickets.' },
 ];
 </script>

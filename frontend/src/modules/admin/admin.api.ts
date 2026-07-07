@@ -25,6 +25,19 @@ export interface CreateAdminPayload {
   password: string;
 }
 
+export interface AdminBookingFilters {
+  status?: string;
+  paymentStatus?: string;
+  eventId?: string;
+  userId?: string;
+}
+
+export interface AdminTransactionFilters {
+  type?: string;
+  referenceType?: string;
+  userId?: string;
+}
+
 export function createAdminUser(payload: CreateAdminPayload) {
   return api.post<ApiResponse<{ user: User }>>('/api/auth/admin/users/admins', payload, { headers: adminHeaders });
 }
@@ -61,14 +74,32 @@ export function bulkCreateSeatsApi(eventId: string, payload: BulkCreateSeatsPayl
   return api.post<ApiResponse<{ createdCount: number }>>(`/api/admin/events/${eventId}/seats/bulk`, payload, { headers: adminHeaders });
 }
 
-export function getAdminBookings() {
-  return api.get<ApiResponse<{ bookings: Booking[] }>>('/api/admin/bookings', { headers: adminHeaders });
+function cleanParams<T extends object>(filters: T) {
+  return Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== undefined && value !== ''));
+}
+
+export function getAdminBookings(filters: AdminBookingFilters = {}) {
+  return api.get<ApiResponse<{ bookings: Booking[] }>>('/api/admin/bookings', {
+    headers: adminHeaders,
+    params: cleanParams(filters),
+  });
 }
 
 export const getAdminBookingsApi = getAdminBookings;
 
-export function getAdminTransactions() {
-  return api.get<ApiResponse<{ transactions: WalletTransaction[] }>>('/api/admin/transactions', { headers: adminHeaders });
+export function cancelBookingApi(bookingId: string) {
+  return api.post<ApiResponse<{ booking: Booking }>>(`/api/admin/bookings/${bookingId}/cancel`, undefined, { headers: adminHeaders });
+}
+
+export function refundBookingApi(bookingId: string) {
+  return api.post<ApiResponse<{ booking: Booking }>>(`/api/admin/bookings/${bookingId}/refund`, undefined, { headers: adminHeaders });
+}
+
+export function getAdminTransactions(filters: AdminTransactionFilters = {}) {
+  return api.get<ApiResponse<{ transactions: WalletTransaction[] }>>('/api/admin/transactions', {
+    headers: adminHeaders,
+    params: cleanParams(filters),
+  });
 }
 
 export const getAdminTransactionsApi = getAdminTransactions;

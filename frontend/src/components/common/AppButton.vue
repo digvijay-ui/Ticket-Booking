@@ -1,7 +1,7 @@
 <template>
   <button
     :type="type"
-    class="focus-ticket inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-2 px-4 py-2 text-sm font-bold uppercase tracking-normal transition duration-150 disabled:cursor-not-allowed disabled:opacity-60"
+    class="focus-ticket inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-2 px-4 py-2 font-mono text-sm font-bold uppercase transition duration-150 disabled:cursor-not-allowed disabled:opacity-60"
     :class="variantClass"
     :disabled="disabled || loading"
   >

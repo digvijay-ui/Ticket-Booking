@@ -1,933 +1,461 @@
 {
   "info": {
     "name": "Ticket Booking Backend API",
+    "description": "Final Postman collection for the ticket booking backend.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Health Check",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/health",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "health"]
-        }
-      },
-      "response": [
+      "name": "Health",
+      "item": [
         {
-          "name": "Success",
-          "originalRequest": {
+          "name": "Health Check",
+          "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "health"]
-            }
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Backend running\"\n}"
+            "url": "{{baseUrl}}/api/health"
+          }
         }
       ]
     },
     {
-      "name": "User Signup",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/auth/signup",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "auth", "signup"]
-        }
-      },
-      "response": [
+      "name": "Auth",
+      "item": [
         {
-          "name": "Success",
-          "originalRequest": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "User Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.token) pm.environment.set('token', json.data.token);"
+                ]
               }
-            ],
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/signup",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "signup"]
-            }
-          },
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"User registered successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user_id\",\n      \"name\": \"Test User\",\n      \"email\": \"user@example.com\",\n      \"role\": \"USER\",\n      \"walletBalanceInPaise\": 0\n    },\n    \"token\": \"jwt_token\"\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "User Login",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "const jsonData = pm.response.json();",
-              "if (jsonData?.data?.token) {",
-              "  pm.environment.set(\"token\", jsonData.data.token);",
-              "}"
-            ]
+            "url": "{{baseUrl}}/api/auth/signup"
           }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
         },
-        "url": {
-          "raw": "{{baseUrl}}/api/auth/login",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "auth", "login"]
-        }
-      },
-      "response": [
         {
-          "name": "Success",
-          "originalRequest": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.token) pm.environment.set('token', json.data.token);"
+                ]
               }
-            ],
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
-            }
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user_id\",\n      \"name\": \"Test User\",\n      \"email\": \"user@example.com\",\n      \"role\": \"USER\",\n      \"walletBalanceInPaise\": 0\n    },\n    \"token\": \"jwt_token\"\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Admin Login",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "const jsonData = pm.response.json();",
-              "if (jsonData?.data?.token) {",
-              "  pm.environment.set(\"adminToken\", jsonData.data.token);",
-              "}"
-            ]
+            "url": "{{baseUrl}}/api/auth/login"
           }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
         },
-        "url": {
-          "raw": "{{baseUrl}}/api/auth/admin-login",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "auth", "admin-login"]
-        }
-      },
-      "response": [
         {
-          "name": "Success",
-          "originalRequest": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "Admin Signup First Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.token) pm.environment.set('adminToken', json.data.token);"
+                ]
               }
-            ],
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/admin-signup"
+          }
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.token) pm.environment.set('adminToken', json.data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/admin-login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "admin-login"]
-            }
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Admin login successful\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"admin_user_id\",\n      \"name\": \"Admin User\",\n      \"email\": \"admin@example.com\",\n      \"role\": \"ADMIN\",\n      \"walletBalanceInPaise\": 0\n    },\n    \"token\": \"jwt_token\"\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Get Current User",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/auth/me",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "auth", "me"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "originalRequest": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/auth/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "me"]
-            }
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Current user fetched successfully\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"user_id\",\n      \"name\": \"Test User\",\n      \"email\": \"user@example.com\",\n      \"role\": \"USER\",\n      \"walletBalanceInPaise\": 0\n    }\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Add Money",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
+            "url": "{{baseUrl}}/api/auth/admin-login"
           }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"amountInPaise\": 10000\n}"
         },
-        "url": {
-          "raw": "{{baseUrl}}/api/wallet/add-money",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "wallet", "add-money"]
-        }
-      },
-      "response": [
         {
-          "name": "Success",
-          "originalRequest": {
+          "name": "Create Admin User",
+          "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"amountInPaise\": 10000\n}"
+              "raw": "{\n  \"name\": \"Second Admin\",\n  \"email\": \"second-admin@example.com\",\n  \"password\": \"password123\"\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/wallet/add-money",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "wallet", "add-money"]
-            }
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Money added to wallet successfully\",\n  \"data\": {\n    \"walletBalanceInPaise\": 10000,\n    \"transaction\": {\n      \"id\": \"transaction_id\",\n      \"type\": \"CREDIT\",\n      \"amountInPaise\": 10000,\n      \"balanceAfterInPaise\": 10000,\n      \"description\": \"Money added to wallet\",\n      \"referenceType\": \"ADD_MONEY\",\n      \"createdAt\": \"date\"\n    }\n  }\n}"
+            "url": "{{baseUrl}}/api/auth/admin/users/admins"
+          }
+        },
+        {
+          "name": "Current User",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
         }
       ]
     },
     {
-      "name": "Get Wallet Balance",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/wallet/balance",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "wallet", "balance"]
-        }
-      },
-      "response": [
+      "name": "Wallet",
+      "item": [
         {
-          "name": "Success",
-          "originalRequest": {
+          "name": "Add Money",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amountInPaise\": 50000\n}"
+            },
+            "url": "{{baseUrl}}/api/wallet/add-money"
+          }
+        },
+        {
+          "name": "Wallet Balance",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/wallet/balance"
+          }
+        },
+        {
+          "name": "Wallet Transactions",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/wallet/transactions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "List Events",
+          "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/wallet/balance",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "wallet", "balance"]
-            }
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Wallet balance fetched successfully\",\n  \"data\": {\n    \"walletBalanceInPaise\": 10000\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Get Wallet Transactions",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
-            }
-          ]
+            "url": "{{baseUrl}}/api/events"
+          }
         },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/wallet/transactions",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "wallet", "transactions"]
-        }
-      },
-      "response": [
         {
-          "name": "Success",
-          "originalRequest": {
+          "name": "Get Event",
+          "request": {
             "method": "GET",
             "header": [],
+            "url": "{{baseUrl}}/api/events/{{eventId}}"
+          }
+        },
+        {
+          "name": "Get Event Seats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const seats = json?.data?.seats || [];",
+                  "if (seats[0]?.id) pm.environment.set('seatId1', seats[0].id);",
+                  "if (seats[1]?.id) pm.environment.set('seatId2', seats[1].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/events/{{eventId}}/seats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Events",
+      "item": [
+        {
+          "name": "Create Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.event?.id) pm.environment.set('eventId', json.data.event.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Coldplay Concert\",\n  \"description\": \"Live music concert event\",\n  \"location\": \"Ahmedabad Stadium\",\n  \"startDate\": \"2026-08-10T18:00:00.000Z\",\n  \"endDate\": \"2026-08-10T22:00:00.000Z\",\n  \"seatPriceInPaise\": 50000,\n  \"status\": \"PUBLISHED\"\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/events"
+          }
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PATCH",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Coldplay Concert Updated\",\n  \"status\": \"PUBLISHED\",\n  \"seatPriceInPaise\": 75000\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/events/{{eventId}}"
+          }
+        },
+        {
+          "name": "Cancel Event",
+          "request": {
+            "method": "DELETE",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/events/{{eventId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Seats",
+      "item": [
+        {
+          "name": "Bulk Create Seats",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rows\": [\"A\", \"B\", \"C\"],\n  \"seatsPerRow\": 10,\n  \"priceInPaise\": 50000\n}"
+            },
+            "url": "{{baseUrl}}/api/admin/events/{{eventId}}/seats/bulk"
+          }
+        },
+        {
+          "name": "Get Admin Event Seats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const seats = json?.data?.seats || [];",
+                  "if (seats[0]?.id) pm.environment.set('seatId1', seats[0].id);",
+                  "if (seats[1]?.id) pm.environment.set('seatId2', seats[1].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/events/{{eventId}}/seats"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservation",
+      "item": [
+        {
+          "name": "Reserve Seats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.reservation?.id) pm.environment.set('reservationId', json.data.reservation.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"seatIds\": [\"{{seatId1}}\", \"{{seatId2}}\"]\n}"
+            },
+            "url": "{{baseUrl}}/api/bookings/reserve"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Booking",
+      "item": [
+        {
+          "name": "Confirm Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json?.data?.booking?.id) pm.environment.set('bookingId', json.data.booking.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reservationId\": \"{{reservationId}}\",\n  \"idempotencyKey\": \"{{idempotencyKey}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/bookings/confirm"
+          }
+        },
+        {
+          "name": "My Bookings",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/bookings/my-bookings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Bookings",
+      "item": [
+        {
+          "name": "List Admin Bookings",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/wallet/transactions",
+              "raw": "{{baseUrl}}/api/admin/bookings?status=CONFIRMED&eventId={{eventId}}",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "wallet", "transactions"]
+              "path": ["api", "admin", "bookings"],
+              "query": [
+                { "key": "status", "value": "CONFIRMED" },
+                { "key": "eventId", "value": "{{eventId}}" },
+                { "key": "userId", "value": "", "disabled": true }
+              ]
             }
-          },
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Wallet transactions fetched successfully\",\n  \"data\": {\n    \"transactions\": [\n      {\n        \"id\": \"transaction_id\",\n        \"type\": \"CREDIT\",\n        \"amountInPaise\": 10000,\n        \"balanceAfterInPaise\": 10000,\n        \"description\": \"Money added to wallet\",\n        \"referenceType\": \"ADD_MONEY\",\n        \"createdAt\": \"date\"\n      }\n    ]\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Create Event",
-      "event": [
+          }
+        },
         {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "const jsonData = pm.response.json();",
-              "if (jsonData?.data?.event?.id) {",
-              "  pm.environment.set(\"eventId\", jsonData.data.event.id);",
-              "}"
-            ]
+          "name": "Cancel Booking",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/bookings/{{bookingId}}/cancel"
+          }
+        },
+        {
+          "name": "Refund Booking",
+          "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/bookings/{{bookingId}}/refund"
           }
         }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
+      ]
+    },
+    {
+      "name": "Admin Transactions",
+      "item": [
+        {
+          "name": "List Admin Transactions",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/transactions?type=CREDIT&referenceType=ADD_MONEY",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "transactions"],
+              "query": [
+                { "key": "type", "value": "CREDIT" },
+                { "key": "referenceType", "value": "ADD_MONEY" },
+                { "key": "userId", "value": "", "disabled": true }
+              ]
             }
-          ]
-        },
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
           }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"title\": \"Coldplay Concert\",\n  \"description\": \"Live music concert event\",\n  \"location\": \"Ahmedabad Stadium\",\n  \"startDate\": \"2026-08-10T18:00:00.000Z\",\n  \"endDate\": \"2026-08-10T22:00:00.000Z\",\n  \"seatPriceInPaise\": 50000,\n  \"status\": \"PUBLISHED\"\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/events",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "events"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Event created successfully\",\n  \"data\": {\n    \"event\": {\n      \"id\": \"event_id\",\n      \"title\": \"Coldplay Concert\",\n      \"description\": \"Live music concert event\",\n      \"location\": \"Ahmedabad Stadium\",\n      \"status\": \"PUBLISHED\",\n      \"seatPriceInPaise\": 50000,\n      \"totalSeats\": 0,\n      \"availableSeats\": 0,\n      \"reservedSeats\": 0,\n      \"bookedSeats\": 0\n    }\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Update Event",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "PATCH",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"location\": \"Ahmedabad Stadium Gate 2\",\n  \"status\": \"PUBLISHED\"\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "events", "{{eventId}}"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Cancel Event",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "events", "{{eventId}}"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Bulk Create Seats",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"rows\": [\"A\", \"B\", \"C\"],\n  \"seatsPerRow\": 10,\n  \"priceInPaise\": 50000\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}/seats/bulk",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "events", "{{eventId}}", "seats", "bulk"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Seats created successfully\",\n  \"data\": {\n    \"createdCount\": 30,\n    \"eventSeatCounts\": {\n      \"totalSeats\": 30,\n      \"availableSeats\": 30,\n      \"reservedSeats\": 0,\n      \"bookedSeats\": 0\n    }\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Admin View Event Seats",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/events/{{eventId}}/seats",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "events", "{{eventId}}", "seats"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "List Events",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/events",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "events"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Events fetched successfully\",\n  \"data\": {\n    \"events\": []\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Get Event Details",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/events/{{eventId}}",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "events", "{{eventId}}"]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "Get Event Seats",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "const jsonData = pm.response.json();",
-              "const seats = jsonData?.data?.seats || [];",
-              "if (seats[0]?.id) {",
-              "  pm.environment.set(\"seatId1\", seats[0].id);",
-              "}",
-              "if (seats[1]?.id) {",
-              "  pm.environment.set(\"seatId2\", seats[1].id);",
-              "}"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/events/{{eventId}}/seats",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "events", "{{eventId}}", "seats"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Seats fetched successfully\",\n  \"data\": {\n    \"seats\": []\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Reserve Seats",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "const jsonData = pm.response.json();",
-              "if (jsonData?.data?.reservation?.id) {",
-              "  pm.environment.set(\"reservationId\", jsonData.data.reservation.id);",
-              "}"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"seatIds\": [\"{{seatId1}}\", \"{{seatId2}}\"]\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/bookings/reserve",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "bookings", "reserve"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "Created",
-          "code": 201,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Seats reserved successfully\",\n  \"data\": {\n    \"reservation\": {\n      \"id\": \"reservation_id\",\n      \"eventId\": \"event_id\",\n      \"seatIds\": [\"seat_id_1\", \"seat_id_2\"],\n      \"status\": \"ACTIVE\",\n      \"totalAmountInPaise\": 100000,\n      \"expiresAt\": \"2026-08-10T18:05:00.000Z\"\n    }\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Confirm Booking",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "const jsonData = pm.response.json();",
-              "if (jsonData?.data?.booking?.id) {",
-              "  pm.environment.set(\"bookingId\", jsonData.data.booking.id);",
-              "}",
-              "if (jsonData?.data?.booking?.idempotencyKey) {",
-              "  pm.environment.set(\"idempotencyKey\", jsonData.data.booking.idempotencyKey);",
-              "}"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"reservationId\": \"{{reservationId}}\",\n  \"idempotencyKey\": \"confirm-booking-{{$timestamp}}\"\n}"
-        },
-        "url": {
-          "raw": "{{baseUrl}}/api/bookings/confirm",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "bookings", "confirm"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Booking confirmed successfully\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"booking_id\",\n      \"userId\": \"user_id\",\n      \"eventId\": \"event_id\",\n      \"seatIds\": [\"seat_id_1\", \"seat_id_2\"],\n      \"reservationId\": \"reservation_id\",\n      \"status\": \"CONFIRMED\",\n      \"paymentStatus\": \"PAID\",\n      \"totalAmountInPaise\": 100000,\n      \"walletTransactionId\": \"wallet_transaction_id\",\n      \"idempotencyKey\": \"unique-key\",\n      \"createdAt\": \"date\"\n    }\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Get My Bookings",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{token}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/bookings/my-bookings",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "bookings", "my-bookings"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Bookings fetched successfully\",\n  \"data\": {\n    \"bookings\": [\n      {\n        \"id\": \"booking_id\",\n        \"event\": {\n          \"id\": \"event_id\",\n          \"title\": \"Concert Night\"\n        },\n        \"seats\": [\n          {\n            \"id\": \"seat_id\",\n            \"seatNumber\": \"A1\",\n            \"row\": \"A\"\n          }\n        ],\n        \"status\": \"CONFIRMED\",\n        \"paymentStatus\": \"PAID\",\n        \"totalAmountInPaise\": 50000,\n        \"createdAt\": \"date\"\n      }\n    ]\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Admin Get Bookings",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/bookings",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "bookings"],
-          "query": [
-            {
-              "key": "userId",
-              "value": "",
-              "disabled": true
-            },
-            {
-              "key": "eventId",
-              "value": "{{eventId}}",
-              "disabled": true
-            },
-            {
-              "key": "status",
-              "value": "CONFIRMED",
-              "disabled": true
-            }
-          ]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Admin bookings fetched successfully\",\n  \"data\": {\n    \"bookings\": []\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Admin Get Transactions",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/transactions",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "transactions"],
-          "query": [
-            {
-              "key": "userId",
-              "value": "",
-              "disabled": true
-            },
-            {
-              "key": "type",
-              "value": "REFUND",
-              "disabled": true
-            },
-            {
-              "key": "referenceType",
-              "value": "REFUND",
-              "disabled": true
-            }
-          ]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Admin transactions fetched successfully\",\n  \"data\": {\n    \"transactions\": []\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Admin Cancel Booking",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/bookings/{{bookingId}}/cancel",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "bookings", "{{bookingId}}", "cancel"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Booking cancelled successfully\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"booking_id\",\n      \"status\": \"CANCELLED\",\n      \"paymentStatus\": \"REFUNDED\"\n    },\n    \"refundTransaction\": {\n      \"id\": \"transaction_id\",\n      \"type\": \"REFUND\",\n      \"referenceType\": \"REFUND\"\n    }\n  }\n}"
-        }
-      ]
-    },
-    {
-      "name": "Admin Refund Booking",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "{{adminToken}}",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{baseUrl}}/api/admin/bookings/{{bookingId}}/refund",
-          "host": ["{{baseUrl}}"],
-          "path": ["api", "admin", "bookings", "{{bookingId}}", "refund"]
-        }
-      },
-      "response": [
-        {
-          "name": "Success",
-          "status": "OK",
-          "code": 200,
-          "_postman_previewlanguage": "json",
-          "body": "{\n  \"success\": true,\n  \"message\": \"Booking refunded successfully\",\n  \"data\": {\n    \"booking\": {\n      \"id\": \"booking_id\",\n      \"status\": \"REFUNDED\",\n      \"paymentStatus\": \"REFUNDED\"\n    },\n    \"refundTransaction\": {\n      \"id\": \"transaction_id\",\n      \"type\": \"REFUND\",\n      \"referenceType\": \"REFUND\"\n    }\n  }\n}"
         }
       ]
     }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "eventId", "value": "" },
+    { "key": "seatId1", "value": "" },
+    { "key": "seatId2", "value": "" },
+    { "key": "reservationId", "value": "" },
+    { "key": "bookingId", "value": "" },
+    { "key": "idempotencyKey", "value": "confirm-booking-test-key-001" }
   ]
 }

@@ -4,18 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        inkNight: '#1B1030',
-        marqueeRed: '#E63946',
-        ticketGold: '#FFC94A',
-        paperCream: '#F7F1E3',
+        inkNight: '#121221',
+        marqueeRed: '#E07A5F',
+        ticketGold: '#F2CC8F',
+        paperCream: '#e6e3d0',
         electricTeal: '#2EC4B6',
-        deepPlum: '#4A1942',
+        deepPlum: '#1e1e2e',
         stubCharcoal: '#2B2130',
       },
       fontFamily: {
-        display: ['"Bebas Neue"', '"Anton"', 'sans-serif'],
-        body: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
-        mono: ['"IBM Plex Mono"', 'monospace'],
+        display: ['"Anton"', 'sans-serif'],
+        body: ['"Work Sans"', 'system-ui', 'sans-serif'],
+        mono: ['"Space Mono"', 'monospace'],
       },
       boxShadow: {
         marquee: '0 0 0 2px #FFC94A, 0 0 34px rgba(230, 57, 70, 0.28)',
