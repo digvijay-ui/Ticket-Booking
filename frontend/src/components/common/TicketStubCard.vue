@@ -55,8 +55,8 @@ const props = withDefaults(
 const statusVariant = computed(() => {
   const normalized = props.status.toLowerCase();
 
-  if (['available', 'reserved', 'booked', 'paid', 'refunded', 'cancelled', 'draft', 'published'].includes(normalized)) {
-    return normalized as 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published';
+  if (['available', 'reserved', 'booked', 'paid', 'refunded', 'cancelled', 'draft', 'published', 'completed'].includes(normalized)) {
+    return normalized as 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published' | 'completed';
   }
 
   return 'draft';

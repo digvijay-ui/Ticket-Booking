@@ -16,7 +16,7 @@ export interface EventFormPayload {
 export interface BulkCreateSeatsPayload {
   rows: string[];
   seatsPerRow: number;
-  priceInPaise?: number;
+  priceInPaise: number;
 }
 
 export interface CreateAdminPayload {
@@ -33,26 +33,42 @@ export function createAdminEvent(payload: EventFormPayload) {
   return api.post<ApiResponse<{ event: EventItem }>>('/api/admin/events', payload, { headers: adminHeaders });
 }
 
-export function bulkCreateAdminSeats(eventId: string, payload: BulkCreateSeatsPayload) {
-  return api.post<ApiResponse<{ createdCount: number }>>(`/api/admin/events/${eventId}/seats/bulk`, payload, { headers: adminHeaders });
-}
+export const createEventApi = createAdminEvent;
 
 export function updateAdminEvent(eventId: string, payload: Partial<EventFormPayload>) {
   return api.patch<ApiResponse<{ event: EventItem }>>(`/api/admin/events/${eventId}`, payload, { headers: adminHeaders });
+}
+
+export const updateEventApi = updateAdminEvent;
+
+export function cancelEventApi(eventId: string) {
+  return api.delete<ApiResponse<{ event: EventItem }>>(`/api/admin/events/${eventId}`, { headers: adminHeaders });
 }
 
 export function getAdminEvents() {
   return api.get<ApiResponse<{ events: EventItem[] }>>('/api/events', { headers: adminHeaders });
 }
 
+export const getAdminEventsApi = getAdminEvents;
+
 export function getAdminEventSeats(eventId: string) {
   return api.get<ApiResponse<{ seats: Seat[] }>>(`/api/admin/events/${eventId}/seats`, { headers: adminHeaders });
+}
+
+export const getAdminEventSeatsApi = getAdminEventSeats;
+
+export function bulkCreateSeatsApi(eventId: string, payload: BulkCreateSeatsPayload) {
+  return api.post<ApiResponse<{ createdCount: number }>>(`/api/admin/events/${eventId}/seats/bulk`, payload, { headers: adminHeaders });
 }
 
 export function getAdminBookings() {
   return api.get<ApiResponse<{ bookings: Booking[] }>>('/api/admin/bookings', { headers: adminHeaders });
 }
 
+export const getAdminBookingsApi = getAdminBookings;
+
 export function getAdminTransactions() {
   return api.get<ApiResponse<{ transactions: WalletTransaction[] }>>('/api/admin/transactions', { headers: adminHeaders });
 }
+
+export const getAdminTransactionsApi = getAdminTransactions;

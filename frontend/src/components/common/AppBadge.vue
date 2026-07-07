@@ -20,7 +20,8 @@ type BadgeVariant =
   | 'refunded'
   | 'cancelled'
   | 'draft'
-  | 'published';
+  | 'published'
+  | 'completed';
 
 const props = withDefaults(
   defineProps<{
@@ -43,6 +44,7 @@ const variantClass = computed(() => {
     cancelled: 'border-marqueeRed bg-marqueeRed text-paperCream',
     draft: 'border-stubCharcoal/40 bg-paperCream text-stubCharcoal',
     published: 'border-ticketGold bg-deepPlum text-ticketGold',
+    completed: 'border-electricTeal bg-electricTeal/20 text-inkNight',
   };
 
   return classes[props.variant];
@@ -58,6 +60,7 @@ const iconName = computed(() => {
     cancelled: 'mdi:close-octagon',
     draft: 'mdi:pencil-box-outline',
     published: 'mdi:bullhorn-variant',
+    completed: 'mdi:check-circle-outline',
   };
 
   return icons[props.variant];
