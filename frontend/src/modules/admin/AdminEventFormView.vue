@@ -14,6 +14,22 @@
         <AppInput v-model="startDate" label="Start date" type="datetime-local" :error="errors.startDate" />
         <AppInput v-model="endDate" label="End date" type="datetime-local" :error="errors.endDate" />
       </div>
+
+      <div v-if="!isEdit" class="mt-5 rounded-sm border-2 border-ticketGold/40 bg-inkNight/45 p-4">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p class="font-mono text-xs font-semibold uppercase text-ticketGold">Seat layout</p>
+            <p class="text-sm text-paperCream/65">Rows use letters. Example: A,B,C with 10 seats creates A1-A10, B1-B10, C1-C10.</p>
+          </div>
+          <p class="font-mono text-xs font-bold uppercase text-electricTeal">{{ seatPreview }}</p>
+        </div>
+
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
+          <AppInput v-model="rows" label="Rows" placeholder="A,B,C" :error="errors.rows" />
+          <AppInput v-model="seatsPerRow" label="Seats per row" type="number" placeholder="10" :error="errors.seatsPerRow" />
+        </div>
+      </div>
+
       <label class="mt-4 block">
         <span class="mb-2 block font-mono text-xs font-semibold uppercase text-paperCream/80">Description</span>
         <textarea
@@ -52,7 +68,7 @@ import AppInput from '@/components/common/AppInput.vue';
 import { getEvent } from '@/modules/events/event.api';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { rupeesToPaise } from '@/utils/money';
-import { createAdminEvent, updateAdminEvent } from './admin.api';
+import { bulkCreateAdminSeats, createAdminEvent, updateAdminEvent } from './admin.api';
 
 const route = useRoute();
 const router = useRouter();
@@ -63,6 +79,8 @@ const description = ref('');
 const price = ref('');
 const startDate = ref('');
 const endDate = ref('');
+const rows = ref('A,B,C');
+const seatsPerRow = ref('10');
 const status = ref<'DRAFT' | 'PUBLISHED'>('DRAFT');
 const saving = ref(false);
 const submitError = ref('');
@@ -73,6 +91,21 @@ const errors = reactive({
   price: '',
   startDate: '',
   endDate: '',
+  rows: '',
+  seatsPerRow: '',
+});
+
+const parsedRows = computed(() =>
+  rows.value
+    .split(',')
+    .map((row) => row.trim().toUpperCase())
+    .filter(Boolean),
+);
+
+const uniqueRows = computed(() => Array.from(new Set(parsedRows.value)));
+const seatPreview = computed(() => {
+  const count = uniqueRows.value.length * Number(seatsPerRow.value || 0);
+  return count > 0 ? `${count} seats` : 'No seats';
 });
 
 function toDateTimeLocal(value: string) {
@@ -108,7 +141,22 @@ function validate() {
   errors.price = Number(price.value) > 0 ? '' : 'Price must be greater than 0';
   errors.startDate = startDate.value ? '' : 'Start date is required';
   errors.endDate = endDate.value && new Date(endDate.value) > new Date(startDate.value) ? '' : 'End date must be after start date';
-  return !errors.title && !errors.location && !errors.description && !errors.price && !errors.startDate && !errors.endDate;
+  errors.rows = !isEdit.value && !uniqueRows.value.length ? 'Add at least one row letter' : '';
+  errors.seatsPerRow =
+    !isEdit.value && (!Number.isInteger(Number(seatsPerRow.value)) || Number(seatsPerRow.value) <= 0)
+      ? 'Seats per row must be a whole number greater than 0'
+      : '';
+
+  return (
+    !errors.title &&
+    !errors.location &&
+    !errors.description &&
+    !errors.price &&
+    !errors.startDate &&
+    !errors.endDate &&
+    !errors.rows &&
+    !errors.seatsPerRow
+  );
 }
 
 async function submit() {
@@ -134,7 +182,12 @@ async function submit() {
     if (isEdit.value) {
       await updateAdminEvent(String(route.params.eventId), payload);
     } else {
-      await createAdminEvent(payload);
+      const response = await createAdminEvent(payload);
+      await bulkCreateAdminSeats(response.data.data.event.id, {
+        rows: uniqueRows.value,
+        seatsPerRow: Number(seatsPerRow.value),
+        priceInPaise: payload.seatPriceInPaise,
+      });
     }
 
     router.push('/admin/events');

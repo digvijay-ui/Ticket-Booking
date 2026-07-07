@@ -40,7 +40,6 @@ const router = useRouter();
 const links = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: 'mdi:view-dashboard-outline' },
   { to: '/admin/events', label: 'Events', icon: 'mdi:ticket-confirmation-outline' },
-  { to: '/admin/admins/create', label: 'Create Admin', icon: 'mdi:shield-account-outline' },
   { to: '/admin/bookings', label: 'Bookings', icon: 'mdi:clipboard-text-clock-outline' },
   { to: '/admin/transactions', label: 'Transactions', icon: 'mdi:receipt-text-outline' },
 ];

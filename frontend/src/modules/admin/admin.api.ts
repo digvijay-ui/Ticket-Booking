@@ -13,6 +13,12 @@ export interface EventFormPayload {
   status?: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';
 }
 
+export interface BulkCreateSeatsPayload {
+  rows: string[];
+  seatsPerRow: number;
+  priceInPaise?: number;
+}
+
 export interface CreateAdminPayload {
   name: string;
   email: string;
@@ -25,6 +31,10 @@ export function createAdminUser(payload: CreateAdminPayload) {
 
 export function createAdminEvent(payload: EventFormPayload) {
   return api.post<ApiResponse<{ event: EventItem }>>('/api/admin/events', payload, { headers: adminHeaders });
+}
+
+export function bulkCreateAdminSeats(eventId: string, payload: BulkCreateSeatsPayload) {
+  return api.post<ApiResponse<{ createdCount: number }>>(`/api/admin/events/${eventId}/seats/bulk`, payload, { headers: adminHeaders });
 }
 
 export function updateAdminEvent(eventId: string, payload: Partial<EventFormPayload>) {

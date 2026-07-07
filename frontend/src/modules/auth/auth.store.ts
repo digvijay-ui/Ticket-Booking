@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 
 import type { User } from '@/services/apiTypes';
+import { getApiErrorMessage } from '@/utils/apiError';
 import {
   adminLoginApi,
   adminSignupApi,
@@ -17,6 +18,8 @@ interface AuthState {
   user: User | null;
   adminUser: User | null;
   loading: boolean;
+  adminLoading: boolean;
+  adminError: string;
 }
 
 const USER_TOKEN_KEY = 'token';
@@ -46,6 +49,8 @@ export const useAuthStore = defineStore('auth', {
     user: readJson<User>(USER_KEY),
     adminUser: readJson<User>(ADMIN_USER_KEY),
     loading: false,
+    adminLoading: false,
+    adminError: '',
   }),
   getters: {
     isAuthenticated: (state) => Boolean(state.token),
@@ -104,7 +109,8 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     async adminLogin(payload: LoginPayload) {
-      this.loading = true;
+      this.adminLoading = true;
+      this.adminError = '';
       try {
         const response = await adminLoginApi(payload);
         const token = response.data.data.token;
@@ -115,12 +121,16 @@ export const useAuthStore = defineStore('auth', {
 
         this.setAdminToken(token, response.data.data.user);
         return response.data.data.user;
+      } catch (error) {
+        this.adminError = getApiErrorMessage(error) || 'Invalid admin login or something went wrong';
+        throw error;
       } finally {
-        this.loading = false;
+        this.adminLoading = false;
       }
     },
     async adminSignup(payload: SignupPayload) {
-      this.loading = true;
+      this.adminLoading = true;
+      this.adminError = '';
       try {
         const response = await adminSignupApi(payload);
         const token = response.data.data.token;
@@ -131,8 +141,11 @@ export const useAuthStore = defineStore('auth', {
 
         this.setAdminToken(token, response.data.data.user);
         return response.data.data.user;
+      } catch (error) {
+        this.adminError = getApiErrorMessage(error) || 'Invalid admin login or something went wrong';
+        throw error;
       } finally {
-        this.loading = false;
+        this.adminLoading = false;
       }
     },
     async fetchMe() {
@@ -155,6 +168,7 @@ export const useAuthStore = defineStore('auth', {
     adminLogout() {
       this.adminToken = null;
       this.adminUser = null;
+      this.adminError = '';
       localStorage.removeItem(ADMIN_TOKEN_KEY);
       localStorage.removeItem(ADMIN_USER_KEY);
     },

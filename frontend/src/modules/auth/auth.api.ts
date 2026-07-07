@@ -24,9 +24,7 @@ export function loginApi(payload: LoginPayload) {
 }
 
 export function adminLoginApi(payload: LoginPayload) {
-  return api.post<ApiResponse<AuthResponse>>('/api/auth/admin-login', payload, {
-    headers: { 'X-Admin-Route': 'true' },
-  });
+  return api.post<ApiResponse<AuthResponse>>('/api/auth/admin-login', payload);
 }
 
 export function adminSignupApi(payload: SignupPayload) {

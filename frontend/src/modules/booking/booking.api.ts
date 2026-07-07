@@ -15,10 +15,14 @@ export function reserveSeats(payload: ReserveSeatsPayload) {
   return api.post<ApiResponse<{ reservation: Reservation }>>('/api/bookings/reserve', payload);
 }
 
-export function confirmBooking(payload: ConfirmBookingPayload) {
+export function confirmBookingApi(payload: ConfirmBookingPayload) {
   return api.post<ApiResponse<{ booking: Booking }>>('/api/bookings/confirm', payload);
 }
 
-export function getMyBookings() {
+export const confirmBooking = confirmBookingApi;
+
+export function getMyBookingsApi() {
   return api.get<ApiResponse<{ bookings: Booking[] }>>('/api/bookings/my-bookings');
 }
+
+export const getMyBookings = getMyBookingsApi;

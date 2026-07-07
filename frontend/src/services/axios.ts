@@ -11,10 +11,18 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const requestUrl = config.url ?? '';
+  const publicAuthPaths = ['/api/auth/login', '/api/auth/signup', '/api/auth/admin-login', '/api/auth/admin-signup'];
+  const isPublicAuthRequest = publicAuthPaths.some((path) => requestUrl.startsWith(path));
+
+  if (isPublicAuthRequest) {
+    delete config.headers.Authorization;
+    delete config.headers['X-Admin-Route'];
+    return config;
+  }
+
   const isCurrentAdminRoute = window.location.pathname.startsWith('/admin');
   const isAdminRequest =
     requestUrl.startsWith('/api/admin') ||
-    requestUrl.includes('/admin-login') ||
     config.headers?.['X-Admin-Route'] === 'true' ||
     isCurrentAdminRoute;
   const tokenKey = isAdminRequest ? ADMIN_TOKEN_KEY : USER_TOKEN_KEY;
@@ -38,7 +46,6 @@ api.interceptors.response.use(
     const currentPath = window.location.pathname;
     const isAdminRequest =
       requestUrl.startsWith('/api/admin') ||
-      requestUrl.includes('/admin-login') ||
       currentPath.startsWith('/admin') ||
       error.config?.headers?.['X-Admin-Route'] === 'true';
 
