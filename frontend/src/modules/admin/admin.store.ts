@@ -7,6 +7,7 @@ import {
   cancelBookingApi,
   cancelEventApi,
   createEventApi,
+  deleteEventApi,
   getAdminBookingsApi,
   getAdminEventSeatsApi,
   getAdminEventsApi,
@@ -183,6 +184,24 @@ export const useAdminStore = defineStore('admin', {
         this.selectedEvent = event;
         this.events = this.events.map((item) => (item.id === event.id ? event : item));
         return event;
+      } catch (error) {
+        this.eventsError = getApiErrorMessage(error);
+        throw error;
+      } finally {
+        this.eventSaving = false;
+      }
+    },
+    async deleteEvent(eventId: string) {
+      this.eventSaving = true;
+      this.eventsError = '';
+
+      try {
+        const response = await deleteEventApi(eventId);
+        this.events = this.events.filter((item) => item.id !== eventId);
+        if (this.selectedEvent?.id === eventId) {
+          this.selectedEvent = null;
+        }
+        return response.data.data;
       } catch (error) {
         this.eventsError = getApiErrorMessage(error);
         throw error;

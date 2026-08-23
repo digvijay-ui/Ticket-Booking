@@ -33,7 +33,7 @@
       <p class="mt-2 text-sm text-stubCharcoal/65">Create events and start bookings.</p>
     </section>
 
-    <section class="grid gap-5 xl:grid-cols-2">
+    <section class="grid gap-5 2xl:grid-cols-2">
       <AdminActivityPanel
         eyebrow="Latest ledger"
         title="Recent Bookings"

@@ -4,6 +4,7 @@ import { authMiddleware } from "../../middleware/auth.middleware";
 import {
   cancelEventController,
   createEventController,
+  deleteEventController,
   getEventController,
   listEventsController,
   updateEventController
@@ -23,11 +24,17 @@ eventRoutes.patch(
   adminMiddleware,
   updateEventController
 );
+eventRoutes.post(
+  "/admin/events/:eventId/cancel",
+  authMiddleware,
+  adminMiddleware,
+  cancelEventController
+);
 eventRoutes.delete(
   "/admin/events/:eventId",
   authMiddleware,
   adminMiddleware,
-  cancelEventController
+  deleteEventController
 );
 
 eventRoutes.get("/events", listEventsController);

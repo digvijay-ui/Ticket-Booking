@@ -6,6 +6,7 @@ import {
   EventError,
   cancelEvent,
   createEvent,
+  deleteEvent,
   getEventById,
   listPublishedEvents,
   updateEvent
@@ -110,6 +111,26 @@ export const cancelEventController = async (
       data: {
         event
       }
+    });
+  } catch (error) {
+    res.status(getStatusCode(error)).json({
+      success: false,
+      message: getErrorMessage(error)
+    });
+  }
+};
+
+export const deleteEventController = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const result = await deleteEvent(getEventIdParam(req));
+
+    res.status(200).json({
+      success: true,
+      message: "Event deleted successfully",
+      data: result
     });
   } catch (error) {
     res.status(getStatusCode(error)).json({

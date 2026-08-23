@@ -55,7 +55,13 @@ export function updateAdminEvent(eventId: string, payload: Partial<EventFormPayl
 export const updateEventApi = updateAdminEvent;
 
 export function cancelEventApi(eventId: string) {
-  return api.delete<ApiResponse<{ event: EventItem }>>(`/api/admin/events/${eventId}`, { headers: adminHeaders });
+  return api.post<ApiResponse<{ event: EventItem }>>(`/api/admin/events/${eventId}/cancel`, undefined, { headers: adminHeaders });
+}
+
+export function deleteEventApi(eventId: string) {
+  return api.delete<ApiResponse<{ eventId: string; deletedBookings: number; deletedReservations: number; deletedSeats: number }>>(`/api/admin/events/${eventId}`, {
+    headers: adminHeaders,
+  });
 }
 
 export function getAdminEvents() {

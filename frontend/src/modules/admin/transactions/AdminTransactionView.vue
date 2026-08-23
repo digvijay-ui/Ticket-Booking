@@ -66,7 +66,7 @@
               </span>
             </div>
 
-            <h2 class="mt-3 line-clamp-1 font-display text-3xl uppercase leading-none">
+            <h2 class="admin-card-title mt-3 line-clamp-1">
               {{ transaction.description || 'Wallet transaction' }}
             </h2>
             <p class="mt-1 truncate text-sm font-semibold text-stubCharcoal/65">{{ userLabel(transaction) }}</p>

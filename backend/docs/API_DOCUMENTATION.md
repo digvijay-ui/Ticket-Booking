@@ -682,9 +682,9 @@ Error response:
 
 ### Cancel Event
 
-Method: `DELETE`
+Method: `POST`
 
-URL: `/api/admin/events/:eventId`
+URL: `/api/admin/events/:eventId/cancel`
 
 Auth required: Admin
 
@@ -701,6 +701,40 @@ Success response:
       "id": "event_id",
       "status": "CANCELLED"
     }
+  }
+}
+```
+
+Error response:
+
+```json
+{
+  "success": false,
+  "message": "Event not found"
+}
+```
+
+### Delete Event
+
+Method: `DELETE`
+
+URL: `/api/admin/events/:eventId`
+
+Auth required: Admin
+
+Request body: None
+
+Success response:
+
+```json
+{
+  "success": true,
+  "message": "Event deleted successfully",
+  "data": {
+    "eventId": "event_id",
+    "deletedBookings": 1,
+    "deletedReservations": 2,
+    "deletedSeats": 50
   }
 }
 ```

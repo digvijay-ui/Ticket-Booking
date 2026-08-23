@@ -59,7 +59,7 @@
           <AppBadge :variant="bookingStatusVariant(booking)" :label="booking.status" />
         </div>
 
-        <h2 class="mt-3 line-clamp-2 font-display text-4xl uppercase leading-none">{{ eventLabel(booking) }}</h2>
+        <h2 class="admin-card-title mt-3 line-clamp-2">{{ eventLabel(booking) }}</h2>
         <p class="mt-1 truncate text-sm font-semibold text-stubCharcoal/65">{{ userLabel(booking) }}</p>
 
         <div class="my-4 border-t-2 border-dashed border-stubCharcoal/25" />

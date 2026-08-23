@@ -264,6 +264,15 @@
         {
           "name": "Cancel Event",
           "request": {
+            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/events/{{eventId}}/cancel"
+          }
+        },
+        {
+          "name": "Delete Event",
+          "request": {
             "method": "DELETE",
             "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
             "header": [],

@@ -1,4 +1,6 @@
 import { ClientSession, Types } from "mongoose";
+import { BookingModel } from "../booking/booking.model";
+import { ReservationModel } from "../reservation/reservation.model";
 import { SeatModel } from "../seat/seat.model";
 import { CreateEventInput, UpdateEventInput } from "./event.contract";
 import { EventModel, EventStatus, IEvent } from "./event.model";
@@ -35,6 +37,13 @@ export interface EventSeatCounts {
   availableSeats: number;
   reservedSeats: number;
   bookedSeats: number;
+}
+
+export interface DeleteEventResult {
+  eventId: string;
+  deletedBookings: number;
+  deletedReservations: number;
+  deletedSeats: number;
 }
 
 const toObjectId = (id: string, label: string): Types.ObjectId => {
@@ -136,6 +145,30 @@ export const cancelEvent = async (eventId: string): Promise<SafeEvent> => {
   }
 
   return toSafeEvent(event);
+};
+
+export const deleteEvent = async (eventId: string): Promise<DeleteEventResult> => {
+  const eventObjectId = toObjectId(eventId, "event id");
+  const event = await EventModel.findById(eventObjectId);
+
+  if (!event) {
+    throw new EventError("Event not found", 404);
+  }
+
+  const [bookingResult, reservationResult, seatResult] = await Promise.all([
+    BookingModel.deleteMany({ eventId: eventObjectId }),
+    ReservationModel.deleteMany({ eventId: eventObjectId }),
+    SeatModel.deleteMany({ eventId: eventObjectId })
+  ]);
+
+  await EventModel.deleteOne({ _id: eventObjectId });
+
+  return {
+    eventId,
+    deletedBookings: bookingResult.deletedCount || 0,
+    deletedReservations: reservationResult.deletedCount || 0,
+    deletedSeats: seatResult.deletedCount || 0
+  };
 };
 
 export const listPublishedEvents = async (): Promise<SafeEvent[]> => {

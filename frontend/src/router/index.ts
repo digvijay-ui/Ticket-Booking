@@ -24,7 +24,7 @@ import { useAuthStore } from '@/modules/auth/auth.store';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  linkActiveClass: 'bg-paperCream/10 text-ticketGold',
+  linkActiveClass: 'bg-paperCream/10 text-[#14b8a6]',
   linkExactActiveClass: 'bg-paperCream text-stubCharcoal',
   routes: [
     {

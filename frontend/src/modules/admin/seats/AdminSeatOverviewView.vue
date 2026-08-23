@@ -24,7 +24,7 @@
           <div class="flex items-start justify-between gap-3">
             <div>
               <p class="font-mono text-[10px] font-bold uppercase text-marqueeRed">Event</p>
-              <h2 class="mt-1 font-display text-3xl leading-none">{{ eventName }}</h2>
+              <h2 class="admin-card-title mt-1 line-clamp-2">{{ eventName }}</h2>
             </div>
             <p class="max-w-28 truncate font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">{{ eventId }}</p>
           </div>
