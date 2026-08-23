@@ -81,7 +81,7 @@ import { getEventByIdApi } from '@/modules/events/event.api';
 import type { EventItem } from '@/services/apiTypes';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { rupeesToPaise } from '@/utils/money';
-import { useAdminStore } from './admin.store';
+import { useAdminStore } from '../admin.store';
 
 const FieldBlock = defineComponent({
   props: {

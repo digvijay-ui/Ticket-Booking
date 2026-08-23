@@ -38,10 +38,10 @@ const props = withDefaults(
 
 const variantClass = computed(() => {
   const classes: Record<ButtonVariant, string> = {
-    primary: 'border-marqueeRed bg-marqueeRed text-paperCream hover:bg-paperCream hover:text-marqueeRed',
-    secondary: 'border-ticketGold bg-ticketGold text-stubCharcoal hover:bg-paperCream',
+    primary: 'border-[#f97316] bg-[#f97316] text-inkNight hover:bg-paperCream hover:text-[#c2410c]',
+    secondary: 'border-[#14b8a6] bg-[#14b8a6]/15 text-[#14b8a6] hover:bg-[#14b8a6] hover:text-inkNight',
     danger: 'border-marqueeRed bg-transparent text-marqueeRed hover:bg-marqueeRed hover:text-paperCream',
-    ghost: 'border-paperCream/30 bg-transparent text-paperCream hover:border-ticketGold hover:text-ticketGold',
+    ghost: 'border-paperCream/30 bg-transparent text-paperCream hover:border-[#14b8a6] hover:text-[#14b8a6]',
   };
 
   return classes[props.variant];

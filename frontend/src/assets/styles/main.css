@@ -42,6 +42,11 @@
   .ticket-id {
     font-family: "Space Mono", monospace;
     letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 
   a {
@@ -66,7 +71,11 @@
 
 @layer components {
   .focus-ticket {
-    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed focus-visible:outline-ticketGold;
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+  }
+
+  .focus-ticket:focus-visible {
+    outline-color: #14b8a6;
   }
 
   .marquee-panel {

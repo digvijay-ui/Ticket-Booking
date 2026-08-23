@@ -130,7 +130,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import type { User, WalletTransaction } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useAdminStore } from './admin.store';
+import { useAdminStore } from '../admin.store';
 
 type AdminTransaction = WalletTransaction & {
   _id?: string;

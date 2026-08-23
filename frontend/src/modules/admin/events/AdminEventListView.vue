@@ -100,7 +100,7 @@ import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
 import type { EventItem } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useAdminStore } from './admin.store';
+import { useAdminStore } from '../admin.store';
 
 const adminStore = useAdminStore();
 const cancellingEventId = ref('');

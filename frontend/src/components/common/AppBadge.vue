@@ -36,15 +36,15 @@ const props = withDefaults(
 
 const variantClass = computed(() => {
   const classes: Record<BadgeVariant, string> = {
-    available: 'border-electricTeal bg-electricTeal text-inkNight',
-    reserved: 'border-ticketGold bg-ticketGold text-stubCharcoal',
-    booked: 'border-marqueeRed bg-marqueeRed text-paperCream',
-    paid: 'border-electricTeal bg-electricTeal text-inkNight',
-    refunded: 'border-ticketGold bg-ticketGold text-stubCharcoal',
-    cancelled: 'border-marqueeRed bg-marqueeRed text-paperCream',
+    available: 'border-[#14b8a6] bg-[#14b8a6]/20 text-[#0f766e]',
+    reserved: 'border-stubCharcoal/35 bg-stubCharcoal/10 text-stubCharcoal',
+    booked: 'border-[#ef4444] bg-[#ef4444] text-paperCream',
+    paid: 'border-[#14b8a6] bg-[#14b8a6] text-inkNight',
+    refunded: 'border-[#ef4444] bg-[#ef4444]/15 text-[#dc2626]',
+    cancelled: 'border-[#ef4444] bg-[#ef4444] text-paperCream',
     draft: 'border-stubCharcoal/40 bg-paperCream text-stubCharcoal',
-    published: 'border-ticketGold bg-deepPlum text-ticketGold',
-    completed: 'border-electricTeal bg-electricTeal/20 text-inkNight',
+    published: 'border-[#14b8a6] bg-deepPlum text-[#14b8a6]',
+    completed: 'border-[#14b8a6] bg-[#14b8a6]/20 text-[#0f766e]',
   };
 
   return classes[props.variant];

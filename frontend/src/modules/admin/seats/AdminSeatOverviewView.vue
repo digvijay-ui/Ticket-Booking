@@ -112,7 +112,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import SeatGrid from '@/components/seats/SeatGrid.vue';
 import SeatLegend from '@/components/seats/SeatLegend.vue';
 import { rupeesToPaise } from '@/utils/money';
-import { useAdminStore } from './admin.store';
+import { useAdminStore } from '../admin.store';
 
 const route = useRoute();
 const adminStore = useAdminStore();

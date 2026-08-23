@@ -47,7 +47,7 @@ import { reactive, ref } from 'vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { createAdminUser } from './admin.api';
+import { createAdminUser } from '../admin.api';
 
 const name = ref('');
 const email = ref('');

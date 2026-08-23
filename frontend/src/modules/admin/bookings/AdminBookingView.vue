@@ -122,7 +122,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import type { Booking, EventItem, Seat, User } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useAdminStore } from './admin.store';
+import { useAdminStore } from '../admin.store';
 
 type BadgeVariant = 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published' | 'completed';
 type AdminBooking = Omit<Booking, 'userId' | 'event' | 'seats'> & {
