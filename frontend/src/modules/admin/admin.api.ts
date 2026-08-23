@@ -38,6 +38,54 @@ export interface AdminTransactionFilters {
   userId?: string;
 }
 
+export type AnalyticsRange = 'daily' | 'weekly' | 'monthly';
+
+export interface AnalyticsSummary {
+  totalRevenueInPaise: number;
+  totalBookings: number;
+  confirmedBookings: number;
+  cancelledBookings: number;
+  refundedBookings: number;
+  refundedAmountInPaise: number;
+  totalEvents: number;
+  activeEvents: number;
+  totalSeats: number;
+  availableSeats: number;
+  reservedSeats: number;
+  bookedSeats: number;
+}
+
+export interface ChartSeriesData {
+  labels: string[];
+  values: number[];
+}
+
+export interface BookingStatusAnalytics {
+  confirmed: number;
+  cancelled: number;
+  refunded: number;
+}
+
+export interface SeatStatusAnalytics {
+  available: number;
+  reserved: number;
+  booked: number;
+}
+
+export interface TopEventAnalytics {
+  eventId: string;
+  title: string;
+  totalBookings: number;
+  revenueInPaise: number;
+  bookedSeats: number;
+}
+
+export interface WalletFlowAnalytics {
+  creditInPaise: number;
+  debitInPaise: number;
+  refundInPaise: number;
+}
+
 export function createAdminUser(payload: CreateAdminPayload) {
   return api.post<ApiResponse<{ user: User }>>('/api/auth/admin/users/admins', payload, { headers: adminHeaders });
 }
@@ -109,3 +157,30 @@ export function getAdminTransactions(filters: AdminTransactionFilters = {}) {
 }
 
 export const getAdminTransactionsApi = getAdminTransactions;
+
+export function getAnalyticsSummaryApi() {
+  return api.get<ApiResponse<AnalyticsSummary>>('/api/admin/analytics/summary', { headers: adminHeaders });
+}
+
+export function getRevenueAnalyticsApi(range: AnalyticsRange = 'daily') {
+  return api.get<ApiResponse<ChartSeriesData>>('/api/admin/analytics/revenue', {
+    headers: adminHeaders,
+    params: { range },
+  });
+}
+
+export function getBookingStatusAnalyticsApi() {
+  return api.get<ApiResponse<BookingStatusAnalytics>>('/api/admin/analytics/booking-status', { headers: adminHeaders });
+}
+
+export function getSeatStatusAnalyticsApi() {
+  return api.get<ApiResponse<SeatStatusAnalytics>>('/api/admin/analytics/seat-status', { headers: adminHeaders });
+}
+
+export function getTopEventsAnalyticsApi() {
+  return api.get<ApiResponse<{ events: TopEventAnalytics[] }>>('/api/admin/analytics/top-events', { headers: adminHeaders });
+}
+
+export function getWalletFlowAnalyticsApi() {
+  return api.get<ApiResponse<WalletFlowAnalytics>>('/api/admin/analytics/wallet-flow', { headers: adminHeaders });
+}

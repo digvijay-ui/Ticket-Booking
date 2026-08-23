@@ -1,4 +1,4 @@
-<template>
+remo<template>
   <div class="space-y-6 text-paperCream">
     <div class="flex flex-wrap items-end justify-between gap-4">
       <div>
@@ -11,26 +11,86 @@
       </RouterLink>
     </div>
 
-    <p v-if="adminStore.error" class="rounded-sm border border-[#ef4444] bg-[#ef4444]/15 px-3 py-2 text-sm font-semibold text-paperCream">
-      {{ adminStore.error }}
+    <p v-if="dashboardError" class="rounded-sm border border-[#ef4444] bg-[#ef4444]/15 px-3 py-2 text-sm font-semibold text-paperCream">
+      {{ dashboardError }}
     </p>
 
-    <section v-if="adminStore.loading" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-      <div v-for="index in 8" :key="index" class="h-36 rounded-md border-2 border-stubCharcoal bg-paperCream p-3 text-stubCharcoal shadow-ticket">
+    <section v-if="adminStore.analyticsLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div v-for="index in 4" :key="index" class="h-32 rounded-md border-2 border-stubCharcoal bg-paperCream p-3 text-stubCharcoal shadow-ticket">
         <div class="h-2.5 w-20 animate-pulse rounded-sm bg-stubCharcoal/15" />
         <div class="mt-3 h-8 w-24 animate-pulse rounded-sm bg-stubCharcoal/20" />
         <div class="mt-4 h-5 w-40 animate-pulse rounded-sm bg-stubCharcoal/10" />
-        <div class="mt-5 h-7 w-32 animate-pulse rounded-sm bg-stubCharcoal/10" />
       </div>
     </section>
 
-    <section v-else class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <section v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <AdminStatCard v-for="stat in stats" :key="stat.label" v-bind="stat" />
     </section>
 
-    <section v-if="!adminStore.loading && !hasData" class="rounded-md border-2 border-stubCharcoal bg-paperCream p-8 text-center text-stubCharcoal shadow-ticket">
+    <section v-if="!adminStore.loading && !adminStore.analyticsLoading && !hasData" class="rounded-md border-2 border-stubCharcoal bg-paperCream p-8 text-center text-stubCharcoal shadow-ticket">
       <p class="font-display text-4xl leading-none">No admin data yet.</p>
       <p class="mt-2 text-sm text-stubCharcoal/65">Create events and start bookings.</p>
+    </section>
+
+    <section class="space-y-4">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="font-mono text-xs font-bold uppercase text-paperCream/55">Analytics board</p>
+          <h2 class="font-display text-4xl leading-none text-paperCream">BOX OFFICE SIGNALS</h2>
+        </div>
+        <label class="flex items-center gap-2 font-mono text-[10px] font-bold uppercase text-paperCream/60">
+          Range
+          <select
+            v-model="revenueRange"
+            class="focus-ticket h-10 rounded-sm border-2 border-paperCream/20 bg-paperCream px-3 text-sm font-bold text-stubCharcoal"
+            @change="refreshAnalytics"
+          >
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <RevenueTrendChart :data="adminStore.revenueData" :range="revenueRange" />
+        <BookingStatusChart :data="adminStore.bookingStatusData" />
+        <SeatStatusChart :data="adminStore.seatStatusData" />
+        <WalletFlowChart :data="adminStore.walletFlowData" />
+      </div>
+    </section>
+
+    <section class="rounded-md border-2 border-paperCream/15 bg-deepPlum p-4 sm:p-5">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p class="font-mono text-xs font-bold uppercase text-paperCream/55">Top performers</p>
+          <h2 class="font-display text-4xl leading-none text-paperCream">TOP EVENTS</h2>
+        </div>
+        <span class="rounded-sm border border-paperCream/20 px-2 py-1 font-mono text-[10px] font-bold uppercase text-paperCream/60">
+          By revenue
+        </span>
+      </div>
+
+      <div v-if="adminStore.topEvents.length" class="grid gap-3">
+        <article
+          v-for="(event, index) in adminStore.topEvents"
+          :key="event.eventId"
+          class="relative grid gap-3 overflow-hidden rounded-sm border-2 border-stubCharcoal bg-paperCream p-3 text-stubCharcoal shadow-ticket sm:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] sm:items-center"
+        >
+          <span class="font-mono text-xs font-black uppercase text-stubCharcoal/45 tabular-nums">#{{ index + 1 }}</span>
+          <div class="min-w-0">
+            <h3 class="admin-card-title truncate text-stubCharcoal">{{ event.title }}</h3>
+            <p class="truncate font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">Event {{ shortId(event.eventId) }}</p>
+          </div>
+          <p class="font-mono text-xs font-bold uppercase text-stubCharcoal/60 tabular-nums">{{ formatCount(event.totalBookings) }} bookings</p>
+          <p class="font-mono text-xs font-bold uppercase text-[#0f766e] tabular-nums">{{ formatINR(event.revenueInPaise) }}</p>
+          <p class="font-mono text-xs font-bold uppercase text-[#ef4444] tabular-nums">{{ formatCount(event.bookedSeats) }} seats</p>
+        </article>
+      </div>
+
+      <div v-else class="rounded-sm border border-paperCream/15 bg-paperCream p-5 text-center text-stubCharcoal">
+        <p class="font-semibold">No top events yet.</p>
+      </div>
     </section>
 
     <section class="grid gap-5 2xl:grid-cols-2">
@@ -54,14 +114,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import AppButton from '@/components/common/AppButton.vue';
 import type { Booking, EventItem, WalletTransaction } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
+import BookingStatusChart from './charts/BookingStatusChart.vue';
+import RevenueTrendChart from './charts/RevenueTrendChart.vue';
+import SeatStatusChart from './charts/SeatStatusChart.vue';
+import WalletFlowChart from './charts/WalletFlowChart.vue';
 import AdminActivityPanel from './components/AdminActivityPanel.vue';
 import AdminStatCard from './components/AdminStatCard.vue';
+import type { AnalyticsRange } from '../admin.api';
 import { useAdminStore } from '../admin.store';
 
 type BadgeVariant = 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published' | 'completed';
@@ -85,8 +150,20 @@ type ActivityPanelItem = {
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const RECENT_ROW_LIMIT = 8;
 const adminStore = useAdminStore();
+const revenueRange = ref<AnalyticsRange>('daily');
 
-const hasData = computed(() => Boolean(adminStore.events.length || adminStore.bookings.length || adminStore.transactions.length));
+const dashboardError = computed(() => [adminStore.error, adminStore.analyticsError].filter(Boolean).join(' | '));
+const summary = computed(() => adminStore.analyticsSummary);
+const hasData = computed(() =>
+  Boolean(
+    adminStore.events.length ||
+      adminStore.bookings.length ||
+      adminStore.transactions.length ||
+      summary.value?.totalBookings ||
+      summary.value?.totalEvents ||
+      summary.value?.totalSeats,
+  ),
+);
 const recentBookings = computed(() => [...(adminStore.bookings as DashboardBooking[])].sort(byCreatedAt).slice(0, RECENT_ROW_LIMIT));
 const recentTransactions = computed(() => [...adminStore.transactions].sort(byCreatedAt).slice(0, RECENT_ROW_LIMIT));
 
@@ -135,65 +212,52 @@ const transactionRows = computed<ActivityPanelItem[]>(() =>
 
 const stats = computed(() => [
   {
-    label: 'Total Events',
-    value: String(adminStore.totalEvents),
-    valueClass: 'text-stubCharcoal',
-    subtitle: 'Published, draft, cancelled, and completed events',
-    ...periodDelta(adminStore.events, () => true, 'positive'),
-  },
-  {
-    label: 'Total Bookings',
-    value: String(adminStore.totalBookings),
-    valueClass: 'text-stubCharcoal',
-    subtitle: 'All booking records in the ledger',
-    ...periodDelta(adminStore.bookings, () => true, 'positive'),
-  },
-  {
-    label: 'Confirmed Bookings',
-    value: String(adminStore.confirmedBookings),
-    valueClass: 'text-[#0f766e]',
-    subtitle: 'Bookings paid and confirmed',
-    ...periodDelta(adminStore.bookings, (booking) => booking.status === 'CONFIRMED', 'positive'),
-  },
-  {
-    label: 'Cancelled Bookings',
-    value: String(adminStore.cancelledBookings),
-    valueClass: 'text-[#dc2626]',
-    subtitle: 'Bookings cancelled before fulfilment',
-    ...periodDelta(adminStore.bookings, (booking) => booking.status === 'CANCELLED', 'negative'),
-  },
-  {
     label: 'Total Revenue',
-    value: formatINR(adminStore.totalRevenueInPaise),
+    value: formatINR(summary.value?.totalRevenueInPaise ?? adminStore.totalRevenueInPaise),
     valueClass: 'text-[#0f766e]',
-    subtitle: 'From confirmed bookings',
+    subtitle: 'From confirmed paid bookings',
     ...moneyDelta(adminStore.transactions, (transaction) => transaction.type === 'DEBIT', 'positive'),
   },
   {
-    label: 'Refunded Amount',
-    value: formatINR(adminStore.refundedAmountInPaise),
-    valueClass: 'text-[#dc2626]',
-    subtitle: 'Returned through refunds',
-    ...moneyDelta(adminStore.transactions, (transaction) => transaction.type === 'REFUND', 'negative'),
+    label: 'Total Bookings',
+    value: formatCount(summary.value?.totalBookings ?? adminStore.totalBookings),
+    valueClass: 'text-stubCharcoal',
+    subtitle: `${formatCount(summary.value?.confirmedBookings ?? adminStore.confirmedBookings)} confirmed`,
+    ...periodDelta(adminStore.bookings, () => true, 'positive'),
   },
   {
-    label: 'Wallet Credits',
-    value: formatINR(adminStore.walletCreditAmountInPaise),
+    label: 'Active Events',
+    value: formatCount(summary.value?.activeEvents ?? adminStore.events.filter((event) => event.status === 'PUBLISHED').length),
     valueClass: 'text-[#0f766e]',
-    subtitle: 'Wallet top-ups and positive adjustments',
-    ...moneyDelta(adminStore.transactions, (transaction) => transaction.type === 'CREDIT', 'positive'),
+    subtitle: `${formatCount(summary.value?.totalEvents ?? adminStore.totalEvents)} total events`,
+    ...periodDelta(adminStore.events, (event) => event.status === 'PUBLISHED', 'positive'),
   },
   {
-    label: 'Wallet Debits',
-    value: formatINR(adminStore.walletDebitAmountInPaise),
+    label: 'Seats Booked',
+    value: formatCount(summary.value?.bookedSeats ?? totalBookedSeatsFromEvents.value),
     valueClass: 'text-[#dc2626]',
-    subtitle: 'Wallet spend on bookings',
-    ...moneyDelta(adminStore.transactions, (transaction) => transaction.type === 'DEBIT', 'negative'),
+    subtitle: `${formatCount(summary.value?.availableSeats ?? totalAvailableSeatsFromEvents.value)} available seats`,
+    ...periodDelta(adminStore.bookings, (booking) => booking.status === 'CONFIRMED', 'positive'),
   },
 ]);
 
+const totalBookedSeatsFromEvents = computed(() => adminStore.events.reduce((total, event) => total + event.bookedSeats, 0));
+const totalAvailableSeatsFromEvents = computed(() => adminStore.events.reduce((total, event) => total + event.availableSeats, 0));
+
 function byCreatedAt(first: { createdAt: string }, second: { createdAt: string }) {
   return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime();
+}
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value);
+}
+
+function shortId(id: string) {
+  if (id.length <= 10) {
+    return id;
+  }
+
+  return `${id.slice(0, 6)}...${id.slice(-4)}`;
 }
 
 function bookingEventName(booking: DashboardBooking) {
@@ -314,7 +378,12 @@ function formatRelativeTime(date: string) {
   return formatter.format(Math.round(deltaMonths / 12), 'year');
 }
 
+function refreshAnalytics() {
+  adminStore.fetchAnalyticsData(revenueRange.value);
+}
+
 onMounted(() => {
   adminStore.fetchDashboardData();
+  refreshAnalytics();
 });
 </script>

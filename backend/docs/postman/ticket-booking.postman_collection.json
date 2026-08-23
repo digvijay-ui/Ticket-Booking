@@ -433,6 +433,72 @@
       ]
     },
     {
+      "name": "Admin Analytics",
+      "item": [
+        {
+          "name": "Analytics Summary",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/analytics/summary"
+          }
+        },
+        {
+          "name": "Revenue Analytics",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/analytics/revenue?range={{analyticsRange}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "analytics", "revenue"],
+              "query": [
+                { "key": "range", "value": "{{analyticsRange}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Booking Status Analytics",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/analytics/booking-status"
+          }
+        },
+        {
+          "name": "Seat Status Analytics",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/analytics/seat-status"
+          }
+        },
+        {
+          "name": "Top Events Analytics",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/analytics/top-events"
+          }
+        },
+        {
+          "name": "Wallet Flow Analytics",
+          "request": {
+            "method": "GET",
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] },
+            "header": [],
+            "url": "{{baseUrl}}/api/admin/analytics/wallet-flow"
+          }
+        }
+      ]
+    },
+    {
       "name": "Admin Transactions",
       "item": [
         {
@@ -465,6 +531,7 @@
     { "key": "seatId2", "value": "" },
     { "key": "reservationId", "value": "" },
     { "key": "bookingId", "value": "" },
+    { "key": "analyticsRange", "value": "daily" },
     { "key": "idempotencyKey", "value": "confirm-booking-test-key-001" }
   ]
 }

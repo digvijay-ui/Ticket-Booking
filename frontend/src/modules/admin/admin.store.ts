@@ -8,16 +8,29 @@ import {
   cancelEventApi,
   createEventApi,
   deleteEventApi,
+  getAnalyticsSummaryApi,
   getAdminBookingsApi,
   getAdminEventSeatsApi,
   getAdminEventsApi,
   getAdminTransactionsApi,
+  getBookingStatusAnalyticsApi,
+  getRevenueAnalyticsApi,
+  getSeatStatusAnalyticsApi,
+  getTopEventsAnalyticsApi,
+  getWalletFlowAnalyticsApi,
   refundBookingApi,
   updateEventApi,
+  type AnalyticsRange,
+  type AnalyticsSummary,
   type AdminBookingFilters,
   type AdminTransactionFilters,
+  type BookingStatusAnalytics,
   type BulkCreateSeatsPayload,
+  type ChartSeriesData,
   type EventFormPayload,
+  type SeatStatusAnalytics,
+  type TopEventAnalytics,
+  type WalletFlowAnalytics,
 } from './admin.api';
 
 interface AdminState {
@@ -39,6 +52,14 @@ interface AdminState {
   transactionsLoading: boolean;
   transactionsError: string;
   actionLoadingId: string;
+  analyticsSummary: AnalyticsSummary | null;
+  revenueData: ChartSeriesData;
+  bookingStatusData: BookingStatusAnalytics;
+  seatStatusData: SeatStatusAnalytics;
+  topEvents: TopEventAnalytics[];
+  walletFlowData: WalletFlowAnalytics;
+  analyticsLoading: boolean;
+  analyticsError: string;
 }
 
 function sumTransactions(transactions: WalletTransaction[], type: WalletTransaction['type']) {
@@ -65,6 +86,14 @@ export const useAdminStore = defineStore('admin', {
     transactionsLoading: false,
     transactionsError: '',
     actionLoadingId: '',
+    analyticsSummary: null,
+    revenueData: { labels: [], values: [] },
+    bookingStatusData: { confirmed: 0, cancelled: 0, refunded: 0 },
+    seatStatusData: { available: 0, reserved: 0, booked: 0 },
+    topEvents: [],
+    walletFlowData: { creditInPaise: 0, debitInPaise: 0, refundInPaise: 0 },
+    analyticsLoading: false,
+    analyticsError: '',
   }),
   getters: {
     totalEvents: (state) => state.events.length,
@@ -123,6 +152,66 @@ export const useAdminStore = defineStore('admin', {
 
       this.error = Array.from(new Set(errors)).join(' | ');
       this.loading = false;
+    },
+    async fetchAnalyticsData(range: AnalyticsRange = 'daily') {
+      this.analyticsLoading = true;
+      this.analyticsError = '';
+
+      const [summaryResult, revenueResult, bookingStatusResult, seatStatusResult, topEventsResult, walletFlowResult] = await Promise.allSettled([
+        getAnalyticsSummaryApi(),
+        getRevenueAnalyticsApi(range),
+        getBookingStatusAnalyticsApi(),
+        getSeatStatusAnalyticsApi(),
+        getTopEventsAnalyticsApi(),
+        getWalletFlowAnalyticsApi(),
+      ]);
+
+      const errors: string[] = [];
+
+      if (summaryResult.status === 'fulfilled') {
+        this.analyticsSummary = summaryResult.value.data.data;
+      } else {
+        this.analyticsSummary = null;
+        errors.push(getApiErrorMessage(summaryResult.reason));
+      }
+
+      if (revenueResult.status === 'fulfilled') {
+        this.revenueData = revenueResult.value.data.data;
+      } else {
+        this.revenueData = { labels: [], values: [] };
+        errors.push(getApiErrorMessage(revenueResult.reason));
+      }
+
+      if (bookingStatusResult.status === 'fulfilled') {
+        this.bookingStatusData = bookingStatusResult.value.data.data;
+      } else {
+        this.bookingStatusData = { confirmed: 0, cancelled: 0, refunded: 0 };
+        errors.push(getApiErrorMessage(bookingStatusResult.reason));
+      }
+
+      if (seatStatusResult.status === 'fulfilled') {
+        this.seatStatusData = seatStatusResult.value.data.data;
+      } else {
+        this.seatStatusData = { available: 0, reserved: 0, booked: 0 };
+        errors.push(getApiErrorMessage(seatStatusResult.reason));
+      }
+
+      if (topEventsResult.status === 'fulfilled') {
+        this.topEvents = topEventsResult.value.data.data.events;
+      } else {
+        this.topEvents = [];
+        errors.push(getApiErrorMessage(topEventsResult.reason));
+      }
+
+      if (walletFlowResult.status === 'fulfilled') {
+        this.walletFlowData = walletFlowResult.value.data.data;
+      } else {
+        this.walletFlowData = { creditInPaise: 0, debitInPaise: 0, refundInPaise: 0 };
+        errors.push(getApiErrorMessage(walletFlowResult.reason));
+      }
+
+      this.analyticsError = Array.from(new Set(errors)).join(' | ');
+      this.analyticsLoading = false;
     },
     async fetchEvents() {
       this.eventsLoading = true;
