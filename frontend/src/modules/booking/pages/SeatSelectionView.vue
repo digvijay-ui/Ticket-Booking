@@ -66,7 +66,7 @@ import { useEventStore } from '@/modules/events/event.store';
 import type { Seat } from '@/services/apiTypes';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { formatINR } from '@/utils/money';
-import { reserveSeats } from './booking.api';
+import { reserveSeats } from '../booking.api';
 
 const route = useRoute();
 const router = useRouter();

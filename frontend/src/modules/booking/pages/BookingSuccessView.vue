@@ -90,7 +90,7 @@ import AppButton from '@/components/common/AppButton.vue';
 import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useBookingStore } from './booking.store';
+import { useBookingStore } from '../booking.store';
 
 const route = useRoute();
 const bookingStore = useBookingStore();

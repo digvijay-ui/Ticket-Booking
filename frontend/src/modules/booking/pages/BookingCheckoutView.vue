@@ -122,7 +122,7 @@ import { useWalletStore } from '@/modules/wallet/wallet.store';
 import { getApiErrorMessage } from '@/utils/apiError';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useBookingStore } from './booking.store';
+import { useBookingStore } from '../booking.store';
 
 const route = useRoute();
 const router = useRouter();

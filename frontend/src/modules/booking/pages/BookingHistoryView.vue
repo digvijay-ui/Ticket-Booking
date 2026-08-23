@@ -118,7 +118,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import type { Booking } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useBookingStore } from './booking.store';
+import { useBookingStore } from '../booking.store';
 
 interface BookingEvent {
   id: string;

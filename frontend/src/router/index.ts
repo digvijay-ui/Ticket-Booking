@@ -10,16 +10,16 @@ import AdminEventListView from '@/modules/admin/events/AdminEventListView.vue';
 import AdminLoginView from '@/modules/admin/login/AdminLoginView.vue';
 import AdminSeatOverviewView from '@/modules/admin/seats/AdminSeatOverviewView.vue';
 import AdminTransactionView from '@/modules/admin/transactions/AdminTransactionView.vue';
-import LoginView from '@/modules/auth/LoginView.vue';
-import SignupView from '@/modules/auth/SignupView.vue';
-import BookingCheckoutView from '@/modules/booking/BookingCheckoutView.vue';
-import BookingHistoryView from '@/modules/booking/BookingHistoryView.vue';
-import BookingSuccessView from '@/modules/booking/BookingSuccessView.vue';
-import SeatSelectionView from '@/modules/booking/SeatSelectionView.vue';
-import EventDetailView from '@/modules/events/EventDetailView.vue';
-import EventListView from '@/modules/events/EventListView.vue';
-import HomeView from '@/modules/events/HomeView.vue';
-import WalletView from '@/modules/wallet/WalletView.vue';
+import LoginView from '@/modules/auth/pages/LoginView.vue';
+import SignupView from '@/modules/auth/pages/SignupView.vue';
+import BookingCheckoutView from '@/modules/booking/pages/BookingCheckoutView.vue';
+import BookingHistoryView from '@/modules/booking/pages/BookingHistoryView.vue';
+import BookingSuccessView from '@/modules/booking/pages/BookingSuccessView.vue';
+import SeatSelectionView from '@/modules/booking/pages/SeatSelectionView.vue';
+import EventDetailView from '@/modules/events/details/EventDetailView.vue';
+import EventListView from '@/modules/events/pages/EventListView.vue';
+import HomeView from '@/modules/events/pages/HomeView.vue';
+import WalletView from '@/modules/wallet/pages/WalletView.vue';
 import { useAuthStore } from '@/modules/auth/auth.store';
 
 const router = createRouter({

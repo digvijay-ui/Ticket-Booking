@@ -115,7 +115,7 @@ import AppButton from '@/components/common/AppButton.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useWalletStore } from './wallet.store';
+import { useWalletStore } from '../wallet.store';
 
 const wallet = useWalletStore();
 const topUpAmount = ref('');

@@ -125,7 +125,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import type { EventItem } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useEventStore } from './event.store';
+import { useEventStore } from '../event.store';
 
 type BadgeVariant = 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published' | 'completed';
 

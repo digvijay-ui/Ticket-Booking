@@ -46,7 +46,7 @@ import AppButton from '@/components/common/AppButton.vue';
 import AppInput from '@/components/common/AppInput.vue';
 import TicketStubCard from '@/components/common/TicketStubCard.vue';
 import { getApiErrorMessage } from '@/utils/apiError';
-import { useAuthStore } from './auth.store';
+import { useAuthStore } from '../auth.store';
 
 const name = ref('');
 const email = ref('');

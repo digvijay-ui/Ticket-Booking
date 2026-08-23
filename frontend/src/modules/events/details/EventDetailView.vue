@@ -72,7 +72,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import TicketStubCard from '@/components/common/TicketStubCard.vue';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
-import { useEventStore } from './event.store';
+import { useEventStore } from '../event.store';
 
 const route = useRoute();
 const eventStore = useEventStore();
