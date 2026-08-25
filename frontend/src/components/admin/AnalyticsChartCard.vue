@@ -12,8 +12,15 @@
       </span>
     </div>
 
-    <div class="min-h-[220px]">
-      <VueApexCharts v-if="hasData" :height="height" :options="mergedOptions" :series="series" :type="type" />
+    <div ref="chartFrame" class="admin-chart-surface min-h-[220px]">
+      <VueApexCharts
+        v-if="canRenderChart"
+        :height="height"
+        :options="mergedOptions"
+        :series="series"
+        :type="type"
+        :width="chartWidth ?? '100%'"
+      />
       <div v-else class="flex h-[220px] items-center justify-center rounded-sm border border-ticketGold/15 bg-paperCream/5 text-center">
         <p class="font-mono text-xs font-bold uppercase text-paperCream/55">No analytics data</p>
       </div>
@@ -25,7 +32,7 @@
 
 <script setup lang="ts">
 import type { ApexAxisChartSeries, ApexNonAxisChartSeries, ApexOptions } from 'apexcharts';
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 
 const props = withDefaults(
@@ -44,6 +51,13 @@ const props = withDefaults(
   },
 );
 
+const chartFrame = ref<HTMLElement | null>(null);
+const chartWidth = ref<number | null>(null);
+const devicePixelRatio = ref(1);
+const isMounted = ref(false);
+const chartId = `admin-chart-${Math.random().toString(36).slice(2, 10)}`;
+let resizeObserver: ResizeObserver | null = null;
+
 const hasData = computed(() =>
   props.series.some((seriesItem: number | ApexAxisChartSeries[number]) => {
     if (typeof seriesItem === 'number') {
@@ -54,10 +68,17 @@ const hasData = computed(() =>
   }),
 );
 
+const canRenderChart = computed(() => isMounted.value && hasData.value && Boolean(chartWidth.value));
+
 const mergedOptions = computed<ApexOptions>(() => ({
   chart: {
+    animations: { enabled: false },
     background: 'transparent',
     fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
+    parentHeightOffset: 0,
+    redrawOnParentResize: true,
+    redrawOnWindowResize: true,
+    id: chartId,
     sparkline: { enabled: false },
     toolbar: { show: false },
     zoom: { enabled: false },
@@ -88,7 +109,7 @@ const mergedOptions = computed<ApexOptions>(() => ({
     theme: 'dark',
     style: {
       fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
-      fontSize: '11px',
+      fontSize: '12px',
     },
     ...props.options.tooltip,
   },
@@ -99,7 +120,8 @@ const mergedOptions = computed<ApexOptions>(() => ({
       style: {
         colors: '#f2cc8f',
         fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
-        fontSize: '10px',
+        fontSize: '12px',
+        fontWeight: 700,
       },
     },
     ...props.options.xaxis,
@@ -109,11 +131,69 @@ const mergedOptions = computed<ApexOptions>(() => ({
       style: {
         colors: '#f2cc8f',
         fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
-        fontSize: '10px',
+        fontSize: '12px',
+        fontWeight: 700,
       },
     },
     ...props.options.yaxis,
   },
   ...props.options,
 }));
+
+async function syncChartWidth() {
+  await nextTick();
+
+  if (!chartFrame.value) {
+    chartWidth.value = null;
+    return;
+  }
+
+  const width = chartFrame.value.getBoundingClientRect().width;
+  const ratio = window.devicePixelRatio || 1;
+  devicePixelRatio.value = ratio;
+  chartWidth.value = width > 0 ? Math.max(1, Math.round(width * ratio) / ratio) : null;
+}
+
+onMounted(() => {
+  isMounted.value = true;
+  void syncChartWidth();
+  resizeObserver = new ResizeObserver(syncChartWidth);
+
+  if (chartFrame.value) {
+    resizeObserver.observe(chartFrame.value);
+  }
+
+  window.addEventListener('resize', syncChartWidth);
+});
+
+onBeforeUnmount(() => {
+  isMounted.value = false;
+  resizeObserver?.disconnect();
+  window.removeEventListener('resize', syncChartWidth);
+});
 </script>
+
+<style scoped>
+.admin-chart-surface {
+  transform: none;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.admin-chart-surface :deep(.apexcharts-canvas),
+.admin-chart-surface :deep(.apexcharts-svg) {
+  transform: none !important;
+  text-rendering: geometricPrecision;
+}
+
+.admin-chart-surface :deep(.apexcharts-text),
+.admin-chart-surface :deep(.apexcharts-xaxis-label),
+.admin-chart-surface :deep(.apexcharts-yaxis-label),
+.admin-chart-surface :deep(.apexcharts-tooltip),
+.admin-chart-surface :deep(.apexcharts-tooltip *) {
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+</style>

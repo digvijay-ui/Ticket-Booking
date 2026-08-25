@@ -1,9 +1,15 @@
 import mongoose, { Types } from "mongoose";
 import { refreshEventSeatCounts } from "../event/event.service";
+import { EventModel } from "../event/event.model";
 import { ReservationModel } from "../reservation/reservation.model";
 import { SeatModel } from "../seat/seat.model";
 import { UserModel } from "../user/user.model";
 import { WalletTransactionModel } from "../walletTransaction/walletTransaction.model";
+import {
+  TEST_DATA_REGEX,
+  createExcludeEventIdsFilter,
+  createNonTestTextFilter
+} from "../../utils/adminDataFilters";
 import { ConfirmBookingInput } from "./booking.contract";
 import {
   BookingPaymentStatus,
@@ -39,12 +45,31 @@ export interface BookingListFilters {
   userId?: string;
   eventId?: string;
   status?: BookingStatus;
+  paymentStatus?: BookingPaymentStatus;
+  page?: number;
+  limit?: number;
 }
 
 export interface TransactionListFilters {
   userId?: string;
   type?: "CREDIT" | "DEBIT" | "REFUND";
   referenceType?: "ADD_MONEY" | "BOOKING" | "REFUND";
+  page?: number;
+  limit?: number;
+}
+
+export interface ListPagination {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface PaginatedList<T> {
+  items: T[];
+  pagination: ListPagination;
 }
 
 const toObjectId = (id: string, label: string): Types.ObjectId => {
@@ -61,7 +86,7 @@ const toSafeBooking = (booking: IBooking & { _id: unknown }): SafeBooking => ({
   eventId: String(booking.eventId),
   seatIds: booking.seatIds.map((seatId) => String(seatId)),
   reservationId: String(booking.reservationId),
-  status: booking.status,
+  status: getEffectiveBookingStatus(booking.status, booking.paymentStatus),
   paymentStatus: booking.paymentStatus,
   totalAmountInPaise: booking.totalAmountInPaise,
   walletTransactionId: String(booking.walletTransactionId),
@@ -84,6 +109,80 @@ const toObjectIdIfPresent = (
   }
 
   return toObjectId(id, label);
+};
+
+const getEffectiveBookingStatus = (
+  status: BookingStatus,
+  paymentStatus: BookingPaymentStatus
+): BookingStatus => {
+  if (paymentStatus === "REFUNDED") {
+    return "REFUNDED";
+  }
+
+  return status;
+};
+
+const getPagination = (page?: number, limit?: number) => {
+  const normalizedPage = Number.isInteger(page) && page && page > 0 ? page : 1;
+  const normalizedLimit =
+    Number.isInteger(limit) && limit && limit > 0 ? Math.min(limit, 100) : 24;
+
+  return {
+    page: normalizedPage,
+    limit: normalizedLimit,
+    skip: (normalizedPage - 1) * normalizedLimit
+  };
+};
+
+const createPaginationMeta = (
+  page: number,
+  limit: number,
+  totalItems: number
+): ListPagination => {
+  const totalPages = Math.max(Math.ceil(totalItems / limit), 1);
+
+  return {
+    page,
+    limit,
+    totalItems,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1
+  };
+};
+
+const getTestEventIds = async () =>
+  EventModel.find({
+    $or: [
+      { title: TEST_DATA_REGEX },
+      { description: TEST_DATA_REGEX },
+      { location: TEST_DATA_REGEX }
+    ]
+  }).distinct("_id");
+
+const getTestBookingTransactionRefs = async (testEventIds: unknown[]) => {
+  if (!testEventIds.length) {
+    return {
+      walletTransactionIds: [],
+      referenceIds: []
+    };
+  }
+
+  const bookings = await BookingModel.find({
+    eventId: { $in: testEventIds }
+  })
+    .select("_id reservationId walletTransactionId")
+    .lean();
+
+  return {
+    walletTransactionIds: bookings
+      .map((booking) => booking.walletTransactionId)
+      .filter(Boolean),
+    referenceIds: bookings.flatMap((booking) => [
+      String(booking._id),
+      String(booking.reservationId)
+    ])
+  };
 };
 
 const sanitizePopulatedBooking = (booking: Record<string, any>): Record<string, any> => ({
@@ -120,7 +219,7 @@ const sanitizePopulatedBooking = (booking: Record<string, any>): Record<string, 
       )
     : [],
   reservationId: String(booking.reservationId),
-  status: booking.status,
+  status: getEffectiveBookingStatus(booking.status, booking.paymentStatus),
   paymentStatus: booking.paymentStatus,
   totalAmountInPaise: booking.totalAmountInPaise,
   walletTransactionId: String(booking.walletTransactionId),
@@ -431,42 +530,78 @@ export const getMyBookings = async (
 
 export const getAdminBookings = async (
   filters: BookingListFilters
-): Promise<Record<string, any>[]> => {
-  const query: Record<string, unknown> = {};
+): Promise<PaginatedList<Record<string, any>>> => {
+  const testEventIds = await getTestEventIds();
+  const query: Record<string, unknown> = {
+    ...createExcludeEventIdsFilter(testEventIds),
+    ...createNonTestTextFilter(["idempotencyKey"])
+  };
 
   const userObjectId = toObjectIdIfPresent(filters.userId, "user id");
   const eventObjectId = toObjectIdIfPresent(filters.eventId, "event id");
+  const { page, limit, skip } = getPagination(filters.page, filters.limit);
 
   if (userObjectId) query.userId = userObjectId;
   if (eventObjectId) query.eventId = eventObjectId;
   if (filters.status) query.status = filters.status;
+  if (filters.paymentStatus) query.paymentStatus = filters.paymentStatus;
 
-  const bookings = await BookingModel.find(query)
-    .populate("userId", "name email role")
-    .populate("eventId", "title location startDate endDate status")
-    .populate("seatIds", "seatNumber row priceInPaise status")
-    .sort({ createdAt: -1 })
-    .lean();
+  const [bookings, totalItems] = await Promise.all([
+    BookingModel.find(query)
+      .populate("userId", "name email role")
+      .populate("eventId", "title location startDate endDate status")
+      .populate("seatIds", "seatNumber row priceInPaise status")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    BookingModel.countDocuments(query)
+  ]);
 
-  return bookings.map((booking) => sanitizePopulatedBooking(booking));
+  return {
+    items: bookings.map((booking) => sanitizePopulatedBooking(booking)),
+    pagination: createPaginationMeta(page, limit, totalItems)
+  };
 };
 
 export const getAdminTransactions = async (
   filters: TransactionListFilters
-): Promise<Record<string, any>[]> => {
-  const query: Record<string, unknown> = {};
+): Promise<PaginatedList<Record<string, any>>> => {
+  const testEventIds = await getTestEventIds();
+  const testTransactionRefs = await getTestBookingTransactionRefs(testEventIds);
+  const nonTestTextFilter = createNonTestTextFilter([
+    "description",
+    "idempotencyKey",
+    "referenceId"
+  ]);
+  const query: Record<string, unknown> = {
+    $and: [
+      ...((nonTestTextFilter.$and as Record<string, unknown>[]) || []),
+      { _id: { $nin: testTransactionRefs.walletTransactionIds } },
+      { referenceId: { $nin: testTransactionRefs.referenceIds } }
+    ]
+  };
   const userObjectId = toObjectIdIfPresent(filters.userId, "user id");
+  const { page, limit, skip } = getPagination(filters.page, filters.limit);
 
   if (userObjectId) query.userId = userObjectId;
   if (filters.type) query.type = filters.type;
   if (filters.referenceType) query.referenceType = filters.referenceType;
 
-  const transactions = await WalletTransactionModel.find(query)
-    .populate("userId", "name email role")
-    .sort({ createdAt: -1 })
-    .lean();
+  const [transactions, totalItems] = await Promise.all([
+    WalletTransactionModel.find(query)
+      .populate("userId", "name email role")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    WalletTransactionModel.countDocuments(query)
+  ]);
 
-  return transactions.map((transaction) => sanitizeTransaction(transaction));
+  return {
+    items: transactions.map((transaction) => sanitizeTransaction(transaction)),
+    pagination: createPaginationMeta(page, limit, totalItems)
+  };
 };
 
 export const cancelBooking = async (

@@ -6,6 +6,7 @@ import {
   createEventController,
   deleteEventController,
   getEventController,
+  listAdminEventsController,
   listEventsController,
   updateEventController
 } from "./event.controller";
@@ -17,6 +18,12 @@ eventRoutes.post(
   authMiddleware,
   adminMiddleware,
   createEventController
+);
+eventRoutes.get(
+  "/admin/events",
+  authMiddleware,
+  adminMiddleware,
+  listAdminEventsController
 );
 eventRoutes.patch(
   "/admin/events/:eventId",

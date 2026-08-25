@@ -6,7 +6,7 @@
       <p class="text-sm text-paperCream/70">Track wallet credits, booking debits, refunds, and balance movement.</p>
     </div>
 
-    <form class="rounded-md border-2 border-ticketGold/35 bg-deepPlum p-4" @submit.prevent="loadTransactions">
+    <form class="rounded-md border-2 border-ticketGold/35 bg-deepPlum p-4" @submit.prevent="loadTransactions(1)">
       <div class="grid gap-3 md:grid-cols-3">
         <label class="block">
           <span class="transaction-filter-label">Type</span>
@@ -29,8 +29,11 @@
         </label>
 
         <label class="block">
-          <span class="transaction-filter-label">User ID</span>
-          <input v-model.trim="filters.userId" class="transaction-filter-input" placeholder="user id" />
+          <span class="transaction-filter-label">User</span>
+          <input v-model.trim="filters.userQuery" class="transaction-filter-input" list="transaction-user-options" placeholder="Search name or email" />
+          <datalist id="transaction-user-options">
+            <option v-for="user in userOptions" :key="user.id" :value="user.label" />
+          </datalist>
         </label>
       </div>
 
@@ -50,7 +53,7 @@
       <article
         v-for="transaction in transactions"
         :key="getTransactionId(transaction)"
-        class="relative overflow-hidden rounded-md border-2 border-stubCharcoal bg-paperCream p-4 text-stubCharcoal shadow-ticket"
+        class="relative overflow-hidden admin-card-dark"
       >
         <span class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-inkNight" aria-hidden="true" />
 
@@ -58,8 +61,8 @@
           <div class="min-w-0">
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div class="min-w-0">
-                <p class="font-mono text-[10px] font-bold uppercase text-marqueeRed">Transaction ID</p>
-                <p class="truncate font-mono text-xs font-black text-stubCharcoal/65">{{ getTransactionId(transaction) }}</p>
+                <p class="font-mono text-[10px] font-bold uppercase text-ticketGold/75">Transaction ID</p>
+                <IdCopy :id="getTransactionId(transaction)" label="Transaction ID" />
               </div>
               <span class="rounded-sm border px-2.5 py-1 font-mono text-xs font-black uppercase" :class="typeBadgeClass(transaction.type)">
                 {{ transaction.type }}
@@ -69,54 +72,65 @@
             <h2 class="admin-card-title mt-3 line-clamp-1">
               {{ transaction.description || 'Wallet transaction' }}
             </h2>
-            <p class="mt-1 truncate text-sm font-semibold text-stubCharcoal/65">{{ userLabel(transaction) }}</p>
+            <p class="mt-1 truncate text-sm font-semibold text-paperCream/65">{{ userLabel(transaction) }}</p>
           </div>
 
           <div class="grid grid-cols-2 gap-2 font-mono text-[11px] font-bold uppercase">
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-2">
-              <span class="block text-stubCharcoal/45">Amount</span>
+            <div class="admin-muted-tile">
+              <span class="block text-paperCream/45">Amount</span>
               <span class="block text-sm font-black" :class="amountClass(transaction.type)">
                 {{ amountPrefix(transaction.type) }}{{ formatINR(transaction.amountInPaise) }}
               </span>
             </div>
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-2">
-              <span class="block text-stubCharcoal/45">Balance</span>
+            <div class="admin-muted-tile">
+              <span class="block text-paperCream/45">Balance</span>
               <span class="block text-sm font-black">{{ formatINR(transaction.balanceAfterInPaise) }}</span>
             </div>
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-2">
-              <span class="block text-stubCharcoal/45">Reference</span>
+            <div class="admin-muted-tile">
+              <span class="block text-paperCream/45">Reference</span>
               <span class="block truncate text-sm font-black">{{ transaction.referenceType || 'N/A' }}</span>
             </div>
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-2">
-              <span class="block text-stubCharcoal/45">Created</span>
+            <div class="admin-muted-tile">
+              <span class="block text-paperCream/45">Created</span>
               <span class="block truncate text-sm font-black">{{ formatDateTime(transaction.createdAt) }}</span>
             </div>
           </div>
 
-          <div class="min-w-0 border-t-2 border-dashed border-stubCharcoal/25 pt-3 lg:border-l-2 lg:border-t-0 lg:pl-4 lg:pt-0">
+          <div class="min-w-0 border-t-2 border-dashed border-paperCream/20 pt-3 lg:border-l-2 lg:border-t-0 lg:pl-4 lg:pt-0">
             <div class="space-y-2 font-mono text-[11px] font-bold uppercase">
               <div>
-                <span class="block text-stubCharcoal/45">Reference ID</span>
-                <span class="block truncate">{{ transaction.referenceId || 'Not available' }}</span>
+                <span class="block text-paperCream/45">Reference ID</span>
+                <IdCopy :id="transaction.referenceId || ''" label="Reference ID" />
               </div>
               <div>
-                <span class="block text-stubCharcoal/45">User</span>
-                <span class="block truncate">{{ userIdLabel(transaction) }}</span>
+                <span class="block text-paperCream/45">User</span>
+                <IdCopy :id="userIdValue(transaction)" label="User ID" />
               </div>
             </div>
-            <div class="mt-3 w-32 [&>div]:h-7">
-              <BarcodeStrip />
-            </div>
-            <p class="mt-2 font-mono text-[10px] font-black uppercase text-stubCharcoal/35">
+            <p class="mt-3 font-mono text-[10px] font-black uppercase text-paperCream/35">
               Ledger receipt
             </p>
           </div>
         </div>
       </article>
     </div>
-    <div v-else class="rounded-md border-2 border-stubCharcoal bg-paperCream p-8 text-center text-stubCharcoal shadow-ticket">
+    <div v-if="!adminStore.transactionsLoading && adminStore.transactionsPagination.totalItems > adminStore.transactionsPagination.limit" class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-paperCream/10 bg-deepPlum px-4 py-3">
+      <p class="font-mono text-xs font-bold uppercase text-paperCream/60">
+        Page {{ adminStore.transactionsPagination.page }} of {{ adminStore.transactionsPagination.totalPages }} · {{ adminStore.transactionsPagination.totalItems }} transactions
+      </p>
+      <div class="flex gap-2">
+        <AppButton type="button" variant="ghost" icon="mdi:chevron-left" :disabled="!adminStore.transactionsPagination.hasPreviousPage" @click="loadTransactions(adminStore.transactionsPagination.page - 1)">
+          Previous
+        </AppButton>
+        <AppButton type="button" variant="ghost" icon="mdi:chevron-right" :disabled="!adminStore.transactionsPagination.hasNextPage" @click="loadTransactions(adminStore.transactionsPagination.page + 1)">
+          Next
+        </AppButton>
+      </div>
+    </div>
+
+    <div v-else-if="!transactions.length && !adminStore.transactionsError" class="admin-card-dark p-8 text-center">
       <p class="font-display text-4xl leading-none">No transactions found.</p>
-      <p class="mt-2 text-sm text-stubCharcoal/65">Wallet credits, booking debits, and refunds will appear here.</p>
+      <p class="mt-2 text-sm text-paperCream/65">Wallet credits, booking debits, and refunds will appear here.</p>
     </div>
   </div>
 </template>
@@ -125,7 +139,7 @@
 import { computed, onMounted, reactive } from 'vue';
 
 import AppButton from '@/components/common/AppButton.vue';
-import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
+import IdCopy from '@/components/common/IdCopy.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import type { User, WalletTransaction } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
@@ -142,16 +156,27 @@ const adminStore = useAdminStore();
 const filters = reactive({
   type: '',
   referenceType: '',
-  userId: '',
+  userQuery: '',
 });
+const PAGE_SIZE = 24;
 
-const transactions = computed(() => {
-  return [...(adminStore.transactions as AdminTransaction[])]
-    .filter((transaction) => {
-      if (!filters.userId) return true;
-      return userIdLabel(transaction).toLowerCase().includes(filters.userId.toLowerCase());
-    })
-    .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime());
+const transactions = computed(() => [...(adminStore.transactions as AdminTransaction[])].sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()));
+
+const userOptions = computed(() => {
+  const users = new Map<string, { id: string; label: string }>();
+
+  transactions.value.forEach((transaction) => {
+    const user = typeof transaction.userId === 'object' ? transaction.userId : transaction.user;
+
+    if (user) {
+      users.set(user.id, {
+        id: user.id,
+        label: `${user.name} (${user.email})`,
+      });
+    }
+  });
+
+  return Array.from(users.values()).sort((first, second) => first.label.localeCompare(second.label));
 });
 
 function getTransactionId(transaction: AdminTransaction) {
@@ -162,7 +187,8 @@ function currentFilters() {
   return {
     type: filters.type,
     referenceType: filters.referenceType,
-    userId: filters.userId,
+    userId: resolveOptionId(filters.userQuery, userOptions.value),
+    limit: PAGE_SIZE,
   };
 }
 
@@ -177,6 +203,10 @@ function userLabel(transaction: AdminTransaction) {
 }
 
 function userIdLabel(transaction: AdminTransaction) {
+  return userIdValue(transaction) || 'User not available';
+}
+
+function userIdValue(transaction: AdminTransaction) {
   if (transaction.userId && typeof transaction.userId === 'object') {
     return transaction.userId.id;
   }
@@ -185,7 +215,7 @@ function userIdLabel(transaction: AdminTransaction) {
     return transaction.user.id;
   }
 
-  return transaction.userId || 'User not available';
+  return transaction.userId || '';
 }
 
 function amountPrefix(type: WalletTransaction['type']) {
@@ -195,7 +225,7 @@ function amountPrefix(type: WalletTransaction['type']) {
 function amountClass(type: WalletTransaction['type']) {
   if (type === 'DEBIT') return 'text-marqueeRed';
   if (type === 'REFUND') return 'text-ticketGold';
-  return 'text-electricTeal';
+  return 'text-[#5eead4]';
 }
 
 function typeBadgeClass(type: WalletTransaction['type']) {
@@ -204,18 +234,28 @@ function typeBadgeClass(type: WalletTransaction['type']) {
   return 'border-electricTeal bg-electricTeal text-inkNight';
 }
 
-async function loadTransactions() {
-  await adminStore.fetchTransactions(currentFilters()).catch(() => undefined);
+async function loadTransactions(page = adminStore.transactionsPagination.page) {
+  await adminStore.fetchTransactions({
+    ...currentFilters(),
+    page,
+  }).catch(() => undefined);
 }
 
 function resetFilters() {
   filters.type = '';
   filters.referenceType = '';
-  filters.userId = '';
-  loadTransactions();
+  filters.userQuery = '';
+  loadTransactions(1);
 }
 
-onMounted(loadTransactions);
+function resolveOptionId(query: string, options: Array<{ id: string; label: string }>) {
+  if (!query) return '';
+  const exactMatch = options.find((option) => option.label === query || option.id === query);
+  if (exactMatch) return exactMatch.id;
+  return /^[a-f\d]{24}$/i.test(query) ? query : '';
+}
+
+onMounted(() => loadTransactions(1));
 </script>
 
 <style scoped>
@@ -224,6 +264,6 @@ onMounted(loadTransactions);
 }
 
 .transaction-filter-input {
-  @apply focus-ticket w-full rounded-sm border-2 border-paperCream/25 bg-paperCream px-3 py-2.5 text-stubCharcoal placeholder:text-stubCharcoal/45;
+  @apply admin-filter-input;
 }
 </style>

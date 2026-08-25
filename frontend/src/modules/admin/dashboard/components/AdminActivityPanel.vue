@@ -1,5 +1,5 @@
 <template>
-  <section class="rounded-md border-2 border-paperCream/15 bg-deepPlum p-4 sm:p-5">
+  <section class="h-fit rounded-md border-2 border-paperCream/15 bg-deepPlum p-4 sm:p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <p class="font-mono text-xs font-bold uppercase text-paperCream/55">{{ eyebrow }}</p>
@@ -10,29 +10,29 @@
 
     <div class="mb-4 grid gap-2 lg:grid-cols-[1fr_9rem_9rem_10rem]">
       <label class="relative block">
-        <Icon icon="mdi:magnify" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stubCharcoal/45" aria-hidden="true" />
+        <Icon icon="mdi:magnify" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-paperCream/45" aria-hidden="true" />
         <input
           v-model.trim="search"
-          class="focus-ticket h-10 w-full rounded-sm border-2 border-stubCharcoal bg-paperCream pl-9 pr-3 text-sm font-semibold text-stubCharcoal placeholder:text-stubCharcoal/45"
+          class="admin-filter-input h-10 pl-9 text-sm font-semibold"
           :placeholder="searchPlaceholder"
           type="search"
         />
       </label>
       <input
         v-model="dateFrom"
-        class="focus-ticket h-10 rounded-sm border-2 border-stubCharcoal bg-paperCream px-3 text-sm font-semibold text-stubCharcoal"
+        class="admin-filter-input h-10 text-sm font-semibold"
         type="date"
         aria-label="Start date"
       />
       <input
         v-model="dateTo"
-        class="focus-ticket h-10 rounded-sm border-2 border-stubCharcoal bg-paperCream px-3 text-sm font-semibold text-stubCharcoal"
+        class="admin-filter-input h-10 text-sm font-semibold"
         type="date"
         aria-label="End date"
       />
       <select
         v-model="status"
-        class="focus-ticket h-10 rounded-sm border-2 border-stubCharcoal bg-paperCream px-3 text-sm font-semibold text-stubCharcoal"
+        class="admin-filter-input h-10 text-sm font-semibold"
         aria-label="Status"
       >
         <option value="">All statuses</option>
@@ -44,41 +44,48 @@
       <article
         v-for="item in filteredItems"
         :key="item.id"
-        class="group relative grid gap-2 rounded-sm border border-paperCream/10 bg-paperCream px-3 py-2 text-stubCharcoal sm:grid-cols-[minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_minmax(6.25rem,auto)_auto_minmax(4.75rem,auto)] xl:items-center"
+        class="overflow-hidden rounded-sm border border-paperCream/10 bg-paperCream/5 text-paperCream transition-colors hover:border-[#14b8a6]/55"
       >
-        <p class="admin-card-title min-w-0 truncate text-base text-stubCharcoal" tabindex="0">{{ item.name }}</p>
-        <p class="font-mono text-sm font-bold tabular-nums sm:text-right" :class="item.amountClass">{{ item.amount }}</p>
-        <AppBadge :variant="item.badgeVariant" :label="item.status" />
-        <time class="font-mono text-[11px] font-bold uppercase text-stubCharcoal/55 tabular-nums sm:text-right" :datetime="item.createdAt">{{ item.relativeTime }}</time>
-
-        <div
-          class="absolute left-3 right-3 top-[calc(100%-1px)] z-20 hidden rounded-sm border border-stubCharcoal/20 bg-inkNight p-3 text-paperCream opacity-0 shadow-ticket transition group-hover:opacity-100 group-focus-within:opacity-100 md:block"
+        <button
+          type="button"
+          class="focus-ticket grid w-full gap-2 px-3 py-2 text-left sm:grid-cols-[minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_minmax(6.25rem,auto)_auto_minmax(4.75rem,auto)_1.75rem] xl:items-center"
+          :aria-expanded="expandedItemId === item.id"
+          @click="toggleItem(item.id)"
         >
-          <div class="mb-3 flex min-w-0 items-center justify-between gap-3 rounded-sm border border-paperCream/10 bg-paperCream/5 p-2">
-            <div class="min-w-0">
-              <p class="font-mono text-[9px] font-bold uppercase text-paperCream/45">Record ID</p>
-              <p class="truncate font-mono text-xs font-bold tabular-nums">{{ item.id }}</p>
+          <p class="admin-card-title min-w-0 truncate text-base text-paperCream">{{ item.name }}</p>
+          <p class="font-mono text-sm font-bold tabular-nums sm:text-right" :class="item.amountClass">{{ item.amount }}</p>
+          <AppBadge :variant="item.badgeVariant" :label="item.status" />
+          <time class="font-mono text-[11px] font-bold uppercase text-paperCream/55 tabular-nums sm:text-right" :datetime="item.createdAt">{{ item.relativeTime }}</time>
+          <Icon
+            icon="mdi:chevron-down"
+            class="hidden h-5 w-5 justify-self-end text-paperCream/55 transition-transform xl:block"
+            :class="{ 'rotate-180 text-[#14b8a6]': expandedItemId === item.id }"
+            aria-hidden="true"
+          />
+        </button>
+
+        <Transition name="activity-detail">
+          <div v-if="expandedItemId === item.id" class="activity-detail-shell">
+            <div class="border-t border-paperCream/10 px-3 pb-3 pt-2">
+              <div class="mb-3 flex min-w-0 items-center justify-between gap-3 rounded-sm border border-paperCream/10 bg-inkNight/70 p-2">
+                <div class="min-w-0">
+                  <p class="font-mono text-[9px] font-bold uppercase text-paperCream/45">Record ID</p>
+                  <IdCopy :id="item.id" label="Record ID" />
+                </div>
+              </div>
+              <dl class="grid gap-2 text-xs sm:grid-cols-2">
+                <div v-for="detail in visibleDetails(item)" :key="detail.label" class="min-w-0">
+                  <dt class="font-mono text-[9px] font-bold uppercase text-paperCream/45">{{ detail.label }}</dt>
+                  <dd class="truncate font-semibold">{{ detail.value }}</dd>
+                </div>
+              </dl>
             </div>
-            <button
-              class="focus-ticket inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border border-paperCream/20 text-paperCream/70 transition hover:border-paperCream hover:text-paperCream"
-              type="button"
-              :aria-label="`Copy ${item.id}`"
-              @click="copyId(item.id)"
-            >
-              <Icon :icon="copiedId === item.id ? 'mdi:check' : 'mdi:content-copy'" class="h-4 w-4" aria-hidden="true" />
-            </button>
           </div>
-          <dl class="grid gap-2 text-xs sm:grid-cols-2">
-            <div v-for="detail in visibleDetails(item)" :key="detail.label" class="min-w-0">
-              <dt class="font-mono text-[9px] font-bold uppercase text-paperCream/45">{{ detail.label }}</dt>
-              <dd class="truncate font-semibold">{{ detail.value }}</dd>
-            </div>
-          </dl>
-        </div>
+        </Transition>
       </article>
     </div>
 
-    <div v-else class="rounded-sm border border-paperCream/15 bg-paperCream p-5 text-center text-stubCharcoal">
+    <div v-else class="rounded-sm border border-paperCream/15 bg-paperCream/5 p-5 text-center text-paperCream">
       <p class="font-semibold">{{ emptyText }}</p>
     </div>
   </section>
@@ -89,6 +96,7 @@ import { Icon } from '@iconify/vue';
 import { computed, ref } from 'vue';
 
 import AppBadge from '@/components/common/AppBadge.vue';
+import IdCopy from '@/components/common/IdCopy.vue';
 
 type BadgeVariant = 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published' | 'completed';
 
@@ -116,7 +124,7 @@ const search = ref('');
 const dateFrom = ref('');
 const dateTo = ref('');
 const status = ref('');
-const copiedId = ref('');
+const expandedItemId = ref<string | null>(null);
 
 const statusOptions = computed(() => Array.from(new Set(props.items.map((item) => item.status))).sort());
 
@@ -140,17 +148,32 @@ function visibleDetails(item: ActivityPanelItem) {
   return item.details.filter((detail) => detail.label !== 'Booking ID' && detail.label !== 'Transaction ID');
 }
 
-async function copyId(id: string) {
-  try {
-    await navigator.clipboard.writeText(id);
-    copiedId.value = id;
-    window.setTimeout(() => {
-      if (copiedId.value === id) {
-        copiedId.value = '';
-      }
-    }, 1200);
-  } catch {
-    copiedId.value = '';
-  }
+function toggleItem(itemId: string) {
+  expandedItemId.value = expandedItemId.value === itemId ? null : itemId;
 }
 </script>
+
+<style scoped>
+.activity-detail-shell {
+  overflow: hidden;
+}
+
+.activity-detail-enter-active,
+.activity-detail-leave-active {
+  transition:
+    max-height 180ms ease,
+    opacity 160ms ease;
+}
+
+.activity-detail-enter-from,
+.activity-detail-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.activity-detail-enter-to,
+.activity-detail-leave-from {
+  max-height: 18rem;
+  opacity: 1;
+}
+</style>

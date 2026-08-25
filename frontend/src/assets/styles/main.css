@@ -88,6 +88,26 @@
     overflow-wrap: anywhere;
   }
 
+  .admin-panel-dark {
+    @apply rounded-md border-2 border-paperCream/10 bg-[#241f2f] p-4 text-paperCream shadow-[8px_8px_0_rgba(8,8,15,0.35)];
+  }
+
+  .admin-card-dark {
+    @apply rounded-md border-2 border-paperCream/10 bg-[#241f2f] p-4 text-paperCream shadow-[8px_8px_0_rgba(8,8,15,0.35)];
+  }
+
+  .admin-muted-tile {
+    @apply rounded-sm border border-paperCream/10 bg-paperCream/5 p-2;
+  }
+
+  .admin-filter-input {
+    @apply focus-ticket w-full rounded-sm border-2 border-paperCream/20 bg-inkNight px-3 py-2.5 text-paperCream placeholder:text-paperCream/40;
+  }
+
+  .admin-field-label {
+    @apply mb-1 block font-mono text-[10px] font-bold uppercase text-paperCream/60;
+  }
+
   .marquee-panel {
     background:
       radial-gradient(circle at 16px 16px, rgba(255, 201, 74, 0.72) 0 3px, transparent 4px),

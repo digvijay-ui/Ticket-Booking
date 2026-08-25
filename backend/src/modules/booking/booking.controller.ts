@@ -8,6 +8,7 @@ import {
   startIdempotentRequest
 } from "../idempotencyKey/idempotencyKey.service";
 import { confirmBookingSchema } from "./booking.contract";
+import { BookingPaymentStatus, BookingStatus } from "./booking.model";
 import {
   BookingError,
   cancelBooking,
@@ -122,6 +123,35 @@ const getStringParam = (
   return fallback;
 };
 
+const getNumberParam = (value: unknown): number | undefined => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : undefined;
+};
+
+const parseEnumParam = <T extends string>(
+  value: unknown,
+  allowedValues: readonly T[]
+): T | undefined => {
+  if (typeof value !== "string" || value === "") {
+    return undefined;
+  }
+
+  return allowedValues.includes(value as T) ? (value as T) : undefined;
+};
+
+const bookingStatuses: readonly BookingStatus[] = [
+  "CONFIRMED",
+  "CANCELLED",
+  "REFUNDED"
+];
+const bookingPaymentStatuses: readonly BookingPaymentStatus[] = ["PAID", "REFUNDED"];
+const transactionTypes = ["CREDIT", "DEBIT", "REFUND"] as const;
+const referenceTypes = ["ADD_MONEY", "BOOKING", "REFUND"] as const;
+
 export const getMyBookingsController = async (
   req: AuthenticatedRequest,
   res: Response
@@ -155,17 +185,21 @@ export const getAdminBookingsController = async (
   res: Response
 ): Promise<void> => {
   try {
-    const bookings = await getAdminBookings({
+    const result = await getAdminBookings({
       userId: getStringParam(req.query.userId),
       eventId: getStringParam(req.query.eventId),
-      status: getStringParam(req.query.status) as any
+      status: parseEnumParam(req.query.status, bookingStatuses),
+      paymentStatus: parseEnumParam(req.query.paymentStatus, bookingPaymentStatuses),
+      page: getNumberParam(req.query.page),
+      limit: getNumberParam(req.query.limit)
     });
 
     res.status(200).json({
       success: true,
       message: "Admin bookings fetched successfully",
       data: {
-        bookings
+        bookings: result.items,
+        pagination: result.pagination
       }
     });
   } catch (error) {
@@ -181,17 +215,20 @@ export const getAdminTransactionsController = async (
   res: Response
 ): Promise<void> => {
   try {
-    const transactions = await getAdminTransactions({
+    const result = await getAdminTransactions({
       userId: getStringParam(req.query.userId),
-      type: getStringParam(req.query.type) as any,
-      referenceType: getStringParam(req.query.referenceType) as any
+      type: parseEnumParam(req.query.type, transactionTypes),
+      referenceType: parseEnumParam(req.query.referenceType, referenceTypes),
+      page: getNumberParam(req.query.page),
+      limit: getNumberParam(req.query.limit)
     });
 
     res.status(200).json({
       success: true,
       message: "Admin transactions fetched successfully",
       data: {
-        transactions
+        transactions: result.items,
+        pagination: result.pagination
       }
     });
   } catch (error) {

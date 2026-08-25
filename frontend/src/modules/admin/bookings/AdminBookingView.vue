@@ -6,7 +6,7 @@
       <p class="text-sm text-paperCream/70">Review confirmed tickets, wallet payments, cancellations, and refunds.</p>
     </div>
 
-    <form class="rounded-md border-2 border-ticketGold/35 bg-deepPlum p-4" @submit.prevent="loadBookings">
+    <form class="rounded-md border-2 border-ticketGold/35 bg-deepPlum p-4" @submit.prevent="loadBookings(1)">
       <div class="grid gap-3 md:grid-cols-3">
         <label class="block">
           <span class="booking-filter-label">Status</span>
@@ -19,13 +19,19 @@
         </label>
 
         <label class="block">
-          <span class="booking-filter-label">Event ID</span>
-          <input v-model.trim="filters.eventId" class="booking-filter-input" placeholder="event id" />
+          <span class="booking-filter-label">Event</span>
+          <input v-model.trim="filters.eventQuery" class="booking-filter-input" list="booking-event-options" placeholder="Search event name" />
+          <datalist id="booking-event-options">
+            <option v-for="event in eventOptions" :key="event.id" :value="event.label" />
+          </datalist>
         </label>
 
         <label class="block">
-          <span class="booking-filter-label">User ID</span>
-          <input v-model.trim="filters.userId" class="booking-filter-input" placeholder="user id" />
+          <span class="booking-filter-label">User</span>
+          <input v-model.trim="filters.userQuery" class="booking-filter-input" list="booking-user-options" placeholder="Search name or email" />
+          <datalist id="booking-user-options">
+            <option v-for="user in userOptions" :key="user.id" :value="user.label" />
+          </datalist>
         </label>
       </div>
 
@@ -47,22 +53,22 @@
       <article
         v-for="booking in bookings"
         :key="getBookingId(booking)"
-        class="relative flex min-h-[280px] max-h-[340px] flex-col overflow-hidden rounded-md border-2 border-stubCharcoal bg-paperCream p-4 text-stubCharcoal shadow-ticket"
+        class="relative flex min-h-[280px] flex-col overflow-hidden admin-card-dark"
       >
         <span class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-inkNight" aria-hidden="true" />
 
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <p class="font-mono text-[10px] font-bold uppercase text-marqueeRed">Booking ID</p>
-            <p class="truncate font-mono text-[11px] font-bold text-stubCharcoal/60">{{ getBookingId(booking) }}</p>
+            <p class="font-mono text-[10px] font-bold uppercase text-ticketGold/75">Booking ID</p>
+            <IdCopy :id="getBookingId(booking)" label="Booking ID" />
           </div>
-          <AppBadge :variant="bookingStatusVariant(booking)" :label="booking.status" />
+          <AppBadge :variant="bookingStatusVariant(booking)" :label="bookingStatusLabel(booking)" />
         </div>
 
         <h2 class="admin-card-title mt-3 line-clamp-2">{{ eventLabel(booking) }}</h2>
-        <p class="mt-1 truncate text-sm font-semibold text-stubCharcoal/65">{{ userLabel(booking) }}</p>
+        <p class="mt-1 truncate text-sm font-semibold text-paperCream/65">{{ userLabel(booking) }}</p>
 
-        <div class="my-4 border-t-2 border-dashed border-stubCharcoal/25" />
+        <div class="my-4 border-t-2 border-dashed border-paperCream/20" />
 
         <div class="space-y-1.5 font-mono text-xs">
           <div class="flex justify-between gap-3">
@@ -71,7 +77,7 @@
           </div>
           <div class="flex justify-between gap-3">
             <span class="booking-row-label">Amount</span>
-            <span class="font-black text-marqueeRed">{{ formatINR(booking.totalAmountInPaise) }}</span>
+            <span class="font-black text-ticketGold">{{ formatINR(booking.totalAmountInPaise) }}</span>
           </div>
           <div class="flex justify-between gap-3">
             <span class="booking-row-label">Payment</span>
@@ -83,31 +89,35 @@
           </div>
         </div>
 
-        <div class="mt-3 grid grid-cols-3 gap-1.5 font-mono text-[10px] font-bold uppercase">
-          <span class="rounded-sm bg-stubCharcoal/10 px-2 py-1">{{ booking.status }}</span>
-          <span class="rounded-sm bg-ticketGold/25 px-2 py-1">{{ booking.paymentStatus }}</span>
-          <span class="rounded-sm bg-marqueeRed/10 px-2 py-1 text-marqueeRed">{{ formatINR(booking.totalAmountInPaise) }}</span>
-        </div>
-
-        <p class="mt-3 truncate font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">
-          Wallet {{ booking.walletTransactionId || 'Not available' }}
+        <p class="mt-3 flex min-w-0 items-center gap-2 font-mono text-[10px] font-bold uppercase text-paperCream/45">
+          Wallet <IdCopy :id="booking.walletTransactionId || ''" label="Wallet transaction ID" />
         </p>
 
         <div class="mt-auto pt-3">
-          <div class="mb-3 w-36 [&>div]:h-7">
-            <BarcodeStrip />
-          </div>
-
-          <p class="rounded-sm bg-stubCharcoal/10 p-2 text-center font-mono text-xs font-bold uppercase text-stubCharcoal/55">
+          <p class="rounded-sm bg-paperCream/10 p-2 text-center font-mono text-xs font-bold uppercase text-paperCream/55">
             View only
           </p>
         </div>
       </article>
     </div>
 
-    <div v-else class="rounded-md border-2 border-stubCharcoal bg-paperCream p-8 text-center text-stubCharcoal shadow-ticket">
+    <div v-if="!adminStore.bookingsLoading && adminStore.bookingsPagination.totalItems > adminStore.bookingsPagination.limit" class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-paperCream/10 bg-deepPlum px-4 py-3">
+      <p class="font-mono text-xs font-bold uppercase text-paperCream/60">
+        Page {{ adminStore.bookingsPagination.page }} of {{ adminStore.bookingsPagination.totalPages }} · {{ adminStore.bookingsPagination.totalItems }} bookings
+      </p>
+      <div class="flex gap-2">
+        <AppButton type="button" variant="ghost" icon="mdi:chevron-left" :disabled="!adminStore.bookingsPagination.hasPreviousPage" @click="loadBookings(adminStore.bookingsPagination.page - 1)">
+          Previous
+        </AppButton>
+        <AppButton type="button" variant="ghost" icon="mdi:chevron-right" :disabled="!adminStore.bookingsPagination.hasNextPage" @click="loadBookings(adminStore.bookingsPagination.page + 1)">
+          Next
+        </AppButton>
+      </div>
+    </div>
+
+    <div v-else-if="!bookings.length && !adminStore.bookingsError" class="admin-card-dark p-8 text-center">
       <p class="font-display text-4xl leading-none">No bookings found.</p>
-      <p class="mt-2 text-sm text-stubCharcoal/65">Bookings will appear here after users confirm tickets.</p>
+      <p class="mt-2 text-sm text-paperCream/65">Bookings will appear here after users confirm tickets.</p>
     </div>
   </div>
 </template>
@@ -117,7 +127,7 @@ import { computed, onMounted, reactive } from 'vue';
 
 import AppBadge from '@/components/common/AppBadge.vue';
 import AppButton from '@/components/common/AppButton.vue';
-import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
+import IdCopy from '@/components/common/IdCopy.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import type { Booking, EventItem, Seat, User } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
@@ -135,10 +145,33 @@ type AdminBooking = Omit<Booking, 'userId' | 'event' | 'seats'> & {
 const adminStore = useAdminStore();
 const filters = reactive({
   status: '',
-  eventId: '',
-  userId: '',
+  eventQuery: '',
+  userQuery: '',
 });
 const bookings = computed(() => adminStore.bookings as AdminBooking[]);
+const PAGE_SIZE = 24;
+
+const eventOptions = computed(() =>
+  adminStore.events.map((event) => ({
+    id: event.id,
+    label: `${event.title} (${shortId(event.id)})`,
+  })),
+);
+
+const userOptions = computed(() => {
+  const users = new Map<string, { id: string; label: string }>();
+
+  bookings.value.forEach((booking) => {
+    if (booking.userId && typeof booking.userId === 'object') {
+      users.set(booking.userId.id, {
+        id: booking.userId.id,
+        label: `${booking.userId.name} (${booking.userId.email})`,
+      });
+    }
+  });
+
+  return Array.from(users.values()).sort((first, second) => first.label.localeCompare(second.label));
+});
 
 function getBookingId(booking: AdminBooking) {
   return booking.id || booking._id || '';
@@ -147,15 +180,22 @@ function getBookingId(booking: AdminBooking) {
 function currentFilters() {
   return {
     status: filters.status,
-    eventId: filters.eventId,
-    userId: filters.userId,
+    eventId: resolveOptionId(filters.eventQuery, eventOptions.value),
+    userId: resolveOptionId(filters.userQuery, userOptions.value),
+    limit: PAGE_SIZE,
   };
 }
 
 function bookingStatusVariant(booking: AdminBooking): BadgeVariant {
+  if (booking.paymentStatus === 'REFUNDED') return 'refunded';
   if (booking.status === 'CANCELLED') return 'cancelled';
   if (booking.status === 'REFUNDED') return 'refunded';
   return 'paid';
+}
+
+function bookingStatusLabel(booking: AdminBooking) {
+  if (booking.paymentStatus === 'REFUNDED' || booking.status === 'REFUNDED') return 'REFUNDED';
+  return booking.status;
 }
 
 function paymentStatusVariant(booking: AdminBooking): BadgeVariant {
@@ -186,18 +226,36 @@ function seatsLabel(booking: AdminBooking) {
   return booking.seats.map((seat) => (typeof seat === 'string' ? seat : seat.seatNumber)).join(', ');
 }
 
-async function loadBookings() {
-  await adminStore.fetchBookings(currentFilters());
+async function loadBookings(page = adminStore.bookingsPagination.page) {
+  await adminStore.fetchBookings({
+    ...currentFilters(),
+    page,
+  });
 }
 
 function resetFilters() {
   filters.status = '';
-  filters.eventId = '';
-  filters.userId = '';
-  loadBookings();
+  filters.eventQuery = '';
+  filters.userQuery = '';
+  loadBookings(1);
 }
 
-onMounted(loadBookings);
+function shortId(id: string) {
+  if (id.length <= 14) return id;
+  return `${id.slice(0, 6)}...${id.slice(-4)}`;
+}
+
+function resolveOptionId(query: string, options: Array<{ id: string; label: string }>) {
+  if (!query) return '';
+  const exactMatch = options.find((option) => option.label === query || option.id === query);
+  if (exactMatch) return exactMatch.id;
+  return /^[a-f\d]{24}$/i.test(query) ? query : '';
+}
+
+onMounted(() => {
+  adminStore.fetchEvents().catch(() => undefined);
+  loadBookings(1);
+});
 </script>
 
 <style scoped>
@@ -207,10 +265,10 @@ onMounted(loadBookings);
 }
 
 .booking-row-label {
-  @apply text-stubCharcoal/45;
+  @apply text-paperCream/45;
 }
 
 .booking-filter-input {
-  @apply focus-ticket w-full rounded-sm border-2 border-paperCream/25 bg-paperCream px-3 py-2.5 text-stubCharcoal placeholder:text-stubCharcoal/45;
+  @apply admin-filter-input;
 }
 </style>

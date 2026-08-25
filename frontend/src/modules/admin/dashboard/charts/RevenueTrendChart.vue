@@ -29,6 +29,8 @@ const series = computed<ApexAxisChartSeries>(() => [
   },
 ]);
 
+const maxRevenue = computed(() => Math.max(...props.data.values, 0));
+
 const options = computed<ApexOptions>(() => ({
   colors: ['#5eead4'],
   fill: {
@@ -66,6 +68,9 @@ const options = computed<ApexOptions>(() => ({
     tickAmount: 6,
   },
   yaxis: {
+    min: 0,
+    max: maxRevenue.value > 0 ? Math.ceil(maxRevenue.value * 1.2) : undefined,
+    tickAmount: maxRevenue.value > 0 ? 4 : undefined,
     labels: {
       formatter: (value) => formatShortINR(Number(value)),
     },

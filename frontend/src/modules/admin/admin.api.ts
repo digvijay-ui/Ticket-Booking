@@ -30,12 +30,25 @@ export interface AdminBookingFilters {
   paymentStatus?: string;
   eventId?: string;
   userId?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface AdminTransactionFilters {
   type?: string;
   referenceType?: string;
   userId?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export type AnalyticsRange = 'daily' | 'weekly' | 'monthly';
@@ -113,7 +126,7 @@ export function deleteEventApi(eventId: string) {
 }
 
 export function getAdminEvents() {
-  return api.get<ApiResponse<{ events: EventItem[] }>>('/api/events', { headers: adminHeaders });
+  return api.get<ApiResponse<{ events: EventItem[] }>>('/api/admin/events', { headers: adminHeaders });
 }
 
 export const getAdminEventsApi = getAdminEvents;
@@ -133,7 +146,7 @@ function cleanParams<T extends object>(filters: T) {
 }
 
 export function getAdminBookings(filters: AdminBookingFilters = {}) {
-  return api.get<ApiResponse<{ bookings: Booking[] }>>('/api/admin/bookings', {
+  return api.get<ApiResponse<{ bookings: Booking[]; pagination?: PaginationMeta }>>('/api/admin/bookings', {
     headers: adminHeaders,
     params: cleanParams(filters),
   });
@@ -150,7 +163,7 @@ export function refundBookingApi(bookingId: string) {
 }
 
 export function getAdminTransactions(filters: AdminTransactionFilters = {}) {
-  return api.get<ApiResponse<{ transactions: WalletTransaction[] }>>('/api/admin/transactions', {
+  return api.get<ApiResponse<{ transactions: WalletTransaction[]; pagination?: PaginationMeta }>>('/api/admin/transactions', {
     headers: adminHeaders,
     params: cleanParams(filters),
   });

@@ -20,9 +20,24 @@ const props = defineProps<{
 }>();
 
 const series = computed<ApexNonAxisChartSeries>(() => [props.data.confirmed, props.data.cancelled, props.data.refunded]);
+const totalBookings = computed(() => props.data.confirmed + props.data.cancelled + props.data.refunded);
 
 const options = computed<ApexOptions>(() => ({
   colors: ['#5eead4', '#fb7185', '#F2CC8F'],
+  dataLabels: {
+    enabled: true,
+    formatter: (_value, options) => {
+      const values = [props.data.confirmed, props.data.cancelled, props.data.refunded];
+      const value = values[options?.seriesIndex ?? 0] || 0;
+      return totalBookings.value ? `${Math.round((value / totalBookings.value) * 100)}%` : '0%';
+    },
+    style: {
+      colors: ['#121221'],
+      fontFamily: 'Space Mono, monospace',
+      fontSize: '11px',
+      fontWeight: 700,
+    },
+  },
   labels: ['Confirmed', 'Cancelled', 'Refunded'],
   plotOptions: {
     pie: {

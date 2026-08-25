@@ -2,7 +2,7 @@
   <AnalyticsChartCard
     eyebrow="Inventory capacity"
     title="Seat Status"
-    type="radialBar"
+    type="donut"
     :height="245"
     :series="series"
     :options="options"
@@ -35,50 +35,44 @@ const seatItems = computed(() => [
   { label: 'Booked', value: props.data.booked, className: 'text-[#fb7185]' },
 ]);
 
-const series = computed<ApexNonAxisChartSeries>(() => {
-  if (!totalSeats.value) {
-    return [0, 0, 0];
-  }
-
-  return seatItems.value.map((item) => Math.round((item.value / totalSeats.value) * 100));
-});
+const series = computed<ApexNonAxisChartSeries>(() => seatItems.value.map((item) => item.value));
 
 const options = computed<ApexOptions>(() => ({
   colors: ['#5eead4', '#F2CC8F', '#fb7185'],
+  dataLabels: {
+    enabled: true,
+    formatter: (_value, options) => {
+      const item = seatItems.value[options?.seriesIndex ?? 0];
+      return totalSeats.value && item ? `${Math.round((item.value / totalSeats.value) * 100)}%` : '0%';
+    },
+    style: {
+      colors: ['#121221'],
+      fontFamily: 'Space Mono, monospace',
+      fontSize: '11px',
+      fontWeight: 700,
+    },
+  },
   labels: ['Available', 'Reserved', 'Booked'],
   plotOptions: {
-    radialBar: {
-      hollow: {
-        margin: 4,
-        size: '28%',
-      },
-      track: {
-        background: 'rgba(247, 241, 227, 0.16)',
-        margin: 6,
-        strokeWidth: '94%',
-      },
-      dataLabels: {
-        name: {
-          color: '#F2CC8F',
-          fontFamily: 'Space Mono, monospace',
-          fontSize: '11px',
-          offsetY: -4,
-        },
-        value: {
-          color: '#f7f1e3',
-          fontFamily: 'Space Mono, monospace',
-          fontSize: '18px',
-          formatter: (value) => `${Math.round(Number(value))}%`,
-          offsetY: 2,
-        },
-        total: {
+    pie: {
+      donut: {
+        labels: {
           show: true,
-          color: '#f7f1e3',
-          fontFamily: 'Space Mono, monospace',
-          fontSize: '13px',
-          label: 'Total',
-          formatter: () => formatCount(totalSeats.value),
+          name: { color: '#F2CC8F', fontFamily: 'Space Mono, monospace' },
+          value: {
+            color: '#f7f1e3',
+            fontFamily: 'Space Mono, monospace',
+            formatter: (value) => formatCount(Number(value)),
+          },
+          total: {
+            show: true,
+            color: '#f7f1e3',
+            fontFamily: 'Space Mono, monospace',
+            label: 'Total',
+            formatter: () => formatCount(totalSeats.value),
+          },
         },
+        size: '68%',
       },
     },
   },

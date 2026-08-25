@@ -2,6 +2,11 @@ import { BookingModel } from "../booking/booking.model";
 import { EventModel } from "../event/event.model";
 import { SeatModel } from "../seat/seat.model";
 import { WalletTransactionModel } from "../walletTransaction/walletTransaction.model";
+import {
+  TEST_DATA_REGEX,
+  createExcludeEventIdsFilter,
+  createNonTestTextFilter
+} from "../../utils/adminDataFilters";
 
 export type AnalyticsRange = "daily" | "weekly" | "monthly";
 
@@ -87,7 +92,57 @@ const getDateFormat = (range: AnalyticsRange): string => {
   return "%Y-%m-%d";
 };
 
+const getTestEventIds = async () =>
+  EventModel.find({
+    $or: [
+      { title: TEST_DATA_REGEX },
+      { description: TEST_DATA_REGEX },
+      { location: TEST_DATA_REGEX }
+    ]
+  }).distinct("_id");
+
+const getTestBookingTransactionRefs = async (testEventIds: unknown[]) => {
+  if (!testEventIds.length) {
+    return {
+      walletTransactionIds: [],
+      referenceIds: []
+    };
+  }
+
+  const bookings = await BookingModel.find({
+    eventId: { $in: testEventIds }
+  })
+    .select("_id reservationId walletTransactionId")
+    .lean();
+
+  return {
+    walletTransactionIds: bookings
+      .map((booking) => booking.walletTransactionId)
+      .filter(Boolean),
+    referenceIds: bookings.flatMap((booking) => [
+      String(booking._id),
+      String(booking.reservationId)
+    ])
+  };
+};
+
+const createBookingAnalyticsMatch = (testEventIds: unknown[]): Record<string, unknown> => ({
+  ...createExcludeEventIdsFilter(testEventIds),
+  ...createNonTestTextFilter(["idempotencyKey"])
+});
+
+const createTransactionAnalyticsMatch = (): Record<string, unknown> =>
+  createNonTestTextFilter(["description", "idempotencyKey", "referenceId"]);
+
+const createEventAnalyticsMatch = (): Record<string, unknown> =>
+  createNonTestTextFilter(["title", "description", "location"]);
+
 export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
+  const testEventIds = await getTestEventIds();
+  const bookingMatch = createBookingAnalyticsMatch(testEventIds);
+  const eventMatch = createEventAnalyticsMatch();
+  const seatMatch = createExcludeEventIdsFilter(testEventIds);
+
   const [bookingSummary, eventSummary, seatSummary] = await Promise.all([
     BookingModel.aggregate<{
       _id: null;
@@ -98,18 +153,41 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       totalRevenueInPaise: number;
       refundedAmountInPaise: number;
     }>([
+      { $match: bookingMatch },
       {
         $group: {
           _id: null,
           totalBookings: { $sum: 1 },
           confirmedBookings: {
-            $sum: { $cond: [{ $eq: ["$status", "CONFIRMED"] }, 1, 0] }
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $eq: ["$status", "CONFIRMED"] },
+                    { $ne: ["$paymentStatus", "REFUNDED"] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
           },
           cancelledBookings: {
             $sum: { $cond: [{ $eq: ["$status", "CANCELLED"] }, 1, 0] }
           },
           refundedBookings: {
-            $sum: { $cond: [{ $eq: ["$status", "REFUNDED"] }, 1, 0] }
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ["$status", "REFUNDED"] },
+                    { $eq: ["$paymentStatus", "REFUNDED"] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
           },
           totalRevenueInPaise: {
             $sum: {
@@ -142,6 +220,7 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       totalEvents: number;
       activeEvents: number;
     }>([
+      { $match: eventMatch },
       {
         $group: {
           _id: null,
@@ -159,6 +238,7 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       reservedSeats: number;
       bookedSeats: number;
     }>([
+      { $match: seatMatch },
       {
         $group: {
           _id: null,
@@ -206,6 +286,7 @@ export const getRevenueAnalytics = async (
     throw new AdminAnalyticsError("range must be daily, weekly, or monthly", 400);
   }
 
+  const testEventIds = await getTestEventIds();
   const revenue = await BookingModel.aggregate<{
     _id: string;
     revenueInPaise: number;
@@ -213,7 +294,8 @@ export const getRevenueAnalytics = async (
     {
       $match: {
         status: "CONFIRMED",
-        paymentStatus: "PAID"
+        paymentStatus: "PAID",
+        ...createBookingAnalyticsMatch(testEventIds)
       }
     },
     {
@@ -239,10 +321,18 @@ export const getRevenueAnalytics = async (
 
 export const getBookingStatusAnalytics =
   async (): Promise<BookingStatusAnalytics> => {
+    const testEventIds = await getTestEventIds();
     const statuses = await BookingModel.aggregate<{ _id: string; count: number }>([
+      { $match: createBookingAnalyticsMatch(testEventIds) },
       {
         $group: {
-          _id: "$status",
+          _id: {
+            $cond: [
+              { $eq: ["$paymentStatus", "REFUNDED"] },
+              "REFUNDED",
+              "$status"
+            ]
+          },
           count: { $sum: 1 }
         }
       }
@@ -257,7 +347,9 @@ export const getBookingStatusAnalytics =
   };
 
 export const getSeatStatusAnalytics = async (): Promise<SeatStatusAnalytics> => {
+  const testEventIds = await getTestEventIds();
   const statuses = await SeatModel.aggregate<{ _id: string; count: number }>([
+    { $match: createExcludeEventIdsFilter(testEventIds) },
     {
       $group: {
         _id: "$status",
@@ -275,11 +367,13 @@ export const getSeatStatusAnalytics = async (): Promise<SeatStatusAnalytics> => 
 };
 
 export const getTopEventsAnalytics = async (): Promise<TopEventAnalytics[]> => {
+  const testEventIds = await getTestEventIds();
   const events = await BookingModel.aggregate<TopEventAnalytics>([
     {
       $match: {
         status: "CONFIRMED",
-        paymentStatus: "PAID"
+        paymentStatus: "PAID",
+        ...createBookingAnalyticsMatch(testEventIds)
       }
     },
     {
@@ -318,10 +412,22 @@ export const getTopEventsAnalytics = async (): Promise<TopEventAnalytics[]> => {
 
 export const getWalletFlowAnalytics =
   async (): Promise<WalletFlowAnalytics> => {
+    const testEventIds = await getTestEventIds();
+    const testTransactionRefs = await getTestBookingTransactionRefs(testEventIds);
+    const nonTestTextFilter = createTransactionAnalyticsMatch();
     const flow = await WalletTransactionModel.aggregate<{
       _id: string;
       amountInPaise: number;
     }>([
+      {
+        $match: {
+          $and: [
+            ...((nonTestTextFilter.$and as Record<string, unknown>[]) || []),
+            { _id: { $nin: testTransactionRefs.walletTransactionIds } },
+            { referenceId: { $nin: testTransactionRefs.referenceIds } }
+          ]
+        }
+      },
       {
         $group: {
           _id: "$type",

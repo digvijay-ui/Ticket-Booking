@@ -42,10 +42,13 @@
         <FieldBlock label="Status" :error="errors.status">
           <select v-model="status" class="admin-input">
             <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
+            <option value="PUBLISHED" :disabled="!canPublish">Published</option>
             <option value="CANCELLED">Cancelled</option>
             <option value="COMPLETED">Completed</option>
           </select>
+          <span v-if="!canPublish" class="mt-2 block text-xs font-semibold text-stubCharcoal/55">
+            Add seats before publishing.
+          </span>
         </FieldBlock>
       </div>
 
@@ -105,6 +108,7 @@ const isEdit = computed(() => Boolean(route.params.eventId));
 const loadingEvent = ref(false);
 const successMessage = ref('');
 const submitError = ref('');
+const editableEvent = ref<EventItem | null>(null);
 
 const title = ref('');
 const location = ref('');
@@ -113,6 +117,7 @@ const price = ref('');
 const startDate = ref('');
 const endDate = ref('');
 const status = ref<EventItem['status']>('DRAFT');
+const canPublish = computed(() => Boolean(editableEvent.value?.totalSeats));
 const errors = reactive({
   title: '',
   location: '',
@@ -130,6 +135,7 @@ function toDateTimeLocal(value: string) {
 }
 
 function fillForm(event: EventItem) {
+  editableEvent.value = event;
   title.value = event.title;
   location.value = event.location;
   description.value = event.description;
@@ -173,7 +179,7 @@ function validate() {
   errors.price = Number.isInteger(numericPrice) && numericPrice > 0 ? '' : 'Seat price must be a positive whole number';
   errors.startDate = startDate.value ? '' : 'Start date is required';
   errors.endDate = endDate.value && new Date(endDate.value) > new Date(startDate.value) ? '' : 'End date must be after start date';
-  errors.status = status.value ? '' : 'Status is required';
+  errors.status = status.value === 'PUBLISHED' && !canPublish.value ? 'Create seats before publishing' : status.value ? '' : 'Status is required';
 
   return !errors.title && !errors.location && !errors.description && !errors.price && !errors.startDate && !errors.endDate && !errors.status;
 }

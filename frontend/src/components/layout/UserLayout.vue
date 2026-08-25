@@ -1,7 +1,7 @@
 <template>
   <div class="flex min-h-screen flex-col bg-inkNight text-paperCream">
     <Navbar />
-    <main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:py-10">
+    <main class="mx-auto w-full max-w-7xl flex-1 px-4 pb-24 pt-8 sm:px-6 lg:pt-10">
       <RouterView />
     </main>
     <Footer />

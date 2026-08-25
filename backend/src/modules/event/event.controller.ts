@@ -8,6 +8,7 @@ import {
   createEvent,
   deleteEvent,
   getEventById,
+  listAdminEvents,
   listPublishedEvents,
   updateEvent
 } from "./event.service";
@@ -150,6 +151,28 @@ export const listEventsController = async (
     res.status(200).json({
       success: true,
       message: "Events fetched successfully",
+      data: {
+        events
+      }
+    });
+  } catch (error) {
+    res.status(getStatusCode(error)).json({
+      success: false,
+      message: getErrorMessage(error)
+    });
+  }
+};
+
+export const listAdminEventsController = async (
+  _req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const events = await listAdminEvents();
+
+    res.status(200).json({
+      success: true,
+      message: "Admin events fetched successfully",
       data: {
         events
       }

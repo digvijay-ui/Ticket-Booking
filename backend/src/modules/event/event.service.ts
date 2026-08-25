@@ -84,6 +84,10 @@ export const createEvent = async (
 ): Promise<SafeEvent> => {
   const adminObjectId = toObjectId(adminUserId, "admin user id");
 
+  if (input.status === "PUBLISHED") {
+    throw new EventError("Create seats before publishing an event", 400);
+  }
+
   const event = await EventModel.create({
     title: input.title,
     description: input.description,
@@ -125,7 +129,17 @@ export const updateEvent = async (
   if (input.seatPriceInPaise !== undefined) {
     event.seatPriceInPaise = input.seatPriceInPaise;
   }
-  if (input.status !== undefined) event.status = input.status;
+  if (input.status !== undefined) {
+    if (input.status === "PUBLISHED") {
+      const totalSeats = await SeatModel.countDocuments({ eventId: eventObjectId });
+
+      if (totalSeats <= 0) {
+        throw new EventError("Create seats before publishing an event", 400);
+      }
+    }
+
+    event.status = input.status;
+  }
 
   await event.save();
 
@@ -172,8 +186,19 @@ export const deleteEvent = async (eventId: string): Promise<DeleteEventResult> =
 };
 
 export const listPublishedEvents = async (): Promise<SafeEvent[]> => {
-  const events = await EventModel.find({ status: "PUBLISHED" }).sort({
+  const events = await EventModel.find({
+    status: "PUBLISHED",
+    totalSeats: { $gt: 0 }
+  }).sort({
     startDate: 1
+  });
+
+  return events.map((event) => toSafeEvent(event));
+};
+
+export const listAdminEvents = async (): Promise<SafeEvent[]> => {
+  const events = await EventModel.find({}).sort({
+    createdAt: -1
   });
 
   return events.map((event) => toSafeEvent(event));

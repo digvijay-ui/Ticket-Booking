@@ -28,6 +28,7 @@ import {
   type BulkCreateSeatsPayload,
   type ChartSeriesData,
   type EventFormPayload,
+  type PaginationMeta,
   type SeatStatusAnalytics,
   type TopEventAnalytics,
   type WalletFlowAnalytics,
@@ -49,8 +50,10 @@ interface AdminState {
   bulkCreating: boolean;
   bookingsLoading: boolean;
   bookingsError: string;
+  bookingsPagination: PaginationMeta;
   transactionsLoading: boolean;
   transactionsError: string;
+  transactionsPagination: PaginationMeta;
   actionLoadingId: string;
   analyticsSummary: AnalyticsSummary | null;
   revenueData: ChartSeriesData;
@@ -65,6 +68,15 @@ interface AdminState {
 function sumTransactions(transactions: WalletTransaction[], type: WalletTransaction['type']) {
   return transactions.filter((transaction) => transaction.type === type).reduce((total, transaction) => total + transaction.amountInPaise, 0);
 }
+
+const defaultPagination = (): PaginationMeta => ({
+  page: 1,
+  limit: 24,
+  totalItems: 0,
+  totalPages: 1,
+  hasNextPage: false,
+  hasPreviousPage: false,
+});
 
 export const useAdminStore = defineStore('admin', {
   state: (): AdminState => ({
@@ -83,8 +95,10 @@ export const useAdminStore = defineStore('admin', {
     bulkCreating: false,
     bookingsLoading: false,
     bookingsError: '',
+    bookingsPagination: defaultPagination(),
     transactionsLoading: false,
     transactionsError: '',
+    transactionsPagination: defaultPagination(),
     actionLoadingId: '',
     analyticsSummary: null,
     revenueData: { labels: [], values: [] },
@@ -123,8 +137,8 @@ export const useAdminStore = defineStore('admin', {
 
       const [eventsResult, bookingsResult, transactionsResult] = await Promise.allSettled([
         getAdminEventsApi(),
-        getAdminBookingsApi(),
-        getAdminTransactionsApi(),
+        getAdminBookingsApi({ limit: 12 }),
+        getAdminTransactionsApi({ limit: 12 }),
       ]);
 
       const errors: string[] = [];
@@ -138,15 +152,19 @@ export const useAdminStore = defineStore('admin', {
 
       if (bookingsResult.status === 'fulfilled') {
         this.bookings = bookingsResult.value.data.data.bookings;
+        this.bookingsPagination = bookingsResult.value.data.data.pagination || defaultPagination();
       } else {
         this.bookings = [];
+        this.bookingsPagination = defaultPagination();
         errors.push(getApiErrorMessage(bookingsResult.reason));
       }
 
       if (transactionsResult.status === 'fulfilled') {
         this.transactions = transactionsResult.value.data.data.transactions;
+        this.transactionsPagination = transactionsResult.value.data.data.pagination || defaultPagination();
       } else {
         this.transactions = [];
+        this.transactionsPagination = defaultPagination();
         errors.push(getApiErrorMessage(transactionsResult.reason));
       }
 
@@ -337,9 +355,11 @@ export const useAdminStore = defineStore('admin', {
         const response = await getAdminBookingsApi(filters);
         const bookings = response.data.data.bookings;
         this.bookings = filters.paymentStatus ? bookings.filter((booking) => booking.paymentStatus === filters.paymentStatus) : bookings;
+        this.bookingsPagination = response.data.data.pagination || defaultPagination();
         return this.bookings;
       } catch (error) {
         this.bookings = [];
+        this.bookingsPagination = defaultPagination();
         this.bookingsError = getApiErrorMessage(error);
         throw error;
       } finally {
@@ -393,9 +413,11 @@ export const useAdminStore = defineStore('admin', {
         }
 
         this.transactions = transactions;
+        this.transactionsPagination = response.data.data.pagination || defaultPagination();
         return this.transactions;
       } catch (error) {
         this.transactions = [];
+        this.transactionsPagination = defaultPagination();
         this.transactionsError = getApiErrorMessage(error);
         throw error;
       } finally {

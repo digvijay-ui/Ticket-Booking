@@ -16,10 +16,10 @@ remo<template>
     </p>
 
     <section v-if="adminStore.analyticsLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <div v-for="index in 4" :key="index" class="h-32 rounded-md border-2 border-stubCharcoal bg-paperCream p-3 text-stubCharcoal shadow-ticket">
-        <div class="h-2.5 w-20 animate-pulse rounded-sm bg-stubCharcoal/15" />
-        <div class="mt-3 h-8 w-24 animate-pulse rounded-sm bg-stubCharcoal/20" />
-        <div class="mt-4 h-5 w-40 animate-pulse rounded-sm bg-stubCharcoal/10" />
+      <div v-for="index in 4" :key="index" class="h-32 admin-card-dark">
+        <div class="h-2.5 w-20 animate-pulse rounded-sm bg-paperCream/15" />
+        <div class="mt-3 h-8 w-24 animate-pulse rounded-sm bg-paperCream/20" />
+        <div class="mt-4 h-5 w-40 animate-pulse rounded-sm bg-paperCream/10" />
       </div>
     </section>
 
@@ -27,9 +27,9 @@ remo<template>
       <AdminStatCard v-for="stat in stats" :key="stat.label" v-bind="stat" />
     </section>
 
-    <section v-if="!adminStore.loading && !adminStore.analyticsLoading && !hasData" class="rounded-md border-2 border-stubCharcoal bg-paperCream p-8 text-center text-stubCharcoal shadow-ticket">
+    <section v-if="!adminStore.loading && !adminStore.analyticsLoading && !hasData" class="admin-card-dark p-8 text-center">
       <p class="font-display text-4xl leading-none">No admin data yet.</p>
-      <p class="mt-2 text-sm text-stubCharcoal/65">Create events and start bookings.</p>
+      <p class="mt-2 text-sm text-paperCream/65">Create events and start bookings.</p>
     </section>
 
     <section class="space-y-4">
@@ -42,7 +42,7 @@ remo<template>
           Range
           <select
             v-model="revenueRange"
-            class="focus-ticket h-10 rounded-sm border-2 border-paperCream/20 bg-paperCream px-3 text-sm font-bold text-stubCharcoal"
+            class="admin-filter-input h-10 py-0 text-sm font-bold"
             @change="refreshAnalytics"
           >
             <option value="daily">Daily</option>
@@ -75,25 +75,27 @@ remo<template>
         <article
           v-for="(event, index) in adminStore.topEvents"
           :key="event.eventId"
-          class="relative grid gap-3 overflow-hidden rounded-sm border-2 border-stubCharcoal bg-paperCream p-3 text-stubCharcoal shadow-ticket sm:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] sm:items-center"
+          class="relative grid gap-3 overflow-hidden admin-card-dark sm:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] sm:items-center"
         >
-          <span class="font-mono text-xs font-black uppercase text-stubCharcoal/45 tabular-nums">#{{ index + 1 }}</span>
+          <span class="font-mono text-xs font-black uppercase text-paperCream/45 tabular-nums">#{{ index + 1 }}</span>
           <div class="min-w-0">
-            <h3 class="admin-card-title truncate text-stubCharcoal">{{ event.title }}</h3>
-            <p class="truncate font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">Event {{ shortId(event.eventId) }}</p>
+            <h3 class="admin-card-title truncate text-paperCream">{{ event.title }}</h3>
+            <p class="mt-1 flex min-w-0 items-center gap-1 font-mono text-[10px] font-bold uppercase text-paperCream/45">
+              Event <IdCopy :id="event.eventId" label="Event ID" />
+            </p>
           </div>
-          <p class="font-mono text-xs font-bold uppercase text-stubCharcoal/60 tabular-nums">{{ formatCount(event.totalBookings) }} bookings</p>
-          <p class="font-mono text-xs font-bold uppercase text-[#0f766e] tabular-nums">{{ formatINR(event.revenueInPaise) }}</p>
-          <p class="font-mono text-xs font-bold uppercase text-[#ef4444] tabular-nums">{{ formatCount(event.bookedSeats) }} seats</p>
+          <p class="font-mono text-xs font-bold uppercase text-paperCream/60 tabular-nums">{{ formatCount(event.totalBookings) }} bookings</p>
+          <p class="font-mono text-xs font-bold uppercase text-[#5eead4] tabular-nums">{{ formatINR(event.revenueInPaise) }}</p>
+          <p class="font-mono text-xs font-bold uppercase text-[#fb7185] tabular-nums">{{ formatCount(event.bookedSeats) }} seats</p>
         </article>
       </div>
 
-      <div v-else class="rounded-sm border border-paperCream/15 bg-paperCream p-5 text-center text-stubCharcoal">
+      <div v-else class="rounded-sm border border-paperCream/15 bg-paperCream/5 p-5 text-center text-paperCream">
         <p class="font-semibold">No top events yet.</p>
       </div>
     </section>
 
-    <section class="grid gap-5 2xl:grid-cols-2">
+    <section class="grid items-start gap-5 2xl:grid-cols-2">
       <AdminActivityPanel
         eyebrow="Latest ledger"
         title="Recent Bookings"
@@ -117,6 +119,7 @@ remo<template>
 import { computed, onMounted, ref } from 'vue';
 
 import AppButton from '@/components/common/AppButton.vue';
+import IdCopy from '@/components/common/IdCopy.vue';
 import type { Booking, EventItem, WalletTransaction } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
@@ -172,8 +175,8 @@ const bookingRows = computed<ActivityPanelItem[]>(() =>
     id: booking.id,
     name: bookingEventName(booking),
     amount: formatINR(booking.totalAmountInPaise),
-    amountClass: booking.status === 'CONFIRMED' ? 'text-[#0f766e]' : 'text-[#dc2626]',
-    status: booking.status,
+    amountClass: bookingStatusLabel(booking) === 'CONFIRMED' ? 'text-[#5eead4]' : 'text-[#fb7185]',
+    status: bookingStatusLabel(booking),
     badgeVariant: bookingStatusVariant(booking),
     createdAt: booking.createdAt,
     relativeTime: formatRelativeTime(booking.createdAt),
@@ -214,28 +217,28 @@ const stats = computed(() => [
   {
     label: 'Total Revenue',
     value: formatINR(summary.value?.totalRevenueInPaise ?? adminStore.totalRevenueInPaise),
-    valueClass: 'text-[#0f766e]',
+    valueClass: 'text-[#5eead4]',
     subtitle: 'From confirmed paid bookings',
     ...moneyDelta(adminStore.transactions, (transaction) => transaction.type === 'DEBIT', 'positive'),
   },
   {
     label: 'Total Bookings',
     value: formatCount(summary.value?.totalBookings ?? adminStore.totalBookings),
-    valueClass: 'text-stubCharcoal',
+    valueClass: 'text-paperCream',
     subtitle: `${formatCount(summary.value?.confirmedBookings ?? adminStore.confirmedBookings)} confirmed`,
     ...periodDelta(adminStore.bookings, () => true, 'positive'),
   },
   {
     label: 'Active Events',
     value: formatCount(summary.value?.activeEvents ?? adminStore.events.filter((event) => event.status === 'PUBLISHED').length),
-    valueClass: 'text-[#0f766e]',
+    valueClass: 'text-[#5eead4]',
     subtitle: `${formatCount(summary.value?.totalEvents ?? adminStore.totalEvents)} total events`,
     ...periodDelta(adminStore.events, (event) => event.status === 'PUBLISHED', 'positive'),
   },
   {
     label: 'Seats Booked',
     value: formatCount(summary.value?.bookedSeats ?? totalBookedSeatsFromEvents.value),
-    valueClass: 'text-[#dc2626]',
+    valueClass: 'text-[#fb7185]',
     subtitle: `${formatCount(summary.value?.availableSeats ?? totalAvailableSeatsFromEvents.value)} available seats`,
     ...periodDelta(adminStore.bookings, (booking) => booking.status === 'CONFIRMED', 'positive'),
   },
@@ -250,14 +253,6 @@ function byCreatedAt(first: { createdAt: string }, second: { createdAt: string }
 
 function formatCount(value: number) {
   return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value);
-}
-
-function shortId(id: string) {
-  if (id.length <= 10) {
-    return id;
-  }
-
-  return `${id.slice(0, 6)}...${id.slice(-4)}`;
 }
 
 function bookingEventName(booking: DashboardBooking) {
@@ -284,6 +279,14 @@ function bookingStatusVariant(booking: DashboardBooking): BadgeVariant {
   return booking.status === 'CONFIRMED' ? 'paid' : 'draft';
 }
 
+function bookingStatusLabel(booking: DashboardBooking) {
+  if (booking.paymentStatus === 'REFUNDED' || booking.status === 'REFUNDED') {
+    return 'REFUNDED';
+  }
+
+  return booking.status;
+}
+
 function transactionVariant(type: WalletTransaction['type']): BadgeVariant {
   if (type === 'CREDIT') {
     return 'paid';
@@ -297,7 +300,9 @@ function transactionVariant(type: WalletTransaction['type']): BadgeVariant {
 }
 
 function transactionAmountClass(type: WalletTransaction['type']) {
-  return type === 'CREDIT' ? 'text-[#0f766e]' : 'text-[#dc2626]';
+  if (type === 'CREDIT') return 'text-[#5eead4]';
+  if (type === 'REFUND') return 'text-ticketGold';
+  return 'text-[#fb7185]';
 }
 
 function periodDelta<T extends { createdAt: string }>(items: T[], filter: (item: T) => boolean, polarity: TrendPolarity) {
@@ -332,6 +337,13 @@ function isWithinWindow(createdAt: string, start: number, end: number) {
 }
 
 function formatDelta(current: number, previous: number, polarity: TrendPolarity): { deltaLabel: string; tone: TrendTone } {
+  if (previous === 0 && current === 0) {
+    return {
+      deltaLabel: '',
+      tone: 'neutral',
+    };
+  }
+
   const percent = previous === 0 ? (current > 0 ? 100 : 0) : Math.round(((current - previous) / previous) * 100);
   const sign = percent > 0 ? '+' : '';
   let tone: TrendTone = 'neutral';
