@@ -1,141 +1,121 @@
 <template>
-  <div class="space-y-6">
-    <section class="relative overflow-hidden rounded-md border border-paperCream/10 bg-deepPlum/55 px-5 py-8 sm:px-7 lg:min-h-[320px] lg:py-10">
-      <div class="max-w-2xl">
-        <p class="font-mono text-xs font-bold uppercase text-ticketGold">EST. 2024 • THE ARCHIVE</p>
-        <h1 class="mt-3 font-display text-6xl leading-none text-paperCream sm:text-7xl">LIVE EVENTS</h1>
-        <p class="mt-3 max-w-xl text-sm text-paperCream/70">Published events from the backend, styled as box-office ticket stubs.</p>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <a href="#current-listings" class="focus-ticket inline-flex rounded-sm border-2 border-marqueeRed bg-marqueeRed px-4 py-2 text-sm font-bold uppercase text-paperCream hover:bg-paperCream hover:text-marqueeRed">
-            EXPLORE NOW
-          </a>
-          <a href="#current-listings" class="focus-ticket inline-flex rounded-sm border-2 border-ticketGold bg-transparent px-4 py-2 text-sm font-bold uppercase text-ticketGold hover:bg-ticketGold hover:text-stubCharcoal">
-            VIEW ARCHIVE
-          </a>
+  <div class="event-discovery min-h-screen bg-midnight-ink text-midnight-ivory" :class="{ 'discovery-ready': pageReady }">
+    <EventDiscoveryHeader />
+
+    <section class="px-5 py-10 sm:px-8 lg:px-12 lg:py-14">
+      <div class="mx-auto max-w-[1440px]">
+        <div class="discovery-enter discovery-delay-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+          <EventSearchBar :model-value="searchInput" @update:model-value="updateSearch" />
+          <button type="button" class="focus-midnight inline-flex min-h-[58px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-midnight-surface px-5 text-sm font-extrabold lg:hidden" :aria-expanded="mobileFiltersOpen" aria-controls="mobile-event-filters" @click="mobileFiltersOpen = true">
+            <Icon icon="mdi:tune-variant" class="h-5 w-5 text-midnight-mint" aria-hidden="true" /> Filters
+            <span v-if="activeFilters.length" class="grid h-5 min-w-5 place-items-center rounded-full bg-midnight-ember px-1 text-[10px] text-white">{{ activeFilters.length }}</span>
+          </button>
+          <label class="hidden min-h-[58px] items-center gap-3 rounded-2xl border border-white/10 bg-midnight-surface px-4 lg:flex">
+            <span class="text-[10px] font-extrabold uppercase tracking-[0.14em] text-midnight-stone">Sort</span>
+            <select :value="sortBy" class="bg-transparent text-sm font-bold text-midnight-ivory outline-none" aria-label="Sort events" @change="onSortChange">
+              <option value="upcoming">Upcoming first</option><option value="newest">Recently added</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="discovery-enter discovery-delay-5 mt-4 hidden rounded-[20px] border border-white/10 bg-midnight-surface p-5 lg:block">
+          <EventFilterControls v-model:date="dateFilter" v-model:location="locationFilter" v-model:price="priceFilter" v-model:availability="availabilityFilter" :locations="locations" />
+        </div>
+
+        <div class="mt-5 min-h-9"><ActiveFilterChips :filters="activeFilters" @remove="removeFilter" @clear="clearFilters" /></div>
+
+        <div class="mt-8 flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-[10px] font-extrabold uppercase tracking-[0.16em] text-midnight-mint">The current lineup</p>
+            <h2 class="mt-2 text-3xl font-extrabold tracking-[-0.045em] sm:text-4xl">Events worth showing up for.</h2>
+          </div>
+          <div class="flex items-center justify-between gap-4 sm:justify-end">
+            <p class="text-sm font-semibold text-midnight-stone" aria-live="polite"><strong class="text-midnight-ivory">{{ filteredEvents.length }}</strong> {{ filteredEvents.length === 1 ? 'event' : 'events' }}</p>
+            <label class="flex items-center gap-2 lg:hidden"><span class="sr-only">Sort events</span><select :value="sortBy" class="rounded-xl border border-white/10 bg-midnight-surface px-3 py-2 text-xs font-bold text-midnight-ivory outline-none focus-visible:ring-2 focus-visible:ring-midnight-mint" @change="onSortChange"><option value="upcoming">Upcoming</option><option value="newest">Newest</option><option value="price-low">Lowest price</option><option value="price-high">Highest price</option></select></label>
+          </div>
+        </div>
+
+        <div v-if="eventStore.loading" class="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" aria-label="Loading events" aria-live="polite"><EventCardSkeleton v-for="index in 8" :key="index" /></div>
+
+        <EventEmptyState v-else-if="eventStore.error" class="mt-7" icon="mdi:calendar-remove-outline" title="The lineup didn’t load." copy="We couldn’t reach the event list right now. Check your connection and try once more." action-label="Try again" @action="loadEvents" />
+
+        <EventEmptyState v-else-if="!eventStore.events.length" class="mt-7" icon="mdi:ticket-outline" title="The next lineup is taking shape." copy="There are no published events right now. Check back soon for fresh experiences." />
+
+        <EventEmptyState v-else-if="!filteredEvents.length" class="mt-7" icon="mdi:magnify-close" title="No events match those filters." copy="Try a different date, location, or price range to see more of the lineup." action-label="Clear filters" @action="clearFilters" />
+
+        <div v-else class="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          <div v-for="(event, index) in filteredEvents" :key="event.id" :class="{ 'initial-card-reveal': initialRevealActive }" :style="initialRevealActive ? { animationDelay: `${Math.min(index, 7) * 55}ms` } : undefined">
+            <EventCard :event="event" :index="index" />
+          </div>
         </div>
       </div>
     </section>
 
-    <div id="current-listings" class="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <p class="font-mono text-xs font-bold uppercase text-ticketGold">Current listings</p>
-        <h2 class="font-display text-4xl leading-none text-paperCream">NOW SELLING</h2>
+    <MobileFilterPanel :open="mobileFiltersOpen" :result-count="filteredEvents.length" @close="mobileFiltersOpen = false">
+      <div id="mobile-event-filters">
+        <EventFilterControls v-model:date="dateFilter" v-model:location="locationFilter" v-model:price="priceFilter" v-model:availability="availabilityFilter" :locations="locations" compact />
+        <button v-if="activeFilters.length" type="button" class="focus-midnight mt-6 text-sm font-bold text-midnight-stone underline underline-offset-4" @click="clearFilters">Clear all filters</button>
       </div>
-      <p class="font-mono text-xs uppercase text-paperCream/55">Filter by: All Genres Cinematic Musical</p>
-    </div>
-
-    <div v-if="eventStore.loading" class="rounded-md border-2 border-stubCharcoal bg-paperCream p-8 text-center text-stubCharcoal shadow-ticket">
-      <LoadingSpinner size="lg" />
-      <p class="mt-3 font-mono text-xs font-bold uppercase text-stubCharcoal/55">Loading events</p>
-    </div>
-
-    <div v-else-if="eventStore.error" class="rounded-md border-2 border-stubCharcoal bg-paperCream p-5 text-sm font-semibold text-marqueeRed shadow-ticket">
-      {{ eventStore.error }}
-    </div>
-
-    <div v-else-if="eventStore.events.length" class="grid grid-cols-1 gap-5 xl:grid-cols-2">
-      <article
-        v-for="event in eventStore.events"
-        :key="event.id"
-        class="relative overflow-hidden rounded-md border-2 border-stubCharcoal bg-paperCream text-stubCharcoal shadow-ticket"
-      >
-        <span class="absolute -right-4 top-1/2 hidden h-8 w-8 -translate-y-1/2 rounded-full bg-inkNight lg:block" aria-hidden="true" />
-        <div class="grid min-h-[240px] lg:grid-cols-[1fr_178px]">
-          <div class="flex flex-col p-5">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <AppBadge :variant="statusVariant(event.status)" :label="event.status" />
-              <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">Ref {{ event.id.slice(-8).toUpperCase() }}</p>
-            </div>
-
-            <h3 class="mt-4 line-clamp-2 font-display text-4xl uppercase leading-none">{{ event.title }}</h3>
-            <p class="mt-2 line-clamp-2 text-sm italic text-stubCharcoal/65">{{ event.description }}</p>
-
-            <div class="mt-4 grid gap-3 sm:grid-cols-2">
-              <div>
-                <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">Location</p>
-                <p class="truncate text-sm font-bold">{{ event.location }}</p>
-              </div>
-              <div>
-                <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">Starts</p>
-                <p class="font-mono text-xs font-bold">{{ formatDateTime(event.startDate) }}</p>
-              </div>
-            </div>
-
-            <div class="mt-auto pt-4">
-              <div class="flex flex-wrap gap-2 font-mono uppercase">
-                <span class="inline-flex h-10 min-w-[66px] flex-col justify-center rounded-sm border border-stubCharcoal/15 px-2">
-                  <span class="text-[8px] font-bold text-stubCharcoal/45">Total</span>
-                  <span class="text-xs font-black">{{ event.totalSeats }}</span>
-                </span>
-                <span class="inline-flex h-10 min-w-[78px] flex-col justify-center rounded-sm border border-electricTeal/50 bg-electricTeal/15 px-2">
-                  <span class="text-[8px] font-bold text-stubCharcoal/45">Available</span>
-                  <span class="text-xs font-black">{{ event.availableSeats }}</span>
-                </span>
-                <span class="inline-flex h-10 min-w-[72px] flex-col justify-center rounded-sm border border-ticketGold/60 bg-ticketGold/20 px-2">
-                  <span class="text-[8px] font-bold text-stubCharcoal/45">Reserved</span>
-                  <span class="text-xs font-black">{{ event.reservedSeats }}</span>
-                </span>
-                <span class="inline-flex h-10 min-w-[66px] flex-col justify-center rounded-sm border border-marqueeRed/40 bg-marqueeRed/10 px-2 text-marqueeRed">
-                  <span class="text-[8px] font-bold text-marqueeRed/70">Booked</span>
-                  <span class="text-xs font-black">{{ event.bookedSeats }}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <aside class="relative flex flex-col justify-between gap-4 border-t-2 border-dashed border-stubCharcoal/25 p-5 lg:border-l-2 lg:border-t-0">
-            <span class="absolute -left-4 -top-4 hidden h-8 w-8 rounded-full bg-inkNight lg:block" aria-hidden="true" />
-            <span class="absolute -bottom-4 -left-4 hidden h-8 w-8 rounded-full bg-inkNight lg:block" aria-hidden="true" />
-            <div>
-              <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">Pass price</p>
-              <p class="mt-1 font-display text-4xl leading-none text-marqueeRed">{{ formatINR(event.seatPriceInPaise) }}</p>
-            </div>
-
-            <div class="max-w-32 [&>div]:h-8">
-              <BarcodeStrip />
-            </div>
-
-            <div class="grid gap-2">
-              <RouterLink :to="`/events/${event.id}`" class="flex">
-                <AppButton class="w-full min-h-10 px-3 py-1.5 text-xs" variant="secondary" icon="mdi:ticket-outline">View Details</AppButton>
-              </RouterLink>
-              <RouterLink :to="`/events/${event.id}/seats`" class="flex">
-                <AppButton class="w-full min-h-10 px-3 py-1.5 text-xs" icon="mdi:seat">Select Seats</AppButton>
-              </RouterLink>
-            </div>
-          </aside>
-        </div>
-      </article>
-    </div>
-
-    <div v-else class="rounded-md border-2 border-stubCharcoal bg-paperCream p-8 text-center text-stubCharcoal shadow-ticket">
-      <p class="font-display text-4xl leading-none text-marqueeRed">NO EVENTS</p>
-      <p class="mt-2 text-sm text-stubCharcoal/65">No published events are available yet.</p>
-    </div>
+    </MobileFilterPanel>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { Icon } from '@iconify/vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import AppBadge from '@/components/common/AppBadge.vue';
-import AppButton from '@/components/common/AppButton.vue';
-import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import type { EventItem } from '@/services/apiTypes';
-import { formatDateTime } from '@/utils/date';
-import { formatINR } from '@/utils/money';
+import ActiveFilterChips from '@/components/events/ActiveFilterChips.vue';
+import EventCard from '@/components/events/EventCard.vue';
+import EventCardSkeleton from '@/components/events/EventCardSkeleton.vue';
+import EventDiscoveryHeader from '@/components/events/EventDiscoveryHeader.vue';
+import EventEmptyState from '@/components/events/EventEmptyState.vue';
+import EventFilterControls from '@/components/events/EventFilterControls.vue';
+import EventSearchBar from '@/components/events/EventSearchBar.vue';
+import MobileFilterPanel from '@/components/events/MobileFilterPanel.vue';
 import { useEventStore } from '../event.store';
-
-type BadgeVariant = 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published' | 'completed';
+import { useEventDiscovery, type EventSort } from '../useEventDiscovery';
 
 const eventStore = useEventStore();
+const pageReady = ref(false);
+const mobileFiltersOpen = ref(false);
+const initialRevealActive = ref(false);
+let revealTimer: ReturnType<typeof setTimeout> | undefined;
+const sourceEvents = computed(() => eventStore.events);
+const {
+  searchInput,
+  dateFilter,
+  locationFilter,
+  priceFilter,
+  availabilityFilter,
+  sortBy,
+  locations,
+  filteredEvents,
+  activeFilters,
+  updateSearch,
+  removeFilter,
+  clearFilters,
+} = useEventDiscovery(sourceEvents);
 
-function statusVariant(status: EventItem['status']): BadgeVariant {
-  return status.toLowerCase() as BadgeVariant;
+function onSortChange(event: Event) {
+  sortBy.value = (event.target as HTMLSelectElement).value as EventSort;
+}
+
+async function loadEvents() {
+  await eventStore.fetchEvents();
+  if (!eventStore.error && eventStore.events.length) {
+    initialRevealActive.value = true;
+    await nextTick();
+    if (revealTimer) clearTimeout(revealTimer);
+    revealTimer = setTimeout(() => { initialRevealActive.value = false; }, 850);
+  }
 }
 
 onMounted(() => {
-  eventStore.fetchEvents();
+  window.requestAnimationFrame(() => { pageReady.value = true; });
+  loadEvents();
+});
+
+onBeforeUnmount(() => {
+  if (revealTimer) clearTimeout(revealTimer);
 });
 </script>

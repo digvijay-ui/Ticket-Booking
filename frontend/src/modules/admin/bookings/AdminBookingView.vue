@@ -269,6 +269,10 @@ onMounted(() => {
 }
 
 .booking-filter-input {
-  @apply admin-filter-input;
+  @apply w-full rounded-sm border-2 border-paperCream/20 bg-inkNight px-3 py-2.5 text-paperCream placeholder:text-paperCream/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+}
+
+.booking-filter-input:focus-visible {
+  outline-color: #14b8a6;
 }
 </style>

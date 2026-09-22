@@ -4,6 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
+        midnight: {
+          ink: '#09090B',
+          surface: '#141318',
+          ivory: '#F7F3EC',
+          stone: '#A8A29E',
+          ember: '#FF5A36',
+          mint: '#78DCCA',
+        },
         inkNight: '#121221',
         marqueeRed: '#E07A5F',
         ticketGold: '#F2CC8F',

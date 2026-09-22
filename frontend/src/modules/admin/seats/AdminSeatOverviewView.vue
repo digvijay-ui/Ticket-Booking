@@ -196,6 +196,10 @@ onMounted(async () => {
 
 <style scoped>
 .admin-seat-input {
-  @apply focus-ticket w-full rounded-sm border-2 border-paperCream/25 bg-paperCream px-3 py-2.5 text-stubCharcoal placeholder:text-stubCharcoal/45;
+  @apply w-full rounded-sm border-2 border-paperCream/25 bg-paperCream px-3 py-2.5 text-stubCharcoal placeholder:text-stubCharcoal/45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+}
+
+.admin-seat-input:focus-visible {
+  outline-color: #14b8a6;
 }
 </style>

@@ -222,6 +222,10 @@ onMounted(loadEventForEdit);
 
 <style scoped>
 .admin-input {
-  @apply focus-ticket w-full rounded-sm border-2 border-stubCharcoal/25 bg-inkNight px-4 py-3 text-paperCream placeholder:text-paperCream/40;
+  @apply w-full rounded-sm border-2 border-stubCharcoal/25 bg-inkNight px-4 py-3 text-paperCream placeholder:text-paperCream/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+}
+
+.admin-input:focus-visible {
+  outline-color: #14b8a6;
 }
 </style>
