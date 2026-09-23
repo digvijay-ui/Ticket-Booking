@@ -1,219 +1,114 @@
 <template>
-  <div class="space-y-6 text-[#e3e0f6]">
-    <div>
-      <p class="font-mono text-xs font-bold uppercase text-ticketGold">Payment window</p>
-      <h1 class="font-display text-5xl leading-none sm:text-6xl">RESERVATION CHECKOUT</h1>
-      <p class="max-w-2xl text-sm text-[#e3e0f6]/70">
-        Pay from wallet only after the backend confirms the reservation. Your wallet is debited by the server.
-      </p>
+  <div class="checkout-page min-h-screen overflow-x-clip bg-midnight-ink px-5 pb-24 pt-28 text-midnight-ivory sm:px-8 lg:px-12 lg:pt-32">
+    <div class="mx-auto max-w-[1280px]">
+      <header class="border-b border-white/10 pb-7"><p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-midnight-mint">Final confirmation</p><h1 class="mt-3 text-4xl font-black tracking-[-0.055em] sm:text-6xl">Your seats are on hold.</h1><p class="mt-3 max-w-2xl text-sm font-medium leading-6 text-midnight-stone">Review the ticket and confirm once. Your wallet is debited only after the server confirms the booking.</p></header>
+
+      <div v-if="pageLoading" class="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]" aria-label="Loading reservation"><div class="skeleton h-[520px] rounded-[26px]" /><div class="skeleton h-96 rounded-[26px]" /></div>
+
+      <section v-else-if="!reservationData" class="mt-7 rounded-[26px] border border-dashed border-white/15 bg-midnight-surface px-6 py-14 text-center"><Icon icon="mdi:ticket-off-outline" class="mx-auto h-10 w-10 text-midnight-ember" aria-hidden="true" /><h2 class="mt-4 text-2xl font-black">Reservation not found.</h2><p class="mt-2 text-sm text-midnight-stone">Return to the event and select seats again.</p><RouterLink to="/events" class="mt-6 inline-flex"><AppButton variant="midnight" class="rounded-full">Explore events</AppButton></RouterLink></section>
+
+      <section v-else class="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <article class="overflow-hidden rounded-[26px] border border-white/10 bg-midnight-surface">
+          <div class="grid gap-px bg-white/10 sm:grid-cols-[minmax(0,1fr)_190px]">
+            <div class="bg-midnight-surface p-6 sm:p-8"><div class="flex flex-wrap items-start justify-between gap-4"><div><p class="text-[9px] font-extrabold uppercase tracking-[0.18em] text-midnight-mint">Reserved admission</p><h2 class="mt-3 text-3xl font-black tracking-[-0.045em] sm:text-4xl">{{ eventTitle }}</h2><p class="mt-3 flex items-center gap-2 text-sm font-semibold text-midnight-stone"><Icon icon="mdi:map-marker-outline" class="h-4 w-4 text-midnight-mint" aria-hidden="true" />{{ eventLocation }}</p><p class="mt-2 flex items-center gap-2 text-sm font-semibold text-midnight-stone"><Icon icon="mdi:calendar-clock-outline" class="h-4 w-4 text-midnight-mint" aria-hidden="true" />{{ eventDate }}</p></div></div></div>
+            <div class="bg-midnight-surface p-6 text-center"><p class="text-[9px] font-extrabold uppercase tracking-[0.17em] text-midnight-stone">Time remaining</p><p class="mt-3 text-4xl font-black tabular-nums text-midnight-ember"><ReservationTimer :expires-at="reservationData.reservation.expiresAt" @tick="remainingSeconds = $event" @expired="handleReservationExpired" /></p><p class="mt-2 text-xs font-semibold leading-5 text-midnight-stone">Seats are held until this timer ends.</p></div>
+          </div>
+
+          <div class="p-6 sm:p-8">
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div><p class="text-[9px] font-extrabold uppercase tracking-[0.16em] text-midnight-stone">Selected seats</p><div class="mt-3 flex flex-wrap gap-2"><span v-for="seat in reservationData.seats" :key="seat.id" class="rounded-lg border border-midnight-mint/35 bg-midnight-mint/10 px-3 py-1.5 text-sm font-extrabold text-midnight-mint">{{ seat.seatNumber }}</span></div><p class="mt-3 text-xs font-semibold text-midnight-stone">{{ reservationData.seats.length }} {{ reservationData.seats.length === 1 ? 'seat' : 'seats' }} reserved</p></div>
+              <div><p class="text-[9px] font-extrabold uppercase tracking-[0.16em] text-midnight-stone">Price breakdown</p><dl class="mt-3 space-y-2 text-sm"><div v-for="line in priceBreakdown" :key="line.priceInPaise" class="flex justify-between gap-3"><dt class="text-midnight-stone">{{ line.count }} × {{ formatINR(line.priceInPaise) }}</dt><dd class="font-extrabold">{{ formatINR(line.count * line.priceInPaise) }}</dd></div></dl></div>
+            </div>
+            <div class="mt-7 flex items-center justify-between border-t border-dashed border-white/15 pt-6"><div><p class="text-[9px] font-extrabold uppercase tracking-[0.16em] text-midnight-stone">Reservation ID</p><p class="mt-1 break-all text-xs font-bold text-midnight-ivory">{{ reservationId }}</p></div><span class="ticket-barcode h-9 w-24 text-midnight-stone" aria-hidden="true" /></div>
+          </div>
+        </article>
+
+        <aside class="h-fit rounded-[26px] border border-white/10 bg-midnight-surface p-6 lg:sticky lg:top-24">
+          <p class="text-[9px] font-extrabold uppercase tracking-[0.17em] text-midnight-mint">Wallet payment</p><div class="mt-5 flex items-center justify-between gap-4"><span class="text-sm text-midnight-stone">Current balance</span><strong>{{ formatINR(walletStore.walletBalanceInPaise) }}</strong></div><div class="mt-3 flex items-center justify-between gap-4"><span class="text-sm text-midnight-stone">Total payable</span><strong class="text-2xl">{{ formatINR(totalAmountInPaise) }}</strong></div>
+          <div v-if="hasInsufficientBalance" class="mt-5 rounded-2xl border border-midnight-ember/35 bg-midnight-ember/10 p-4"><p class="font-extrabold">Add {{ formatINR(shortageInPaise) }} to continue.</p><p class="mt-1 text-xs font-semibold leading-5 text-midnight-stone">Your reservation stays active while you top up this wallet.</p></div>
+          <div v-else class="mt-5 flex items-start gap-2 rounded-2xl border border-midnight-mint/30 bg-midnight-mint/10 p-4 text-sm font-semibold"><Icon icon="mdi:check-circle-outline" class="mt-0.5 h-5 w-5 shrink-0 text-midnight-mint" aria-hidden="true" />Your wallet covers this booking.</div>
+          <p v-if="isExpired" class="mt-5 rounded-2xl border border-midnight-ember/35 bg-midnight-ember/10 p-4 text-sm font-bold" role="alert">This reservation expired. No payment was taken.</p>
+          <p v-if="bookingStore.error" class="mt-5 rounded-2xl border border-midnight-ember/35 bg-midnight-ember/10 p-4 text-sm font-bold leading-6" role="alert">{{ bookingStore.error }}</p>
+          <AppButton variant="midnight" class="mt-6 w-full rounded-full" icon="mdi:lock-check-outline" :loading="bookingStore.confirming" :disabled="confirmDisabled" @click="confirmBooking">{{ bookingStore.confirming ? 'Confirming securely…' : 'Confirm Booking' }}</AppButton>
+          <button v-if="hasInsufficientBalance && !isExpired" type="button" class="focus-midnight mt-3 min-h-11 w-full rounded-full border border-midnight-mint/40 text-sm font-extrabold text-midnight-mint hover:bg-midnight-mint/10" @click="topUpOpen = true">Add money without leaving</button>
+          <RouterLink v-if="isExpired || bookingStore.confirmationFailure === 'conflict'" :to="`/events/${reservationData.reservation.eventId}/seats`" class="focus-midnight mt-4 flex min-h-11 items-center justify-center rounded-full border border-white/15 text-sm font-extrabold">Select seats again</RouterLink>
+          <p class="mt-4 text-center text-[10px] font-semibold leading-4 text-midnight-stone">One stable confirmation key is reused for this reservation. Double clicks cannot create a second booking.</p>
+        </aside>
+      </section>
+
+      <p v-if="topUpSuccess" class="mt-5 rounded-2xl border border-midnight-mint/35 bg-midnight-mint/10 p-4 text-sm font-bold" role="status">{{ topUpSuccess }}</p>
+      <AddMoneyPanel :open="topUpOpen" :adding="walletStore.addingMoney" :error="walletStore.error" :suggested-amount-in-paise="shortageInPaise" @close="topUpOpen = false" @add="addMoney" />
     </div>
-
-    <section v-if="walletStore.loading" class="flex min-h-72 items-center justify-center rounded-md bg-deepPlum/70">
-      <LoadingSpinner size="lg" />
-    </section>
-
-    <section v-else-if="!reservationData" class="rounded-md border-2 border-ticketGold bg-paperCream p-6 text-stubCharcoal shadow-ticket">
-      <p class="font-mono text-xs font-bold uppercase text-marqueeRed">Reservation missing</p>
-      <h2 class="mt-2 font-display text-4xl leading-none">Reservation details not found.</h2>
-      <p class="mt-2 text-sm text-stubCharcoal/70">Please select seats again.</p>
-      <RouterLink to="/events" class="mt-5 inline-flex">
-        <AppButton variant="secondary" icon="mdi:arrow-left">Back to Events</AppButton>
-      </RouterLink>
-    </section>
-
-    <section v-else class="grid gap-5 lg:grid-cols-[1fr_360px]">
-      <div class="relative overflow-hidden rounded-md border-2 border-stubCharcoal bg-paperCream p-6 text-stubCharcoal shadow-ticket">
-        <div class="absolute left-0 top-0 h-full w-2 bg-marqueeRed" aria-hidden="true" />
-        <div class="flex flex-wrap items-start justify-between gap-4 pl-2">
-          <div>
-            <p class="font-mono text-xs font-bold uppercase text-marqueeRed">Hold ticket</p>
-            <h2 class="mt-1 font-display text-5xl leading-none">{{ eventTitle }}</h2>
-            <p class="mt-2 max-w-2xl text-sm italic text-stubCharcoal/65">{{ eventLocation }}</p>
-          </div>
-          <div class="rounded-sm border-2 border-ticketGold px-3 py-2 text-center">
-            <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/55">Countdown</p>
-            <p class="font-mono text-2xl font-black text-marqueeRed">{{ countdownLabel }}</p>
-          </div>
-        </div>
-
-        <div class="my-6 border-t-2 border-dashed border-stubCharcoal/25" />
-
-        <div class="grid gap-3 pl-2 sm:grid-cols-2">
-          <div class="rounded-sm border border-stubCharcoal/15 p-3">
-            <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/50">Reservation ID</p>
-            <p class="mt-1 break-all font-mono text-xs font-bold">{{ reservationId }}</p>
-          </div>
-          <div class="rounded-sm border border-stubCharcoal/15 p-3">
-            <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/50">Reservation status</p>
-            <p class="mt-1 font-display text-2xl leading-none">{{ reservationData.reservation.status }}</p>
-          </div>
-          <div class="rounded-sm border border-stubCharcoal/15 p-3">
-            <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/50">Selected seats</p>
-            <p class="mt-1 font-semibold">{{ selectedSeatNumbers }}</p>
-            <p class="mt-1 break-all font-mono text-[11px] text-stubCharcoal/45">{{ selectedSeatIds }}</p>
-          </div>
-          <div class="rounded-sm border border-stubCharcoal/15 p-3">
-            <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/50">Expires at</p>
-            <p class="mt-1 text-sm font-bold">{{ expiresLabel }}</p>
-          </div>
-        </div>
-
-        <div class="mt-6 pl-2">
-          <BarcodeStrip />
-        </div>
-      </div>
-
-      <aside class="h-fit rounded-md border-2 border-stubCharcoal bg-paperCream p-5 text-stubCharcoal shadow-ticket">
-        <p class="font-mono text-xs font-bold uppercase text-stubCharcoal/55">Amount payable</p>
-        <p class="mt-1 font-display text-5xl leading-none text-marqueeRed">{{ formatINR(totalAmountInPaise) }}</p>
-
-        <div class="my-5 border-t-2 border-dashed border-stubCharcoal/25" />
-
-        <div class="space-y-3 font-mono text-sm">
-          <div class="flex justify-between gap-4">
-            <span>Wallet balance</span>
-            <span class="font-bold text-electricTeal">{{ formatINR(walletStore.walletBalanceInPaise) }}</span>
-          </div>
-          <div class="flex justify-between gap-4">
-            <span>Payment method</span>
-            <span class="font-bold">WALLET</span>
-          </div>
-        </div>
-
-        <p v-if="isExpired" class="mt-4 rounded-sm bg-marqueeRed/10 px-3 py-2 text-sm font-semibold text-marqueeRed">
-          Reservation expired
-        </p>
-        <p v-else-if="hasInsufficientBalance" class="mt-4 rounded-sm bg-ticketGold/25 px-3 py-2 text-sm font-semibold text-stubCharcoal">
-          Insufficient wallet balance
-        </p>
-        <p v-if="paymentError" class="mt-4 rounded-sm bg-marqueeRed/10 px-3 py-2 text-sm font-semibold text-marqueeRed">
-          {{ paymentError }}
-        </p>
-
-        <AppButton
-          class="mt-5 w-full"
-          icon="mdi:wallet-check"
-          :loading="bookingStore.confirming"
-          :disabled="isPayDisabled"
-          @click="payFromWallet"
-        >
-          {{ bookingStore.confirming ? 'Processing payment...' : 'Pay From Wallet' }}
-        </AppButton>
-
-        <RouterLink v-if="hasInsufficientBalance" to="/wallet" class="mt-3 flex">
-          <AppButton class="w-full" variant="secondary" icon="mdi:plus-circle">Add Money</AppButton>
-        </RouterLink>
-        <RouterLink v-if="isExpired" to="/events" class="mt-3 flex">
-          <AppButton class="w-full" variant="ghost" icon="mdi:arrow-left">Back to Events</AppButton>
-        </RouterLink>
-      </aside>
-    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { Icon } from '@iconify/vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-
 import AppButton from '@/components/common/AppButton.vue';
-import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import ReservationTimer from '@/components/seats/ReservationTimer.vue';
+import AddMoneyPanel from '@/components/wallet/AddMoneyPanel.vue';
+import { useEventStore } from '@/modules/events/event.store';
 import { useWalletStore } from '@/modules/wallet/wallet.store';
-import { getApiErrorMessage } from '@/utils/apiError';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
 import { useBookingStore } from '../booking.store';
 
-const route = useRoute();
-const router = useRouter();
-const bookingStore = useBookingStore();
-const walletStore = useWalletStore();
-const remainingSeconds = ref(0);
-const paymentError = ref('');
-let countdownTimer: number | undefined;
-
+const route = useRoute(); const router = useRouter(); const bookingStore = useBookingStore(); const walletStore = useWalletStore(); const eventStore = useEventStore();
+const remainingSeconds = ref(0); const pageLoading = ref(true); const topUpOpen = ref(false); const topUpSuccess = ref('');
 const reservationId = computed(() => String(route.params.reservationId));
 const reservationData = computed(() => bookingStore.reservation);
-const eventTitle = computed(() => reservationData.value?.event?.title || 'Reservation hold');
-const eventLocation = computed(() => reservationData.value?.event?.location || 'Box office checkout');
-const selectedSeatNumbers = computed(() => {
-  const seatNumbers = reservationData.value?.seats.map((seat) => seat.seatNumber).filter(Boolean);
-  return seatNumbers?.length ? seatNumbers.join(', ') : 'Reserved seats';
+const eventTitle = computed(() => reservationData.value?.event?.title || 'Reserved event');
+const eventLocation = computed(() => reservationData.value?.event?.location || 'Venue details unavailable');
+const eventDate = computed(() => reservationData.value?.event?.startDate ? formatDateTime(reservationData.value.event.startDate) : 'Date details unavailable');
+const totalAmountInPaise = computed(() => reservationData.value?.reservation.totalAmountInPaise ?? 0);
+const isExpired = computed(() => Boolean(reservationData.value) && (remainingSeconds.value <= 0 || reservationData.value?.reservation.status === 'EXPIRED'));
+const shortageInPaise = computed(() => Math.max(0, totalAmountInPaise.value - walletStore.walletBalanceInPaise));
+const hasInsufficientBalance = computed(() => shortageInPaise.value > 0);
+const confirmDisabled = computed(() => !reservationData.value || isExpired.value || hasInsufficientBalance.value || bookingStore.confirming);
+const priceBreakdown = computed(() => {
+  const groups = new Map<number, number>();
+  for (const seat of reservationData.value?.seats ?? []) groups.set(seat.priceInPaise, (groups.get(seat.priceInPaise) ?? 0) + 1);
+  return [...groups.entries()].map(([priceInPaise, count]) => ({ priceInPaise, count }));
 });
-const selectedSeatIds = computed(() => reservationData.value?.reservation.seatIds.join(', ') || 'No seat IDs');
-const totalAmountInPaise = computed(() => reservationData.value?.reservation.totalAmountInPaise || 0);
-const expiresLabel = computed(() =>
-  reservationData.value?.reservation.expiresAt ? formatDateTime(reservationData.value.reservation.expiresAt) : 'Soon',
-);
-const isExpired = computed(() => Boolean(reservationData.value) && remainingSeconds.value <= 0);
-const hasInsufficientBalance = computed(
-  () => Boolean(reservationData.value) && walletStore.walletBalanceInPaise < totalAmountInPaise.value,
-);
-const isPayDisabled = computed(
-  () => !reservationData.value || isExpired.value || hasInsufficientBalance.value || bookingStore.confirming,
-);
-const countdownLabel = computed(() => formatCountdown(remainingSeconds.value));
 
-function formatCountdown(totalSeconds: number) {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  const paddedMinutes = String(minutes).padStart(2, '0');
-  const paddedSeconds = String(seconds).padStart(2, '0');
-
-  if (hours > 0) {
-    return `${String(hours).padStart(2, '0')}:${paddedMinutes}:${paddedSeconds}`;
-  }
-
-  return `${paddedMinutes}:${paddedSeconds}`;
+async function handleReservationExpired() {
+  remainingSeconds.value = 0; bookingStore.markReservationExpired(reservationId.value);
+  const eventId = reservationData.value?.reservation.eventId;
+  if (eventId) await eventStore.fetchEventSeats(eventId);
 }
-
-function updateCountdown() {
-  const expiresAt = reservationData.value?.reservation.expiresAt;
-
-  if (!expiresAt) {
-    remainingSeconds.value = 0;
-    return;
-  }
-
-  const seconds = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 1000);
-  remainingSeconds.value = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+async function addMoney(amountInPaise: number) {
+  topUpSuccess.value = '';
+  try {
+    const result = await walletStore.addMoney(amountInPaise);
+    if (!result) return;
+    topUpOpen.value = false;
+    topUpSuccess.value = `${formatINR(amountInPaise)} added. Your reservation and selected seats are unchanged.`;
+  } catch { /* Safe error stays in the panel. */ }
 }
-
-async function payFromWallet() {
-  paymentError.value = '';
-
-  if (isPayDisabled.value) {
-    return;
-  }
-
+async function confirmBooking() {
+  if (confirmDisabled.value) return;
   try {
     const booking = await bookingStore.confirmBooking(reservationId.value);
-    await walletStore.fetchBalance();
-    router.push(`/booking/success/${booking.id}`);
-  } catch (error) {
-    paymentError.value = bookingStore.error || getApiErrorMessage(error);
+    if (!booking) return;
+    await Promise.allSettled([
+      walletStore.fetchWallet(),
+      bookingStore.fetchMyBookings(),
+      eventStore.fetchEventSeats(reservationData.value?.reservation.eventId ?? ''),
+    ]);
+    await router.replace(`/booking/success/${booking.id}`);
+  } catch {
+    if (bookingStore.confirmationFailure === 'insufficient') await walletStore.fetchBalance().catch(() => undefined);
   }
 }
-
 onMounted(async () => {
   bookingStore.loadReservation(reservationId.value);
-  updateCountdown();
-  countdownTimer = window.setInterval(updateCountdown, 1000);
-
-  try {
-    walletStore.loading = true;
-    await walletStore.fetchBalance();
-  } catch {
-    paymentError.value = walletStore.error || 'Something went wrong';
-  } finally {
-    walletStore.loading = false;
-  }
-});
-
-onUnmounted(() => {
-  if (countdownTimer) {
-    window.clearInterval(countdownTimer);
-  }
+  try { await walletStore.fetchBalance(); } catch { /* Safe message is shown in the payment summary. */ }
+  finally { pageLoading.value = false; }
 });
 </script>
+
+<style scoped>
+.ticket-barcode{background:repeating-linear-gradient(90deg,currentColor 0 2px,transparent 2px 5px,currentColor 5px 8px,transparent 8px 12px)}
+</style>

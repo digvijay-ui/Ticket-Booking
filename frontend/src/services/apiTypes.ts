@@ -16,6 +16,7 @@ export interface EventItem {
   id: string;
   title: string;
   description: string;
+  imageUrl?: string | null;
   location: string;
   startDate: string;
   endDate: string;
@@ -58,9 +59,9 @@ export interface Booking {
   id: string;
   userId?: string;
   eventId?: string;
-  event?: Pick<EventItem, 'id' | 'title'>;
+  event?: Pick<EventItem, 'id' | 'title' | 'location' | 'startDate' | 'endDate' | 'status'>;
   seatIds?: string[];
-  seats?: Array<Pick<Seat, 'id' | 'seatNumber' | 'row'>>;
+  seats?: Array<Pick<Seat, 'id' | 'seatNumber' | 'row' | 'priceInPaise' | 'status'>>;
   reservationId?: string;
   status: 'CONFIRMED' | 'CANCELLED' | 'REFUNDED';
   paymentStatus: 'PAID' | 'REFUNDED';

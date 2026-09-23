@@ -11,7 +11,13 @@ interface EventState {
   loading: boolean;
   seatsLoading: boolean;
   error: string;
+  detailError: string;
+  detailErrorStatus: number | null;
+  seatsError: string;
 }
+
+let eventDetailsRequest = 0;
+let eventSeatsRequest = 0;
 
 export const useEventStore = defineStore('events', {
   state: (): EventState => ({
@@ -21,6 +27,9 @@ export const useEventStore = defineStore('events', {
     loading: false,
     seatsLoading: false,
     error: '',
+    detailError: '',
+    detailErrorStatus: null,
+    seatsError: '',
   }),
   actions: {
     async fetchEvents() {
@@ -37,29 +46,51 @@ export const useEventStore = defineStore('events', {
       }
     },
     async fetchEventById(eventId: string) {
+      const requestId = ++eventDetailsRequest;
       this.loading = true;
-      this.error = '';
+      this.detailError = '';
+      this.detailErrorStatus = null;
+      this.selectedEvent = null;
 
       try {
         const response = await getEventByIdApi(eventId);
-        this.selectedEvent = response.data.data.event;
+        if (requestId === eventDetailsRequest) {
+          this.selectedEvent = response.data.data.event;
+        }
       } catch (error) {
-        this.error = getApiErrorMessage(error);
+        if (requestId === eventDetailsRequest) {
+          const status = typeof error === 'object' && error !== null && 'response' in error
+            ? (error as { response?: { status?: number } }).response?.status ?? null
+            : null;
+          this.detailErrorStatus = status;
+          this.detailError = status === 404
+            ? 'This event could not be found or is no longer available.'
+            : 'We could not load this event right now.';
+        }
       } finally {
-        this.loading = false;
+        if (requestId === eventDetailsRequest) {
+          this.loading = false;
+        }
       }
     },
     async fetchEventSeats(eventId: string) {
+      const requestId = ++eventSeatsRequest;
       this.seatsLoading = true;
-      this.error = '';
+      this.seatsError = '';
 
       try {
         const response = await getEventSeatsApi(eventId);
-        this.seats = response.data.data.seats;
+        if (requestId === eventSeatsRequest) {
+          this.seats = response.data.data.seats;
+        }
       } catch (error) {
-        this.error = getApiErrorMessage(error);
+        if (requestId === eventSeatsRequest) {
+          this.seatsError = getApiErrorMessage(error);
+        }
       } finally {
-        this.seatsLoading = false;
+        if (requestId === eventSeatsRequest) {
+          this.seatsLoading = false;
+        }
       }
     },
   },

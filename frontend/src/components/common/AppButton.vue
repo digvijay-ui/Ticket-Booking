@@ -17,7 +17,7 @@ import { computed } from 'vue';
 
 import LoadingSpinner from './LoadingSpinner.vue';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'midnight';
 
 const props = withDefaults(
   defineProps<{
@@ -42,6 +42,7 @@ const variantClass = computed(() => {
     secondary: 'border-[#14b8a6] bg-[#14b8a6]/15 text-[#14b8a6] hover:bg-[#14b8a6] hover:text-inkNight',
     danger: 'border-marqueeRed bg-transparent text-marqueeRed hover:bg-marqueeRed hover:text-paperCream',
     ghost: 'border-paperCream/30 bg-transparent text-paperCream hover:border-[#14b8a6] hover:text-[#14b8a6]',
+    midnight: 'border-midnight-ember bg-midnight-ember text-white hover:border-midnight-ivory hover:bg-midnight-ivory hover:text-midnight-ink',
   };
 
   return classes[props.variant];

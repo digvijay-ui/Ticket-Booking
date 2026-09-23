@@ -78,7 +78,10 @@ router.beforeEach((to) => {
   auth.loadFromStorage();
 
   if ((to.name === 'login' || to.name === 'signup') && auth.isAuthenticated) {
-    return '/events';
+    const redirect = typeof to.query.redirect === 'string' && to.query.redirect.startsWith('/')
+      ? to.query.redirect
+      : '/events';
+    return redirect;
   }
 
   if (to.name === 'admin-login' && auth.isAdminAuthenticated) {

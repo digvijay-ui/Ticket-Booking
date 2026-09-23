@@ -1,84 +1,87 @@
 <template>
-  <div class="space-y-6">
-    <div v-if="eventStore.loading" class="flex min-h-80 items-center justify-center rounded-md bg-deepPlum/70">
-      <LoadingSpinner size="lg" />
-    </div>
+  <div class="event-detail min-h-screen overflow-x-clip bg-midnight-ink px-5 pb-20 pt-28 text-midnight-ivory sm:px-8 lg:px-12 lg:pb-28 lg:pt-32" :class="{ 'event-detail-ready': pageReady }">
+    <div class="mx-auto max-w-[1440px]">
+      <RouterLink to="/events" class="focus-midnight mb-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 px-4 text-sm font-bold text-midnight-stone transition hover:border-white/25 hover:text-midnight-ivory">
+        <Icon icon="mdi:arrow-left" class="h-4 w-4" aria-hidden="true" />
+        Back to events
+      </RouterLink>
 
-    <div v-else-if="eventStore.error" class="rounded-md border border-marqueeRed bg-marqueeRed/10 p-5 text-sm font-semibold text-paperCream">
-      {{ eventStore.error }}
-    </div>
+      <EventDetailsSkeleton v-if="eventStore.loading" />
 
-    <template v-else-if="event">
-      <div>
-        <p class="font-mono text-xs uppercase text-ticketGold">Event details</p>
-        <h1 class="font-display text-6xl leading-none text-paperCream">{{ event.title }}</h1>
-        <p class="mt-2 max-w-3xl text-paperCream/70">{{ event.description }}</p>
-      </div>
+      <EventEmptyState
+        v-else-if="eventStore.detailError"
+        icon="mdi:ticket-off-outline"
+        :title="eventStore.detailErrorStatus === 404 ? 'That event has left the lineup.' : 'We lost the event details.'"
+        :copy="eventStore.detailError"
+        :action-label="eventStore.detailErrorStatus === 404 ? 'Browse events' : 'Try again'"
+        @action="handleErrorAction"
+      />
 
-      <TicketStubCard :title="event.title" :subtitle="event.description" :status="event.status">
-        <div class="space-y-5">
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Location</p>
-              <p class="mt-1 font-bold">{{ event.location }}</p>
-            </div>
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Starts</p>
-              <p class="mt-1 font-bold">{{ formatDateTime(event.startDate) }}</p>
-            </div>
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Ends</p>
-              <p class="mt-1 font-bold">{{ formatDateTime(event.endDate) }}</p>
-            </div>
-            <div class="rounded-sm border border-stubCharcoal/15 bg-stubCharcoal/5 p-4">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Price</p>
-              <p class="mt-1 font-bold text-marqueeRed">{{ formatINR(event.seatPriceInPaise) }}</p>
-            </div>
-          </div>
-
-          <div class="grid gap-3 sm:grid-cols-4">
-            <div class="rounded-sm border border-stubCharcoal/15 p-3">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Total</p>
-              <p class="font-display text-3xl leading-none">{{ event.totalSeats }}</p>
-            </div>
-            <div class="rounded-sm border border-electricTeal p-3">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Available</p>
-              <p class="font-display text-3xl leading-none text-electricTeal">{{ event.availableSeats }}</p>
-            </div>
-            <div class="rounded-sm border border-ticketGold p-3">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Reserved</p>
-              <p class="font-display text-3xl leading-none text-ticketGold">{{ event.reservedSeats }}</p>
-            </div>
-            <div class="rounded-sm border border-marqueeRed p-3">
-              <p class="font-mono text-xs uppercase text-stubCharcoal/55">Booked</p>
-              <p class="font-display text-3xl leading-none text-marqueeRed">{{ event.bookedSeats }}</p>
-            </div>
-          </div>
-
-          <RouterLink :to="`/events/${event.id}/seats`" class="focus-ticket inline-flex rounded-sm border-2 border-marqueeRed bg-marqueeRed px-4 py-2 text-sm font-bold uppercase text-paperCream hover:bg-paperCream hover:text-marqueeRed">
-            Select Seats
-          </RouterLink>
+      <template v-else-if="event">
+        <EventDetailsHero
+          :event="event"
+          :booking-unavailable="bookingUnavailable"
+          :unavailable-reason="unavailableReason"
+        />
+        <div class="mt-6 space-y-6">
+          <EventInformation :event="event" />
         </div>
-      </TicketStubCard>
-    </template>
+      </template>
+
+      <EventEmptyState
+        v-else
+        icon="mdi:calendar-question-outline"
+        title="Event not found."
+        copy="This event may have moved, ended, or is no longer part of the current lineup."
+        action-label="Browse events"
+        @action="router.push('/events')"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { Icon } from '@iconify/vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import TicketStubCard from '@/components/common/TicketStubCard.vue';
-import { formatDateTime } from '@/utils/date';
-import { formatINR } from '@/utils/money';
+import EventDetailsHero from '@/components/events/EventDetailsHero.vue';
+import EventDetailsSkeleton from '@/components/events/EventDetailsSkeleton.vue';
+import EventEmptyState from '@/components/events/EventEmptyState.vue';
+import EventInformation from '@/components/events/EventInformation.vue';
 import { useEventStore } from '../event.store';
 
 const route = useRoute();
+const router = useRouter();
 const eventStore = useEventStore();
+const pageReady = ref(false);
 const event = computed(() => eventStore.selectedEvent);
-
-onMounted(() => {
-  eventStore.fetchEventById(String(route.params.eventId));
+const bookingUnavailable = computed(() => !event.value
+  || event.value.status !== 'PUBLISHED'
+  || event.value.availableSeats <= 0);
+const unavailableReason = computed(() => {
+  if (!event.value) return 'Booking is unavailable for this event.';
+  if (event.value.status === 'CANCELLED') return 'This event has been cancelled, so seat selection and booking are closed.';
+  if (event.value.status === 'COMPLETED') return 'This event has ended, so new bookings are no longer available.';
+  if (event.value.status !== 'PUBLISHED') return 'This event is not currently open for booking.';
+  if (event.value.availableSeats <= 0) return 'All seats are currently booked or held. Check back in case a temporary hold expires.';
+  return '';
 });
+
+async function loadEvent() {
+  pageReady.value = false;
+  await eventStore.fetchEventById(String(route.params.eventId));
+  await nextTick();
+  window.requestAnimationFrame(() => { pageReady.value = true; });
+}
+
+function handleErrorAction() {
+  if (eventStore.detailErrorStatus === 404) {
+    router.push('/events');
+    return;
+  }
+  loadEvent();
+}
+
+onMounted(loadEvent);
 </script>
