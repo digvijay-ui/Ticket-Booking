@@ -1,15 +1,32 @@
 <template>
   <div class="space-y-6">
-    <div class="flex flex-wrap items-end justify-between gap-4">
+    <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="font-mono text-xs font-bold uppercase text-ticketGold">Inventory</p>
-        <h1 class="font-display text-5xl leading-none text-paperCream">EVENT MANAGEMENT</h1>
-        <p class="text-sm text-paperCream/70">Create, edit, cancel, and inspect event seat inventory.</p>
+        <p class="admin-kicker">Inventory</p>
+        <h1 class="admin-page-title">Events</h1>
+        <p class="admin-page-copy">Create, edit, publish, and manage event seat inventory.</p>
       </div>
       <RouterLink to="/admin/events/create">
-        <AppButton variant="secondary" icon="mdi:plus">CREATE EVENT</AppButton>
+        <AppButton icon="mdi:plus">Create event</AppButton>
       </RouterLink>
-    </div>
+    </header>
+
+    <form class="admin-panel-dark grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]" @submit.prevent>
+      <label>
+        <span class="admin-field-label">Search events</span>
+        <input v-model.trim="searchQuery" class="admin-filter-input" type="search" placeholder="Title, location, or event ID" />
+      </label>
+      <label>
+        <span class="admin-field-label">Status</span>
+        <select v-model="statusFilter" class="admin-filter-input">
+          <option value="">All statuses</option>
+          <option value="DRAFT">Draft</option>
+          <option value="PUBLISHED">Published</option>
+          <option value="CANCELLED">Cancelled</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+      </label>
+    </form>
 
     <div v-if="adminStore.eventsLoading" class="admin-card-dark p-6">
       <div class="h-3 w-32 animate-pulse rounded-sm bg-paperCream/15" />
@@ -17,28 +34,75 @@
       <div class="mt-6 h-24 animate-pulse rounded-sm bg-paperCream/10" />
     </div>
 
-    <div v-else-if="adminStore.eventsError" class="rounded-md border border-marqueeRed bg-marqueeRed/10 p-4 text-sm font-semibold text-paperCream">
-      {{ adminStore.eventsError }}
+    <div v-else-if="adminStore.eventsError" class="admin-error-state" role="alert">
+      <p class="text-sm font-medium">{{ adminStore.eventsError }}</p>
     </div>
 
-    <div v-else-if="adminStore.events.length" class="grid grid-cols-1 gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-      <article
-        v-for="event in adminStore.events"
+    <template v-else-if="filteredEvents.length">
+      <div class="admin-table-wrap hidden md:block">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Event</th>
+              <th scope="col">Schedule</th>
+              <th scope="col">Price</th>
+              <th scope="col">Status</th>
+              <th scope="col">Seats</th>
+              <th scope="col" class="w-16"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="event in pagedEvents" :key="event.id">
+              <td>
+                <p class="max-w-64 truncate font-semibold">{{ event.title }}</p>
+                <p class="mt-0.5 max-w-64 truncate text-xs text-admin-secondary">{{ event.location }}</p>
+              </td>
+              <td>
+                <p class="whitespace-nowrap text-xs">{{ formatDateTime(event.startDate) }}</p>
+                <p class="mt-0.5 whitespace-nowrap text-xs text-admin-secondary">to {{ formatDateTime(event.endDate) }}</p>
+              </td>
+              <td class="whitespace-nowrap font-medium">{{ formatINR(event.seatPriceInPaise) }}</td>
+              <td><AppBadge :variant="eventStatusVariant(event.status)" :label="event.status" /></td>
+              <td>
+                <p class="whitespace-nowrap font-medium">{{ event.bookedSeats }} / {{ event.totalSeats }}</p>
+                <p class="mt-0.5 text-xs text-admin-secondary">{{ event.availableSeats }} available</p>
+              </td>
+              <td class="relative">
+                <details class="group">
+                  <summary class="admin-focus flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md hover:bg-admin-hover" aria-label="Event actions">
+                    <Icon icon="mdi:dots-horizontal" class="h-5 w-5" aria-hidden="true" />
+                  </summary>
+                  <div class="absolute right-4 z-20 mt-1 w-44 rounded-lg border border-admin-border bg-white p-1 shadow-lg">
+                    <RouterLink :to="`/admin/events/${event.id}/edit`" class="admin-focus flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-admin-hover"><Icon icon="mdi:pencil-outline" class="h-4 w-4" />Edit</RouterLink>
+                    <RouterLink :to="`/admin/events/${event.id}/seats`" class="admin-focus flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-admin-hover"><Icon icon="mdi:seat-outline" class="h-4 w-4" />Manage seats</RouterLink>
+                    <button type="button" class="admin-focus flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-admin-hover disabled:opacity-50" :disabled="event.status === 'CANCELLED' || adminStore.eventSaving" @click="openCancelDialog(event)"><Icon icon="mdi:calendar-remove-outline" class="h-4 w-4" />Cancel</button>
+                    <button type="button" class="admin-focus flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-admin-error hover:bg-admin-errorSoft disabled:opacity-50" :disabled="adminStore.eventSaving" @click="openDeleteDialog(event)"><Icon icon="mdi:trash-can-outline" class="h-4 w-4" />Delete</button>
+                  </div>
+                </details>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 md:hidden">
+        <article
+          v-for="event in pagedEvents"
         :key="event.id"
         class="relative flex min-h-[320px] flex-col admin-card-dark"
       >
-        <span class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-inkNight" aria-hidden="true" />
+        <span class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full border border-admin-border bg-admin-canvas" aria-hidden="true" />
 
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
-            <p class="font-mono text-[10px] font-bold uppercase text-ticketGold/75">Event ID</p>
+            <p class="text-[10px] font-semibold uppercase text-admin-secondary">Event ID</p>
             <IdCopy :id="event.id" label="Event ID" />
           </div>
           <button
             type="button"
-            class="focus-ticket rounded-sm bg-marqueeRed px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-paperCream disabled:cursor-not-allowed disabled:opacity-50"
+            class="admin-focus rounded-md border border-admin-error/30 bg-admin-errorSoft px-2.5 py-1 text-[10px] font-bold uppercase text-admin-error disabled:cursor-not-allowed disabled:opacity-50"
             :disabled="event.status === 'CANCELLED' || adminStore.eventSaving"
-            @click="cancelEvent(event)"
+            @click="openCancelDialog(event)"
           >
             {{ cancellingEventId === event.id ? 'Cancelling...' : 'Cancel Event' }}
           </button>
@@ -46,15 +110,15 @@
 
         <div class="mt-3 flex flex-wrap gap-2">
           <AppBadge :variant="eventStatusVariant(event.status)" :label="event.status" />
-          <span v-if="event.totalSeats === 0" class="rounded-sm border border-ticketGold/40 bg-ticketGold/10 px-2.5 py-1 font-mono text-xs font-semibold uppercase text-ticketGold">
+          <span v-if="event.totalSeats === 0" class="rounded-full border border-admin-warning/30 bg-admin-warningSoft px-2.5 py-1 text-xs font-semibold text-admin-warning">
             Needs seats
           </span>
         </div>
 
-        <h2 class="admin-card-title mt-3 line-clamp-3 text-paperCream">{{ event.title }}</h2>
-        <p class="mt-1 truncate text-sm font-semibold text-paperCream/65">{{ event.location }}</p>
+        <h2 class="mt-3 line-clamp-3 font-semibold text-admin-text">{{ event.title }}</h2>
+        <p class="mt-1 truncate text-sm text-admin-secondary">{{ event.location }}</p>
 
-        <div class="my-4 border-t-2 border-dashed border-paperCream/20" />
+        <div class="my-4 border-t border-dashed border-admin-border" />
 
         <div class="space-y-1.5 font-mono text-xs">
           <div class="flex justify-between gap-3">
@@ -72,10 +136,10 @@
         </div>
 
         <div class="mt-3 flex flex-wrap gap-1.5 font-mono text-[10px] font-bold uppercase">
-          <span class="rounded-sm bg-electricTeal/20 px-2 py-1 text-[#5eead4]">AVL {{ event.availableSeats }}</span>
-          <span class="rounded-sm bg-ticketGold/30 px-2 py-1">RSV {{ event.reservedSeats }}</span>
-          <span class="rounded-sm bg-marqueeRed/15 px-2 py-1 text-marqueeRed">BKD {{ event.bookedSeats }}</span>
-          <span class="rounded-sm bg-paperCream/10 px-2 py-1">TOT {{ event.totalSeats }}</span>
+          <span class="rounded-md bg-admin-successSoft px-2 py-1 text-admin-success">AVL {{ event.availableSeats }}</span>
+          <span class="rounded-md bg-admin-warningSoft px-2 py-1 text-admin-warning">RSV {{ event.reservedSeats }}</span>
+          <span class="rounded-md bg-admin-errorSoft px-2 py-1 text-admin-error">BKD {{ event.bookedSeats }}</span>
+          <span class="rounded-md bg-admin-hover px-2 py-1 text-admin-secondary">TOT {{ event.totalSeats }}</span>
         </div>
 
         <div class="mt-auto pt-3">
@@ -98,30 +162,52 @@
             </AppButton>
           </div>
         </div>
-      </article>
+        </article>
+      </div>
+
+      <div v-if="totalPages > 1" class="admin-pagination">
+        <p class="text-xs text-admin-secondary">Page {{ safePage }} of {{ totalPages }} · {{ filteredEvents.length }} events</p>
+        <div class="flex gap-2">
+          <AppButton variant="ghost" icon="mdi:chevron-left" :disabled="safePage === 1" @click="currentPage -= 1">Previous</AppButton>
+          <AppButton variant="ghost" icon="mdi:chevron-right" :disabled="safePage === totalPages" @click="currentPage += 1">Next</AppButton>
+        </div>
+      </div>
+    </template>
+
+    <div v-else class="admin-empty-state">
+      <p class="text-lg font-bold text-admin-text">No events found</p>
+      <p class="mt-1 text-sm text-admin-secondary">Create your first event to begin selling seats.</p>
     </div>
 
-    <div v-else class="admin-card-dark p-8 text-center">
-      <p class="font-display text-4xl leading-none">No events found.</p>
-      <p class="mt-2 text-sm text-paperCream/65">Create your first event to begin selling seats.</p>
+    <div v-if="eventToCancel" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="cancel-event-title" @click.self="closeCancelDialog">
+      <section class="w-full max-w-lg rounded-lg border border-admin-border bg-white p-5 text-admin-text shadow-xl">
+        <p class="admin-kicker">Event cancellation</p>
+        <h2 id="cancel-event-title" class="mt-2 text-xl font-bold">Cancel {{ eventToCancel.title }}?</h2>
+        <p class="mt-3 text-sm leading-6 text-admin-secondary">The event will stop accepting bookings. Existing data is preserved; this does not permanently delete the event.</p>
+        <div class="mt-5 grid gap-2 sm:grid-cols-2">
+          <AppButton type="button" variant="ghost" :disabled="adminStore.eventSaving" @click="closeCancelDialog">Keep event</AppButton>
+          <AppButton type="button" variant="danger" icon="mdi:calendar-remove" :loading="cancellingEventId === eventToCancel.id" @click="confirmCancelEvent">Cancel event</AppButton>
+        </div>
+      </section>
     </div>
 
     <div
       v-if="eventToDelete"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-inkNight/75 px-4 py-6 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-event-title"
+      @click.self="closeDeleteDialog"
     >
-      <section class="w-full max-w-lg rounded-md border-2 border-[#ef4444] bg-[#241f2f] p-5 text-paperCream shadow-ticket">
-        <p class="font-mono text-xs font-bold uppercase text-[#dc2626]">Final call</p>
-        <h2 id="delete-event-title" class="admin-card-title mt-2 text-paperCream">Delete this event permanently?</h2>
-        <p class="mt-3 text-sm font-semibold text-paperCream/70">
+      <section class="w-full max-w-lg rounded-lg border border-admin-error/30 bg-white p-5 text-admin-text shadow-xl">
+        <p class="text-xs font-bold uppercase tracking-wider text-admin-error">Permanent action</p>
+        <h2 id="delete-event-title" class="mt-2 text-xl font-bold">Delete this event permanently?</h2>
+        <p class="mt-3 text-sm font-medium text-admin-secondary">
           {{ eventToDelete.title }} will be permanently deleted with its seats, reservations, and bookings. This action cannot be undone.
         </p>
-        <div class="mt-4 rounded-sm border border-paperCream/15 bg-paperCream/5 p-3 font-mono text-[11px] font-bold uppercase">
+        <div class="mt-4 rounded-md border border-admin-border bg-admin-canvas p-3 font-mono text-[11px] font-bold uppercase">
           <p class="flex min-w-0 items-center gap-2">Event ID <IdCopy :id="eventToDelete.id" label="Event ID" /></p>
-          <p class="mt-1 text-[#dc2626]">Permanent delete</p>
+          <p class="mt-1 text-admin-error">Permanent delete</p>
         </div>
         <div class="mt-5 grid gap-2 sm:grid-cols-2">
           <AppButton type="button" variant="secondary" icon="mdi:close" :disabled="adminStore.eventSaving" @click="closeDeleteDialog">
@@ -137,7 +223,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+import { Icon } from '@iconify/vue';
 
 import AppBadge from '@/components/common/AppBadge.vue';
 import AppButton from '@/components/common/AppButton.vue';
@@ -153,6 +241,29 @@ const toast = useToastStore();
 const cancellingEventId = ref('');
 const deletingEventId = ref('');
 const eventToDelete = ref<EventItem | null>(null);
+const eventToCancel = ref<EventItem | null>(null);
+const searchQuery = ref('');
+const statusFilter = ref('');
+const currentPage = ref(1);
+const PAGE_SIZE = 10;
+
+const filteredEvents = computed(() => {
+  const query = searchQuery.value.toLowerCase();
+  return adminStore.events.filter((event) =>
+    (!statusFilter.value || event.status === statusFilter.value) &&
+    (!query || [event.title, event.location, event.id].some((value) => value.toLowerCase().includes(query))),
+  );
+});
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredEvents.value.length / PAGE_SIZE)));
+const safePage = computed(() => Math.min(currentPage.value, totalPages.value));
+const pagedEvents = computed(() => {
+  const start = (safePage.value - 1) * PAGE_SIZE;
+  return filteredEvents.value.slice(start, start + PAGE_SIZE);
+});
+
+watch([searchQuery, statusFilter], () => {
+  currentPage.value = 1;
+});
 
 function eventStatusVariant(status: EventItem['status']) {
   if (status === 'PUBLISHED') return 'published';
@@ -161,18 +272,26 @@ function eventStatusVariant(status: EventItem['status']) {
   return 'draft';
 }
 
-async function cancelEvent(event: EventItem) {
-  if (event.status === 'CANCELLED') {
-    return;
-  }
+function openCancelDialog(event: EventItem) {
+  if (event.status !== 'CANCELLED') eventToCancel.value = event;
+}
 
+function closeCancelDialog() {
+  if (!adminStore.eventSaving) eventToCancel.value = null;
+}
+
+async function confirmCancelEvent() {
+  if (!eventToCancel.value) return;
+  const event = eventToCancel.value;
   cancellingEventId.value = event.id;
 
   try {
     await adminStore.cancelEvent(event.id);
+    await adminStore.fetchEvents();
     toast.warning(`"${event.title}" was cancelled.`);
+    eventToCancel.value = null;
   } catch {
-    toast.error(adminStore.eventsError || 'Could not cancel event.');
+    toast.error('The event could not be cancelled. Please try again.');
   } finally {
     cancellingEventId.value = '';
   }
@@ -198,6 +317,7 @@ async function deleteEvent() {
 
   try {
     const result = await adminStore.deleteEvent(event.id);
+    await adminStore.fetchEvents();
     toast.success(`"${event.title}" was permanently deleted.`);
     if (result.deletedBookings > 0) {
       toast.info(`${result.deletedBookings} booking record${result.deletedBookings === 1 ? '' : 's'} removed with this event.`);
@@ -210,7 +330,16 @@ async function deleteEvent() {
   }
 }
 
+function handleDialogKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return;
+  if (eventToDelete.value) closeDeleteDialog();
+  else if (eventToCancel.value) closeCancelDialog();
+}
+
 onMounted(() => {
+  window.addEventListener('keydown', handleDialogKeydown);
   adminStore.fetchEvents().catch(() => undefined);
 });
+
+onBeforeUnmount(() => window.removeEventListener('keydown', handleDialogKeydown));
 </script>

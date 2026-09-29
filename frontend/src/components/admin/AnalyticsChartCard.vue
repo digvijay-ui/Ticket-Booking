@@ -1,13 +1,13 @@
 <template>
-  <article class="relative overflow-hidden rounded-md border-2 border-ticketGold/25 bg-[#241f2f] p-4 text-paperCream shadow-[8px_8px_0_rgba(8,8,15,0.35)] sm:p-5">
-    <span class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-inkNight" aria-hidden="true" />
+  <article class="admin-ticket-card p-4 sm:p-5">
+    <span class="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-admin-border bg-admin-canvas" aria-hidden="true" />
 
     <div class="mb-4 flex min-w-0 items-start justify-between gap-3">
       <div class="min-w-0">
-        <p class="font-mono text-[10px] font-bold uppercase text-ticketGold/75">{{ eyebrow }}</p>
-        <h2 class="mt-1 truncate font-display text-2xl uppercase leading-none tracking-normal text-paperCream sm:text-3xl">{{ title }}</h2>
+        <p class="text-xs font-medium text-admin-secondary">{{ eyebrow }}</p>
+        <h2 class="mt-1 truncate text-lg font-semibold tracking-[-0.02em] text-admin-text sm:text-xl">{{ title }}</h2>
       </div>
-      <span v-if="meta" class="shrink-0 rounded-sm border border-ticketGold/30 bg-ticketGold/10 px-2 py-1 font-mono text-[10px] font-bold uppercase text-ticketGold">
+      <span v-if="meta" class="shrink-0 rounded-md border border-admin-border bg-admin-canvas px-2 py-1 text-[10px] font-medium text-admin-secondary">
         {{ meta }}
       </span>
     </div>
@@ -15,14 +15,15 @@
     <div ref="chartFrame" class="admin-chart-surface min-h-[220px]">
       <VueApexCharts
         v-if="canRenderChart"
+        class="admin-chart-enter"
         :height="height"
         :options="mergedOptions"
         :series="series"
         :type="type"
         :width="chartWidth ?? '100%'"
       />
-      <div v-else class="flex h-[220px] items-center justify-center rounded-sm border border-ticketGold/15 bg-paperCream/5 text-center">
-        <p class="font-mono text-xs font-bold uppercase text-paperCream/55">No analytics data</p>
+      <div v-else class="flex h-[220px] items-center justify-center rounded-md border border-dashed border-admin-border bg-admin-canvas text-center">
+        <p class="text-xs font-medium text-admin-secondary">No analytics data</p>
       </div>
     </div>
 
@@ -71,10 +72,11 @@ const hasData = computed(() =>
 const canRenderChart = computed(() => isMounted.value && hasData.value && Boolean(chartWidth.value));
 
 const mergedOptions = computed<ApexOptions>(() => ({
+  ...props.options,
   chart: {
     animations: { enabled: false },
     background: 'transparent',
-    fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'Manrope, Work Sans, system-ui, sans-serif',
     parentHeightOffset: 0,
     redrawOnParentResize: true,
     redrawOnWindowResize: true,
@@ -84,15 +86,15 @@ const mergedOptions = computed<ApexOptions>(() => ({
     zoom: { enabled: false },
     ...props.options.chart,
   },
-  colors: ['#2EC4B6', '#E07A5F', '#F2CC8F', '#f97316'],
+  colors: props.options.colors ?? ['#111111', '#525252', '#9CA3AF', '#D1D5DB'],
   dataLabels: {
     enabled: false,
     ...props.options.dataLabels,
   },
   legend: {
-    fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
+    fontFamily: 'Manrope, Work Sans, system-ui, sans-serif',
     fontSize: '11px',
-    labels: { colors: '#f7f1e3' },
+    labels: { colors: '#6B7280' },
     markers: { strokeWidth: 0 },
     ...props.options.legend,
   },
@@ -102,11 +104,11 @@ const mergedOptions = computed<ApexOptions>(() => ({
     ...props.options.stroke,
   },
   theme: {
-    mode: 'dark',
+    mode: 'light',
     ...props.options.theme,
   },
   tooltip: {
-    theme: 'dark',
+    theme: 'light',
     style: {
       fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
       fontSize: '12px',
@@ -114,12 +116,12 @@ const mergedOptions = computed<ApexOptions>(() => ({
     ...props.options.tooltip,
   },
   xaxis: {
-    axisBorder: { color: 'rgba(230, 227, 208, 0.14)' },
-    axisTicks: { color: 'rgba(230, 227, 208, 0.14)' },
+    axisBorder: { color: '#E5E7EB' },
+    axisTicks: { color: '#E5E7EB' },
     labels: {
       style: {
-        colors: '#f2cc8f',
-        fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
+        colors: '#6B7280',
+        fontFamily: 'Manrope, Work Sans, system-ui, sans-serif',
         fontSize: '12px',
         fontWeight: 700,
       },
@@ -129,15 +131,14 @@ const mergedOptions = computed<ApexOptions>(() => ({
   yaxis: {
     labels: {
       style: {
-        colors: '#f2cc8f',
-        fontFamily: 'Space Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
+        colors: '#6B7280',
+        fontFamily: 'Manrope, Work Sans, system-ui, sans-serif',
         fontSize: '12px',
         fontWeight: 700,
       },
     },
     ...props.options.yaxis,
   },
-  ...props.options,
 }));
 
 async function syncChartWidth() {
@@ -174,6 +175,19 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.admin-chart-enter {
+  animation: admin-chart-fade 180ms ease-out both;
+}
+
+@keyframes admin-chart-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-chart-enter { animation: none; }
+}
+
 .admin-chart-surface {
   transform: none;
   text-rendering: geometricPrecision;

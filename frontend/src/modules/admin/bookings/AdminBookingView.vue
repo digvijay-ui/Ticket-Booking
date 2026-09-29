@@ -1,13 +1,18 @@
 <template>
   <div class="space-y-6">
-    <div>
-      <p class="font-mono text-xs font-bold uppercase text-ticketGold">Operations</p>
-      <h1 class="font-display text-5xl leading-none text-paperCream">BOOKING CONTROL</h1>
-      <p class="text-sm text-paperCream/70">Review confirmed tickets, wallet payments, cancellations, and refunds.</p>
-    </div>
+    <header>
+      <p class="admin-kicker">Operations</p>
+      <h1 class="admin-page-title">Bookings</h1>
+      <p class="admin-page-copy">Review confirmed tickets, payments, cancellations, and refunds.</p>
+    </header>
 
-    <form class="rounded-md border-2 border-ticketGold/35 bg-deepPlum p-4" @submit.prevent="loadBookings(1)">
-      <div class="grid gap-3 md:grid-cols-3">
+    <form class="admin-panel-dark" @submit.prevent="loadBookings(1)">
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <label class="block">
+          <span class="booking-filter-label">Booking or user search</span>
+          <input v-model.trim="filters.search" class="booking-filter-input" type="search" placeholder="Booking ID, name, or email" />
+        </label>
+
         <label class="block">
           <span class="booking-filter-label">Status</span>
           <select v-model="filters.status" class="booking-filter-input">
@@ -41,17 +46,53 @@
       </div>
     </form>
 
-    <div v-if="adminStore.bookingsLoading" class="flex min-h-56 items-center justify-center rounded-md bg-deepPlum">
+    <div v-if="adminStore.bookingsLoading" class="admin-panel-dark flex min-h-56 items-center justify-center">
       <LoadingSpinner size="lg" />
     </div>
 
-    <div v-else-if="adminStore.bookingsError" class="rounded-md border border-marqueeRed bg-marqueeRed/10 p-4 text-sm font-semibold text-paperCream">
-      {{ adminStore.bookingsError }}
+    <div v-else-if="adminStore.bookingsError" class="admin-error-state" role="alert">
+      <p class="text-sm font-medium">{{ adminStore.bookingsError }}</p>
     </div>
 
-    <div v-else-if="bookings.length" class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-      <article
-        v-for="booking in bookings"
+    <template v-else-if="bookings.length">
+      <div class="admin-table-wrap hidden lg:block">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">Booking</th>
+              <th scope="col">User</th>
+              <th scope="col">Event / seats</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Status</th>
+              <th scope="col">Booked</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="booking in bookings" :key="getBookingId(booking)">
+              <td><IdCopy :id="getBookingId(booking)" label="Booking ID" /></td>
+              <td><p class="max-w-48 truncate text-sm">{{ userLabel(booking) }}</p></td>
+              <td>
+                <p class="max-w-56 truncate font-medium">{{ eventLabel(booking) }}</p>
+                <p class="mt-0.5 max-w-56 truncate text-xs text-admin-secondary">{{ seatsLabel(booking) }}</p>
+              </td>
+              <td class="whitespace-nowrap font-medium">{{ formatINR(booking.totalAmountInPaise) }}</td>
+              <td><AppBadge :variant="bookingStatusVariant(booking)" :label="bookingStatusLabel(booking)" /></td>
+              <td class="whitespace-nowrap text-xs text-admin-secondary">{{ formatDateTime(booking.createdAt) }}</td>
+              <td>
+                <div class="flex justify-end gap-1">
+                  <button type="button" class="admin-focus flex h-9 w-9 items-center justify-center rounded-md text-admin-error hover:bg-admin-errorSoft disabled:opacity-35" :disabled="!canActOnBooking(booking) || Boolean(adminStore.actionLoadingId)" :aria-label="`Cancel booking ${getBookingId(booking)}`" title="Cancel booking" @click="openActionDialog(booking, 'cancel')"><Icon icon="mdi:ticket-remove-outline" class="h-4 w-4" /></button>
+                  <button type="button" class="admin-focus flex h-9 w-9 items-center justify-center rounded-md text-admin-info hover:bg-admin-infoSoft disabled:opacity-35" :disabled="!canActOnBooking(booking) || Boolean(adminStore.actionLoadingId)" :aria-label="`Refund booking ${getBookingId(booking)}`" title="Refund booking" @click="openActionDialog(booking, 'refund')"><Icon icon="mdi:cash-refund" class="h-4 w-4" /></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:hidden">
+        <article
+          v-for="booking in bookings"
         :key="getBookingId(booking)"
         class="relative flex min-h-[280px] flex-col overflow-hidden admin-card-dark"
       >
@@ -93,16 +134,59 @@
           Wallet <IdCopy :id="booking.walletTransactionId || ''" label="Wallet transaction ID" />
         </p>
 
-        <div class="mt-auto pt-3">
-          <p class="rounded-sm bg-paperCream/10 p-2 text-center font-mono text-xs font-bold uppercase text-paperCream/55">
-            View only
-          </p>
+        <div class="mt-auto grid grid-cols-2 gap-2 pt-4">
+          <AppButton
+            type="button"
+            variant="danger"
+            icon="mdi:ticket-remove-outline"
+            :disabled="!canActOnBooking(booking) || Boolean(adminStore.actionLoadingId)"
+            @click="openActionDialog(booking, 'cancel')"
+          >
+            Cancel
+          </AppButton>
+          <AppButton
+            type="button"
+            variant="secondary"
+            icon="mdi:cash-refund"
+            :disabled="!canActOnBooking(booking) || Boolean(adminStore.actionLoadingId)"
+            @click="openActionDialog(booking, 'refund')"
+          >
+            Refund
+          </AppButton>
         </div>
-      </article>
+        </article>
+      </div>
+    </template>
+
+    <div v-if="actionBooking" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="booking-action-title" @click.self="closeActionDialog">
+      <section class="w-full max-w-lg rounded-lg border border-admin-border bg-white p-5 text-admin-text shadow-xl">
+        <p class="admin-kicker">{{ actionKind === 'cancel' ? 'Cancellation' : 'Refund' }}</p>
+        <h2 id="booking-action-title" class="mt-2 text-xl font-extrabold">
+          {{ actionKind === 'cancel' ? 'Cancel and refund this booking?' : 'Refund this booking?' }}
+        </h2>
+        <p class="mt-3 text-sm leading-6 text-admin-secondary">
+          <template v-if="actionKind === 'cancel'">
+            The full amount of {{ formatINR(actionBooking.totalAmountInPaise) }} will return to the user wallet and booked seats will become available.
+          </template>
+          <template v-else>
+            The full amount of {{ formatINR(actionBooking.totalAmountInPaise) }} will return to the user wallet. The booking will be marked refunded.
+          </template>
+        </p>
+        <div class="mt-4 rounded-md border border-admin-border bg-admin-canvas p-3 text-xs">
+          <p class="font-bold text-admin-text">{{ eventLabel(actionBooking) }}</p>
+          <p class="mt-1 font-mono text-admin-secondary">{{ getBookingId(actionBooking) }}</p>
+        </div>
+        <div class="mt-5 grid gap-2 sm:grid-cols-2">
+          <AppButton type="button" variant="ghost" icon="mdi:close" :disabled="Boolean(adminStore.actionLoadingId)" @click="closeActionDialog">Keep booking</AppButton>
+          <AppButton type="button" :variant="actionKind === 'cancel' ? 'danger' : 'secondary'" :icon="actionKind === 'cancel' ? 'mdi:ticket-remove-outline' : 'mdi:cash-refund'" :loading="adminStore.actionLoadingId === getBookingId(actionBooking)" @click="confirmAction">
+            {{ actionKind === 'cancel' ? 'Cancel and refund' : 'Confirm refund' }}
+          </AppButton>
+        </div>
+      </section>
     </div>
 
-    <div v-if="!adminStore.bookingsLoading && adminStore.bookingsPagination.totalItems > adminStore.bookingsPagination.limit" class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-paperCream/10 bg-deepPlum px-4 py-3">
-      <p class="font-mono text-xs font-bold uppercase text-paperCream/60">
+    <div v-if="!adminStore.bookingsLoading && adminStore.bookingsPagination.totalItems > adminStore.bookingsPagination.limit" class="admin-pagination">
+      <p class="text-xs font-medium text-admin-secondary">
         Page {{ adminStore.bookingsPagination.page }} of {{ adminStore.bookingsPagination.totalPages }} · {{ adminStore.bookingsPagination.totalItems }} bookings
       </p>
       <div class="flex gap-2">
@@ -115,20 +199,22 @@
       </div>
     </div>
 
-    <div v-else-if="!bookings.length && !adminStore.bookingsError" class="admin-card-dark p-8 text-center">
-      <p class="font-display text-4xl leading-none">No bookings found.</p>
-      <p class="mt-2 text-sm text-paperCream/65">Bookings will appear here after users confirm tickets.</p>
+    <div v-else-if="!bookings.length && !adminStore.bookingsError" class="admin-empty-state">
+      <p class="text-lg font-bold text-admin-text">No bookings found</p>
+      <p class="mt-1 text-sm text-admin-secondary">Bookings will appear here after users confirm tickets.</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue';
+import { Icon } from '@iconify/vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 
 import AppBadge from '@/components/common/AppBadge.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import IdCopy from '@/components/common/IdCopy.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import { useToastStore } from '@/modules/common/toast/toast.store';
 import type { Booking, EventItem, Seat, User } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
 import { formatINR } from '@/utils/money';
@@ -143,12 +229,23 @@ type AdminBooking = Omit<Booking, 'userId' | 'event' | 'seats'> & {
 };
 
 const adminStore = useAdminStore();
+const toast = useToastStore();
 const filters = reactive({
+  search: '',
   status: '',
   eventQuery: '',
   userQuery: '',
 });
-const bookings = computed(() => adminStore.bookings as AdminBooking[]);
+const rawBookings = computed(() => adminStore.bookings as AdminBooking[]);
+const bookings = computed(() => {
+  const query = filters.search.toLowerCase();
+  if (!query) return rawBookings.value;
+  return rawBookings.value.filter((booking) =>
+    [getBookingId(booking), userLabel(booking), eventLabel(booking)].some((value) => value.toLowerCase().includes(query)),
+  );
+});
+const actionBooking = ref<AdminBooking | null>(null);
+const actionKind = ref<'cancel' | 'refund'>('cancel');
 const PAGE_SIZE = 24;
 
 const eventOptions = computed(() =>
@@ -161,7 +258,7 @@ const eventOptions = computed(() =>
 const userOptions = computed(() => {
   const users = new Map<string, { id: string; label: string }>();
 
-  bookings.value.forEach((booking) => {
+  rawBookings.value.forEach((booking) => {
     if (booking.userId && typeof booking.userId === 'object') {
       users.set(booking.userId.id, {
         id: booking.userId.id,
@@ -230,14 +327,51 @@ async function loadBookings(page = adminStore.bookingsPagination.page) {
   await adminStore.fetchBookings({
     ...currentFilters(),
     page,
-  });
+  }).catch(() => undefined);
 }
 
 function resetFilters() {
+  filters.search = '';
   filters.status = '';
   filters.eventQuery = '';
   filters.userQuery = '';
-  loadBookings(1);
+  void loadBookings(1);
+}
+
+function canActOnBooking(booking: AdminBooking) {
+  return booking.status === 'CONFIRMED' && booking.paymentStatus === 'PAID';
+}
+
+function openActionDialog(booking: AdminBooking, kind: 'cancel' | 'refund') {
+  if (!canActOnBooking(booking)) return;
+  actionBooking.value = booking;
+  actionKind.value = kind;
+}
+
+function closeActionDialog() {
+  if (!adminStore.actionLoadingId) actionBooking.value = null;
+}
+
+async function confirmAction() {
+  if (!actionBooking.value || !canActOnBooking(actionBooking.value)) return;
+  const bookingId = getBookingId(actionBooking.value);
+
+  try {
+    if (actionKind.value === 'cancel') {
+      await adminStore.cancelBooking(bookingId, { ...currentFilters(), page: adminStore.bookingsPagination.page });
+      toast.success('Booking cancelled and the user wallet was refunded.');
+    } else {
+      await adminStore.refundBooking(bookingId, { ...currentFilters(), page: adminStore.bookingsPagination.page });
+      toast.success('Booking refunded successfully.');
+    }
+    actionBooking.value = null;
+    await Promise.all([
+      adminStore.fetchTransactions({ limit: 24 }),
+      adminStore.fetchAnalyticsData(),
+    ]);
+  } catch {
+    toast.error('The booking action could not be completed. Please try again.');
+  }
 }
 
 function shortId(id: string) {
@@ -252,27 +386,34 @@ function resolveOptionId(query: string, options: Array<{ id: string; label: stri
   return /^[a-f\d]{24}$/i.test(query) ? query : '';
 }
 
+function handleDialogKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && actionBooking.value) closeActionDialog();
+}
+
 onMounted(() => {
+  window.addEventListener('keydown', handleDialogKeydown);
   adminStore.fetchEvents().catch(() => undefined);
   loadBookings(1);
 });
+
+onBeforeUnmount(() => window.removeEventListener('keydown', handleDialogKeydown));
 </script>
 
 <style scoped>
 .booking-filter-label,
 .booking-row-label {
-  @apply mb-1 block font-mono text-[10px] font-bold uppercase text-paperCream/60;
+  @apply mb-1 block text-[11px] font-semibold text-admin-secondary;
 }
 
 .booking-row-label {
-  @apply text-paperCream/45;
+  @apply text-admin-subtle;
 }
 
 .booking-filter-input {
-  @apply w-full rounded-sm border-2 border-paperCream/20 bg-inkNight px-3 py-2.5 text-paperCream placeholder:text-paperCream/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+  @apply w-full rounded-md border border-admin-border bg-white px-3 py-2.5 text-sm text-admin-text placeholder:text-admin-subtle transition-colors;
 }
 
 .booking-filter-input:focus-visible {
-  outline-color: #14b8a6;
+  @apply border-admin-black outline-none ring-2 ring-admin-black/10;
 }
 </style>

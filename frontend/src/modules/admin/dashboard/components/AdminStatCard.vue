@@ -1,49 +1,34 @@
 <template>
-  <article class="relative flex min-h-36 flex-col justify-between overflow-hidden admin-card-dark">
-    <span class="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-inkNight" aria-hidden="true" />
-    <div>
-      <p class="font-mono text-[9px] font-bold uppercase text-paperCream/50">{{ label }}</p>
-      <p class="mt-1 truncate font-display text-[1.7rem] leading-none tabular-nums sm:text-3xl" :class="valueClass">{{ value }}</p>
-      <p v-if="subtitle" class="mt-1 line-clamp-1 text-xs font-semibold text-paperCream/60">{{ subtitle }}</p>
-    </div>
-
-    <div v-if="deltaLabel" class="mt-3">
-      <span class="inline-flex items-center rounded-sm border px-2 py-1 font-mono text-[10px] font-bold uppercase tabular-nums" :class="deltaClass">
-        {{ deltaLabel }}
+  <article class="admin-ticket-card initial-card-reveal flex min-h-36 flex-col p-4" :style="{ animationDelay: `${index * 45}ms` }">
+    <div class="flex items-start justify-between gap-3">
+      <p class="text-xs font-medium text-admin-secondary">{{ label }}</p>
+      <span class="flex h-8 w-8 items-center justify-center rounded-md bg-admin-hover text-admin-secondary">
+        <Icon :icon="icon" class="h-4 w-4" aria-hidden="true" />
       </span>
     </div>
+
+    <p class="mt-2 truncate text-2xl font-bold tracking-[-0.035em] text-admin-text tabular-nums sm:text-3xl">{{ value }}</p>
+    <p v-if="subtitle" class="mt-1 line-clamp-1 text-xs text-admin-secondary">{{ subtitle }}</p>
+    <div class="admin-barcode mt-auto w-24 pt-3 opacity-50" aria-hidden="true" />
   </article>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { Icon } from '@iconify/vue';
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     label: string;
     value: string;
+    icon: string;
+    index?: number;
     valueClass?: string;
     subtitle?: string;
-    deltaLabel?: string;
-    tone?: 'positive' | 'negative' | 'neutral';
   }>(),
   {
-    valueClass: 'text-paperCream',
+    index: 0,
+    valueClass: 'text-midnight-ivory',
     subtitle: '',
-    deltaLabel: '',
-    tone: 'neutral',
   },
 );
-
-const deltaClass = computed(() => {
-  if (props.tone === 'positive') {
-    return 'border-[#14b8a6]/40 bg-[#14b8a6]/15 text-[#5eead4]';
-  }
-
-  if (props.tone === 'negative') {
-    return 'border-[#ef4444]/40 bg-[#ef4444]/15 text-[#fb7185]';
-  }
-
-  return 'border-paperCream/20 bg-paperCream/5 text-paperCream/65';
-});
 </script>

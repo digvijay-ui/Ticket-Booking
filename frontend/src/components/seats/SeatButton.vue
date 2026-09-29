@@ -1,8 +1,8 @@
 <template>
   <button
     type="button"
-    class="seat-button focus-midnight group relative flex h-14 min-w-14 flex-col items-center justify-center rounded-xl border px-2 text-xs font-extrabold transition duration-150 sm:h-[60px] sm:min-w-[60px]"
-    :class="seatClass"
+    class="seat-button group relative flex h-14 min-w-14 flex-col items-center justify-center rounded-xl border px-2 text-xs font-extrabold transition duration-150 sm:h-[60px] sm:min-w-[60px]"
+    :class="[seatClass, isAdminUi ? 'admin-focus' : 'focus-midnight']"
     :aria-disabled="disabled"
     :aria-pressed="canSelect ? selected : undefined"
     :aria-label="accessibleLabel"
@@ -21,7 +21,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 import type { Seat } from '@/services/apiTypes';
 import { formatINR } from '@/utils/money';
@@ -45,6 +45,7 @@ const emit = defineEmits<{
   'toggle-seat': [seatId: string];
 }>();
 
+const isAdminUi = inject('adminUi', false);
 const resolvedStatus = computed<SeatUiStatus>(() => props.uiStatus ?? props.seat.status);
 const uiStatus = computed(() => resolvedStatus.value);
 const canSelect = computed(() => resolvedStatus.value === 'AVAILABLE' && !props.eventUnavailable);
@@ -76,6 +77,17 @@ const stateIcon = computed(() => {
   return icons[resolvedStatus.value];
 });
 const seatClass = computed(() => {
+  if (isAdminUi) {
+    if (props.selected) return 'is-selected border-admin-black bg-admin-black text-white';
+    const adminClasses: Record<SeatUiStatus, string> = {
+      AVAILABLE: 'border-admin-black bg-white text-admin-text hover:bg-admin-black hover:text-white',
+      RESERVED: 'cursor-not-allowed border-dashed border-admin-subtle bg-admin-hover text-admin-secondary',
+      BOOKED: 'cursor-not-allowed border-admin-error/40 bg-admin-errorSoft text-admin-error',
+      TEMPORARILY_UNAVAILABLE: 'cursor-not-allowed border-double border-admin-border bg-admin-canvas text-admin-subtle',
+    };
+    return adminClasses[resolvedStatus.value];
+  }
+
   if (props.selected) {
     return 'is-selected border-midnight-mint bg-midnight-mint text-midnight-ink shadow-[0_0_0_3px_rgb(120_220_202_/_0.14)]';
   }

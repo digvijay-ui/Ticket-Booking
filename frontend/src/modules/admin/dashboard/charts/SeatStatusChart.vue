@@ -8,8 +8,8 @@
     :options="options"
   >
     <div class="mt-3 grid grid-cols-3 gap-2">
-      <div v-for="item in seatItems" :key="item.label" class="rounded-sm border border-ticketGold/15 bg-paperCream/5 px-2 py-2">
-        <p class="font-mono text-[9px] font-bold uppercase text-ticketGold/70">{{ item.label }}</p>
+      <div v-for="item in seatItems" :key="item.label" class="rounded-md border border-admin-border bg-admin-canvas px-2 py-2">
+        <p class="text-[10px] font-semibold text-admin-secondary">{{ item.label }}</p>
         <p class="mt-1 font-mono text-sm font-bold tabular-nums" :class="item.className">{{ formatCount(item.value) }}</p>
       </div>
     </div>
@@ -30,15 +30,15 @@ const props = defineProps<{
 const totalSeats = computed(() => props.data.available + props.data.reserved + props.data.booked);
 
 const seatItems = computed(() => [
-  { label: 'Available', value: props.data.available, className: 'text-[#5eead4]' },
-  { label: 'Reserved', value: props.data.reserved, className: 'text-[#F2CC8F]' },
-  { label: 'Booked', value: props.data.booked, className: 'text-[#fb7185]' },
+  { label: 'Available', value: props.data.available, className: 'text-admin-success' },
+  { label: 'Reserved', value: props.data.reserved, className: 'text-admin-warning' },
+  { label: 'Booked', value: props.data.booked, className: 'text-admin-error' },
 ]);
 
 const series = computed<ApexNonAxisChartSeries>(() => seatItems.value.map((item) => item.value));
 
 const options = computed<ApexOptions>(() => ({
-  colors: ['#5eead4', '#F2CC8F', '#fb7185'],
+  colors: ['#3F7652', '#9A6700', '#B54747'],
   dataLabels: {
     enabled: true,
     formatter: (_value, options) => {
@@ -58,16 +58,16 @@ const options = computed<ApexOptions>(() => ({
       donut: {
         labels: {
           show: true,
-          name: { color: '#F2CC8F', fontFamily: 'Space Mono, monospace' },
+          name: { color: '#6B7280', fontFamily: 'Manrope, sans-serif' },
           value: {
-            color: '#f7f1e3',
-            fontFamily: 'Space Mono, monospace',
+            color: '#171717',
+            fontFamily: 'Manrope, sans-serif',
             formatter: (value) => formatCount(Number(value)),
           },
           total: {
             show: true,
-            color: '#f7f1e3',
-            fontFamily: 'Space Mono, monospace',
+            color: '#171717',
+            fontFamily: 'Manrope, sans-serif',
             label: 'Total',
             formatter: () => formatCount(totalSeats.value),
           },

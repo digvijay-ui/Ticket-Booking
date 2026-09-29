@@ -32,7 +32,7 @@ const series = computed<ApexAxisChartSeries>(() => [
 const maxRevenue = computed(() => Math.max(...props.data.values, 0));
 
 const options = computed<ApexOptions>(() => ({
-  colors: ['#5eead4'],
+  colors: ['#111111'],
   fill: {
     gradient: {
       opacityFrom: 0.42,
@@ -43,14 +43,14 @@ const options = computed<ApexOptions>(() => ({
     type: 'gradient',
   },
   grid: {
-    borderColor: 'rgba(242, 204, 143, 0.18)',
+    borderColor: '#E5E7EB',
     strokeDashArray: 4,
   },
   markers: {
-    colors: ['#F2CC8F'],
+    colors: ['#6B7280'],
     hover: { size: 7 },
     size: 5,
-    strokeColors: '#241f2f',
+    strokeColors: '#FFFFFF',
     strokeWidth: 3,
   },
   stroke: {

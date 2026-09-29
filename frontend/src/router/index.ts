@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import AdminLayout from '@/components/layout/AdminLayout.vue';
 import UserLayout from '@/components/layout/UserLayout.vue';
 import AdminBookingView from '@/modules/admin/bookings/AdminBookingView.vue';
+import AdminAnalyticsView from '@/modules/admin/analytics/AdminAnalyticsView.vue';
 import AdminCreateUserView from '@/modules/admin/create-user/AdminCreateUserView.vue';
 import AdminDashboardView from '@/modules/admin/dashboard/AdminDashboardView.vue';
 import AdminEventFormView from '@/modules/admin/event-form/AdminEventFormView.vue';
@@ -60,14 +61,15 @@ const router = createRouter({
       meta: { requiresAdmin: true },
       children: [
         { path: '', redirect: '/admin/dashboard' },
-        { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboardView },
-        { path: 'events', name: 'admin-events', component: AdminEventListView },
-        { path: 'events/create', name: 'admin-event-create', component: AdminEventFormView },
-        { path: 'events/:eventId/edit', name: 'admin-event-edit', component: AdminEventFormView },
-        { path: 'events/:eventId/seats', name: 'admin-event-seats', component: AdminSeatOverviewView },
-        { path: 'admins/create', name: 'admin-create-user', component: AdminCreateUserView },
-        { path: 'bookings', name: 'admin-bookings', component: AdminBookingView },
-        { path: 'transactions', name: 'admin-transactions', component: AdminTransactionView },
+        { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboardView, meta: { title: 'Dashboard' } },
+        { path: 'events', name: 'admin-events', component: AdminEventListView, meta: { title: 'Events' } },
+        { path: 'events/create', name: 'admin-event-create', component: AdminEventFormView, meta: { title: 'Create event', breadcrumb: 'Events / Create' } },
+        { path: 'events/:eventId/edit', name: 'admin-event-edit', component: AdminEventFormView, meta: { title: 'Edit event', breadcrumb: 'Events / Edit' } },
+        { path: 'events/:eventId/seats', name: 'admin-event-seats', component: AdminSeatOverviewView, meta: { title: 'Seat management', breadcrumb: 'Events / Seats' } },
+        { path: 'admins/create', name: 'admin-create-user', component: AdminCreateUserView, meta: { title: 'Create administrator' } },
+        { path: 'bookings', name: 'admin-bookings', component: AdminBookingView, meta: { title: 'Bookings' } },
+        { path: 'transactions', name: 'admin-transactions', component: AdminTransactionView, meta: { title: 'Transactions' } },
+        { path: 'analytics', name: 'admin-analytics', component: AdminAnalyticsView, meta: { title: 'Analytics' } },
       ],
     },
   ],

@@ -1,16 +1,16 @@
 <template>
-  <section class="h-fit rounded-md border-2 border-paperCream/15 bg-deepPlum p-4 sm:p-5">
+  <section class="admin-panel-dark h-fit sm:p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
-        <p class="font-mono text-xs font-bold uppercase text-paperCream/55">{{ eyebrow }}</p>
-        <h2 class="font-display text-3xl leading-none sm:text-4xl">{{ title }}</h2>
+        <p class="text-xs font-medium text-admin-secondary">{{ eyebrow }}</p>
+        <h2 class="mt-1 text-lg font-semibold text-admin-text">{{ title }}</h2>
       </div>
       <AppBadge variant="draft" :label="String(filteredItems.length)" />
     </div>
 
     <div class="mb-4 grid gap-2 lg:grid-cols-[1fr_9rem_9rem_10rem]">
       <label class="relative block">
-        <Icon icon="mdi:magnify" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-paperCream/45" aria-hidden="true" />
+        <Icon icon="mdi:magnify" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-admin-subtle" aria-hidden="true" />
         <input
           v-model.trim="search"
           class="admin-filter-input h-10 pl-9 text-sm font-semibold"
@@ -44,38 +44,38 @@
       <article
         v-for="item in filteredItems"
         :key="item.id"
-        class="overflow-hidden rounded-sm border border-paperCream/10 bg-paperCream/5 text-paperCream transition-colors hover:border-[#14b8a6]/55"
+        class="overflow-hidden rounded-md border border-admin-border bg-white text-admin-text transition-colors hover:bg-admin-hover"
       >
         <button
           type="button"
-          class="focus-ticket grid w-full gap-2 px-3 py-2 text-left sm:grid-cols-[minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_minmax(6.25rem,auto)_auto_minmax(4.75rem,auto)_1.75rem] xl:items-center"
+          class="admin-focus grid w-full gap-2 px-3 py-2 text-left sm:grid-cols-[minmax(0,1fr)_auto] xl:grid-cols-[minmax(0,1fr)_minmax(6.25rem,auto)_auto_minmax(4.75rem,auto)_1.75rem] xl:items-center"
           :aria-expanded="expandedItemId === item.id"
           @click="toggleItem(item.id)"
         >
-          <p class="admin-card-title min-w-0 truncate text-base text-paperCream">{{ item.name }}</p>
+          <p class="admin-card-title min-w-0 truncate text-base text-admin-text">{{ item.name }}</p>
           <p class="font-mono text-sm font-bold tabular-nums sm:text-right" :class="item.amountClass">{{ item.amount }}</p>
           <AppBadge :variant="item.badgeVariant" :label="item.status" />
-          <time class="font-mono text-[11px] font-bold uppercase text-paperCream/55 tabular-nums sm:text-right" :datetime="item.createdAt">{{ item.relativeTime }}</time>
+          <time class="text-[11px] font-medium text-admin-secondary tabular-nums sm:text-right" :datetime="item.createdAt">{{ item.relativeTime }}</time>
           <Icon
             icon="mdi:chevron-down"
-            class="hidden h-5 w-5 justify-self-end text-paperCream/55 transition-transform xl:block"
-            :class="{ 'rotate-180 text-[#14b8a6]': expandedItemId === item.id }"
+            class="hidden h-5 w-5 justify-self-end text-admin-subtle transition-transform xl:block"
+            :class="{ 'rotate-180 text-admin-text': expandedItemId === item.id }"
             aria-hidden="true"
           />
         </button>
 
         <Transition name="activity-detail">
           <div v-if="expandedItemId === item.id" class="activity-detail-shell">
-            <div class="border-t border-paperCream/10 px-3 pb-3 pt-2">
-              <div class="mb-3 flex min-w-0 items-center justify-between gap-3 rounded-sm border border-paperCream/10 bg-inkNight/70 p-2">
+            <div class="border-t border-admin-border px-3 pb-3 pt-2">
+              <div class="mb-3 flex min-w-0 items-center justify-between gap-3 rounded-md border border-admin-border bg-admin-canvas p-2">
                 <div class="min-w-0">
-                  <p class="font-mono text-[9px] font-bold uppercase text-paperCream/45">Record ID</p>
+                  <p class="text-[10px] font-medium text-admin-subtle">Record ID</p>
                   <IdCopy :id="item.id" label="Record ID" />
                 </div>
               </div>
               <dl class="grid gap-2 text-xs sm:grid-cols-2">
                 <div v-for="detail in visibleDetails(item)" :key="detail.label" class="min-w-0">
-                  <dt class="font-mono text-[9px] font-bold uppercase text-paperCream/45">{{ detail.label }}</dt>
+                  <dt class="text-[10px] font-medium text-admin-subtle">{{ detail.label }}</dt>
                   <dd class="truncate font-semibold">{{ detail.value }}</dd>
                 </div>
               </dl>
@@ -85,7 +85,7 @@
       </article>
     </div>
 
-    <div v-else class="rounded-sm border border-paperCream/15 bg-paperCream/5 p-5 text-center text-paperCream">
+    <div v-else class="rounded-md border border-dashed border-admin-border bg-admin-canvas p-5 text-center text-admin-text">
       <p class="font-semibold">{{ emptyText }}</p>
     </div>
   </section>

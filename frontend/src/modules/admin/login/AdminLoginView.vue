@@ -1,87 +1,52 @@
 <template>
-  <div class="min-h-screen bg-[#121221] px-4 py-8 text-[#e3e0f6]">
-    <div class="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center justify-center">
-      <section class="grid w-full overflow-hidden rounded-md border-2 border-stubCharcoal bg-paperCream text-stubCharcoal shadow-ticket lg:grid-cols-[1fr_420px]">
-        <div class="relative p-6 sm:p-8">
-          <div class="absolute left-0 top-0 h-full w-2 bg-marqueeRed" aria-hidden="true" />
-          <p class="pl-2 font-mono text-xs font-bold uppercase text-marqueeRed">Admin counter</p>
-          <h1 class="mt-2 pl-2 font-display text-6xl leading-none sm:text-7xl">ADMIN ENTRY</h1>
-          <p class="mt-3 max-w-2xl pl-2 text-sm text-stubCharcoal/70">
-            Manage events, seats, payments, refunds, and cancellations.
-          </p>
-
-          <div class="my-8 border-t-2 border-dashed border-stubCharcoal/25" />
-
-          <div class="grid gap-3 pl-2 sm:grid-cols-2">
-            <div class="rounded-sm border border-stubCharcoal/15 p-3">
-              <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/50">Access level</p>
-              <p class="mt-1 font-display text-3xl leading-none text-marqueeRed">ADMIN</p>
-            </div>
-            <div class="rounded-sm border border-stubCharcoal/15 p-3">
-              <p class="font-mono text-[10px] font-bold uppercase text-stubCharcoal/50">Token storage</p>
-              <p class="mt-1 font-mono text-xs font-bold">adminToken</p>
-            </div>
-          </div>
-
-          <div class="mt-8 pl-2">
-            <BarcodeStrip />
+  <div class="admin-login-shell min-h-screen bg-admin-canvas px-4 py-10 text-admin-text">
+    <main class="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md items-center">
+      <section class="w-full">
+        <div class="mb-6 flex items-center gap-3">
+          <span class="flex h-10 w-10 items-center justify-center rounded-md bg-admin-black font-semibold text-white">EB</span>
+          <div>
+            <p class="text-sm font-semibold">EventBooking</p>
+            <p class="text-xs text-admin-secondary">Administration</p>
           </div>
         </div>
 
-        <form class="relative border-t-2 border-dashed border-stubCharcoal/25 p-6 sm:p-8 lg:border-l-2 lg:border-t-0" @submit.prevent="submit">
-          <span class="absolute -left-4 -top-4 hidden h-8 w-8 rounded-full bg-[#121221] lg:block" aria-hidden="true" />
-          <span class="absolute -bottom-4 -left-4 hidden h-8 w-8 rounded-full bg-[#121221] lg:block" aria-hidden="true" />
-
-          <p class="font-mono text-xs font-bold uppercase text-ticketGold">Secure desk</p>
-          <h2 class="mt-1 font-display text-5xl leading-none">LOGIN AS ADMIN</h2>
+        <form class="rounded-xl border border-admin-border bg-white p-6 shadow-[0_12px_30px_rgba(17,17,17,0.07)] sm:p-8" @submit.prevent="submit">
+          <p class="text-xs font-medium text-admin-secondary">Secure access</p>
+          <h1 class="mt-1 text-2xl font-bold tracking-[-0.03em]">Sign in to admin</h1>
+          <p class="mt-2 text-sm leading-6 text-admin-secondary">Manage events, bookings, transactions, seats, and refunds.</p>
 
           <div class="mt-6 space-y-4">
             <label class="block">
-              <span class="mb-2 block font-mono text-xs font-bold uppercase text-stubCharcoal/60">Email</span>
-              <input
-                v-model.trim="email"
-                class="focus-ticket w-full rounded-sm border-2 border-stubCharcoal/25 bg-paperCream px-4 py-3 text-stubCharcoal placeholder:text-stubCharcoal/40"
-                :class="{ 'border-marqueeRed': errors.email }"
-                type="email"
-                autocomplete="email"
-                placeholder="admin@example.com"
-              />
-              <span v-if="errors.email" class="mt-2 block font-mono text-xs font-bold text-marqueeRed">{{ errors.email }}</span>
+              <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Email address</span>
+              <input v-model.trim="email" class="admin-login-input" :class="{ 'border-admin-error': errors.email }" type="email" autocomplete="email" placeholder="admin@example.com" />
+              <span v-if="errors.email" class="mt-1.5 block text-xs font-medium text-admin-error">{{ errors.email }}</span>
             </label>
 
             <label class="block">
-              <span class="mb-2 block font-mono text-xs font-bold uppercase text-stubCharcoal/60">Password</span>
-              <input
-                v-model="password"
-                class="focus-ticket w-full rounded-sm border-2 border-stubCharcoal/25 bg-paperCream px-4 py-3 text-stubCharcoal placeholder:text-stubCharcoal/40"
-                :class="{ 'border-marqueeRed': errors.password }"
-                type="password"
-                autocomplete="current-password"
-                placeholder="password123"
-              />
-              <span v-if="errors.password" class="mt-2 block font-mono text-xs font-bold text-marqueeRed">{{ errors.password }}</span>
+              <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Password</span>
+              <input v-model="password" class="admin-login-input" :class="{ 'border-admin-error': errors.password }" type="password" autocomplete="current-password" placeholder="Enter your password" />
+              <span v-if="errors.password" class="mt-1.5 block text-xs font-medium text-admin-error">{{ errors.password }}</span>
             </label>
           </div>
 
-          <p v-if="submitError" class="mt-4 rounded-sm border border-marqueeRed bg-marqueeRed/10 px-3 py-2 text-sm font-semibold text-marqueeRed">
+          <p v-if="submitError" class="mt-4 rounded-md border border-admin-error/25 bg-admin-errorSoft px-3 py-2 text-sm font-medium text-admin-error" role="alert">
             {{ submitError }}
           </p>
 
-          <AppButton class="mt-6 w-full" type="submit" icon="mdi:shield-key" :loading="auth.adminLoading">
-            {{ auth.adminLoading ? 'Checking credentials...' : 'LOGIN AS ADMIN' }}
+          <AppButton class="mt-6 w-full" type="submit" icon="mdi:shield-key-outline" :loading="auth.adminLoading">
+            {{ auth.adminLoading ? 'Checking credentials...' : 'Sign in' }}
           </AppButton>
         </form>
       </section>
-    </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { provide, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import AppButton from '@/components/common/AppButton.vue';
-import BarcodeStrip from '@/components/common/BarcodeStrip.vue';
 import { useAuthStore } from '@/modules/auth/auth.store';
 import { getApiErrorMessage } from '@/utils/apiError';
 
@@ -92,6 +57,8 @@ const errors = reactive({
   email: '',
   password: '',
 });
+
+provide('adminUi', true);
 const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
@@ -130,3 +97,21 @@ async function submit() {
   }
 }
 </script>
+
+<style scoped>
+.admin-login-input {
+  @apply w-full rounded-md border border-admin-border bg-white px-3 py-2.5 text-sm text-admin-text placeholder:text-admin-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1;
+}
+
+.admin-login-input:focus-visible {
+  outline-color: #111111;
+}
+
+.admin-login-shell { font-family: "Manrope", "Work Sans", system-ui, sans-serif; }
+
+.admin-login-shell :is(h1, h2, h3) {
+  font-family: "Manrope", "Work Sans", system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  text-transform: none;
+}
+</style>

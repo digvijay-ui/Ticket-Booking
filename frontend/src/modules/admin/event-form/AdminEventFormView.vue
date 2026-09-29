@@ -1,15 +1,15 @@
 <template>
   <div class="space-y-6">
-    <div class="flex flex-wrap items-end justify-between gap-4">
+    <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="font-mono text-xs font-bold uppercase text-ticketGold">Event editor</p>
-        <h1 class="font-display text-5xl leading-none text-paperCream">{{ isEdit ? 'EDIT EVENT' : 'CREATE EVENT' }}</h1>
-        <p class="text-sm text-paperCream/70">Frontend uses rupees. Backend receives seatPriceInPaise.</p>
+        <p class="admin-kicker">Event editor</p>
+        <h1 class="admin-page-title">{{ isEdit ? 'Edit event' : 'Create event' }}</h1>
+        <p class="admin-page-copy">Prices are entered in rupees and submitted as integer paise.</p>
       </div>
       <RouterLink to="/admin/events">
         <AppButton type="button" variant="secondary" icon="mdi:arrow-left">Back</AppButton>
       </RouterLink>
-    </div>
+    </header>
 
     <div v-if="loadingEvent" class="rounded-md border-2 border-stubCharcoal bg-paperCream p-6 text-stubCharcoal shadow-ticket">
       <div class="h-3 w-32 animate-pulse rounded-sm bg-stubCharcoal/15" />
@@ -17,7 +17,7 @@
       <div class="mt-6 h-40 animate-pulse rounded-sm bg-stubCharcoal/10" />
     </div>
 
-    <form v-else class="rounded-md border-2 border-stubCharcoal bg-paperCream p-5 text-stubCharcoal shadow-ticket" @submit.prevent="submit">
+    <form v-else class="admin-panel-dark mx-auto max-w-5xl p-5" @submit.prevent="submit">
       <div class="grid gap-4 md:grid-cols-2">
         <FieldBlock label="Title" :error="errors.title">
           <input v-model="title" class="admin-input" placeholder="Coldplay Concert" />
@@ -56,14 +56,14 @@
         <textarea v-model="description" class="admin-input min-h-28 resize-y" placeholder="Describe the event" />
       </FieldBlock>
 
-      <p v-if="submitError" class="mt-4 rounded-sm border border-marqueeRed bg-marqueeRed/10 px-3 py-2 text-sm font-semibold text-marqueeRed">
+      <p v-if="submitError" class="mt-4 rounded-md border border-admin-error/25 bg-admin-error-soft px-3 py-2 text-sm font-medium text-admin-error" role="alert">
         {{ submitError }}
       </p>
-      <p v-if="successMessage" class="mt-4 rounded-sm border border-electricTeal bg-electricTeal/15 px-3 py-2 text-sm font-semibold text-stubCharcoal">
+      <p v-if="successMessage" class="mt-4 rounded-md border border-admin-success/25 bg-admin-success-soft px-3 py-2 text-sm font-medium text-admin-success" role="status">
         {{ successMessage }}
       </p>
 
-      <div class="mt-5 flex flex-wrap gap-3">
+      <div class="sticky bottom-4 z-10 mt-6 flex flex-wrap gap-3 rounded-lg border border-admin-border bg-white/95 p-3 shadow-lg">
         <AppButton type="submit" icon="mdi:content-save" :loading="adminStore.eventSaving">
           {{ adminStore.eventSaving ? 'Please wait...' : isEdit ? 'UPDATE EVENT' : 'CREATE EVENT' }}
         </AppButton>
@@ -94,9 +94,9 @@ const FieldBlock = defineComponent({
   setup(props, { slots, attrs }) {
     return () =>
       h('label', { class: ['block', attrs.class] }, [
-        h('span', { class: 'mb-2 block font-mono text-xs font-bold uppercase text-stubCharcoal/60' }, props.label),
+        h('span', { class: 'mb-1.5 block text-xs font-medium text-admin-secondary' }, props.label),
         slots.default?.(),
-        props.error ? h('span', { class: 'mt-2 block font-mono text-xs font-bold text-marqueeRed' }, props.error) : null,
+        props.error ? h('span', { class: 'mt-1.5 block text-xs font-medium text-admin-error' }, props.error) : null,
       ]);
   },
 });
@@ -222,10 +222,10 @@ onMounted(loadEventForEdit);
 
 <style scoped>
 .admin-input {
-  @apply w-full rounded-sm border-2 border-stubCharcoal/25 bg-inkNight px-4 py-3 text-paperCream placeholder:text-paperCream/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+  @apply w-full rounded-md border border-admin-border bg-white px-3 py-2.5 text-sm text-admin-text placeholder:text-admin-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1;
 }
 
 .admin-input:focus-visible {
-  outline-color: #14b8a6;
+  outline-color: #111111;
 }
 </style>

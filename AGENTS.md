@@ -13,3 +13,14 @@
 - Preserve existing API integration, routes, authentication, booking logic, and business functionality.
 - Use the Midnight Cinema palette for public-facing UI: ink `#09090B`, raised surface `#141318`, warm ivory `#F7F3EC`, muted stone `#A8A29E`, orange-red `#FF5A36`, soft mint `#78DCCA`, and low-opacity warm-white borders.
 - Define shared design values as Tailwind theme tokens or CSS custom properties rather than scattering raw values.
+
+## Admin Design System
+
+- Keep admin styling isolated from the public Midnight Cinema experience; public customer pages must remain unchanged.
+- Use a monochrome admin palette: background `#F7F7F8`, surface `#FFFFFF`, sidebar/active black `#111111`, primary text `#171717`, secondary text `#6B7280`, subtle text `#9CA3AF`, borders `#E5E7EB`, hover `#F3F4F6`, and white `#FFFFFF`.
+- Reserve muted green, amber, red, and blue for semantic status and feedback only.
+- Prefer compact white surfaces, thin borders, restrained shadows, strong information hierarchy, and minimal corner rounding.
+- Admin data views should use responsive tables on larger screens and structured compact cards on mobile.
+- Preserve ticket identity only through subtle corner cuts, short perforations, or a 28–36px barcode detail.
+- Keep admin motion short and functional, and disable nonessential motion under `prefers-reduced-motion`.
+- Reuse admin page headers, filters, tables, dialogs, status badges, skeletons, and pagination patterns across modules.

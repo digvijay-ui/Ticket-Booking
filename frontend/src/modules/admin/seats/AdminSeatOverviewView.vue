@@ -1,29 +1,37 @@
 <template>
   <div class="space-y-6">
-    <div class="flex flex-wrap items-end justify-between gap-4">
+    <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="font-mono text-xs font-bold uppercase text-ticketGold">Seat map admin</p>
-        <h1 class="font-display text-5xl leading-none text-paperCream">SEAT OVERVIEW</h1>
-        <p class="text-sm text-paperCream/70">{{ eventLabel }}</p>
+        <p class="admin-kicker">Seat management</p>
+        <h1 class="admin-page-title">Seat overview</h1>
+        <p class="admin-page-copy">{{ eventLabel }}</p>
       </div>
       <RouterLink to="/admin/events">
         <AppButton variant="secondary" icon="mdi:arrow-left">Back to Events</AppButton>
       </RouterLink>
-    </div>
+    </header>
 
-    <p v-if="adminStore.seatsError" class="rounded-sm border border-marqueeRed bg-marqueeRed/15 px-3 py-2 text-sm font-semibold text-paperCream">
+    <p v-if="adminStore.seatsError" class="admin-error-state text-sm font-medium" role="alert">
       {{ adminStore.seatsError }}
     </p>
-    <p v-if="successMessage" class="rounded-sm border border-electricTeal bg-electricTeal/15 px-3 py-2 text-sm font-semibold text-paperCream">
+    <p v-if="successMessage" class="rounded-md border border-admin-success/25 bg-admin-successSoft px-3 py-2 text-sm font-medium text-admin-success" role="status">
       {{ successMessage }}
     </p>
 
+    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Seat inventory summary">
+      <article v-for="stat in seatStatCards" :key="stat.label" class="admin-ticket-card min-h-32 p-4">
+        <p class="text-xs font-medium text-admin-secondary">{{ stat.label }}</p>
+        <p class="mt-2 text-3xl font-bold text-admin-text tabular-nums">{{ stat.value }}</p>
+        <div class="admin-barcode mt-4 w-24 opacity-50" aria-hidden="true" />
+      </article>
+    </section>
+
     <section class="grid gap-4 lg:grid-cols-[360px_1fr]">
       <aside class="space-y-4">
-        <div class="rounded-md border-2 border-stubCharcoal bg-paperCream p-4 text-stubCharcoal shadow-ticket">
+        <div class="rounded-lg border border-admin-border bg-white p-4 text-admin-text shadow-sm">
           <div class="flex items-start justify-between gap-3">
             <div>
-              <p class="font-mono text-[10px] font-bold uppercase text-marqueeRed">Event</p>
+              <p class="text-[10px] font-bold uppercase text-admin-secondary">Event</p>
               <h2 class="admin-card-title mt-1 line-clamp-2">{{ eventName }}</h2>
             </div>
             <p class="max-w-28 truncate font-mono text-[10px] font-bold uppercase text-stubCharcoal/45">{{ eventId }}</p>
@@ -32,20 +40,20 @@
           <div class="my-4 border-t-2 border-dashed border-stubCharcoal/25" />
 
           <div class="grid grid-cols-2 gap-2 font-mono text-xs uppercase">
-            <div class="rounded-sm border border-stubCharcoal/15 p-2">
+            <div class="rounded-md border border-admin-border bg-admin-canvas p-2">
               <p class="text-[9px] font-bold text-stubCharcoal/45">Total Seats</p>
               <p class="font-black">{{ seatStats.total }}</p>
             </div>
-            <div class="rounded-sm border border-electricTeal/50 bg-electricTeal/15 p-2">
+            <div class="rounded-md border border-admin-success/25 bg-admin-successSoft p-2">
               <p class="text-[9px] font-bold text-stubCharcoal/45">Available</p>
               <p class="font-black">{{ seatStats.available }}</p>
             </div>
-            <div class="rounded-sm border border-ticketGold/60 bg-ticketGold/20 p-2">
+            <div class="rounded-md border border-admin-warning/25 bg-admin-warningSoft p-2">
               <p class="text-[9px] font-bold text-stubCharcoal/45">Reserved</p>
               <p class="font-black">{{ seatStats.reserved }}</p>
             </div>
-            <div class="rounded-sm border border-marqueeRed/40 bg-marqueeRed/10 p-2 text-marqueeRed">
-              <p class="text-[9px] font-bold text-marqueeRed/70">Booked</p>
+            <div class="rounded-md border border-admin-error/25 bg-admin-errorSoft p-2 text-admin-error">
+              <p class="text-[9px] font-bold text-admin-error">Booked</p>
               <p class="font-black">{{ seatStats.booked }}</p>
             </div>
           </div>
@@ -55,30 +63,30 @@
           </div>
         </div>
 
-        <form class="rounded-md border-2 border-ticketGold/50 bg-deepPlum p-4 text-paperCream" @submit.prevent="submitBulkCreate">
-          <p class="font-mono text-xs font-bold uppercase text-ticketGold">Bulk Create Seats</p>
+        <form class="admin-panel-dark" @submit.prevent="submitBulkCreate">
+          <p class="text-sm font-semibold text-admin-text">Bulk create seats</p>
           <div class="mt-4 space-y-3">
             <label class="block">
-              <span class="mb-1.5 block font-mono text-[10px] font-bold uppercase text-paperCream/70">Rows</span>
+              <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Rows</span>
               <input v-model="rows" class="admin-seat-input" placeholder="A,B,C" />
               <span v-if="errors.rows" class="mt-1 block font-mono text-xs font-bold text-marqueeRed">{{ errors.rows }}</span>
             </label>
 
             <label class="block">
-              <span class="mb-1.5 block font-mono text-[10px] font-bold uppercase text-paperCream/70">Seats per row</span>
+              <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Seats per row</span>
               <input v-model="seatsPerRow" class="admin-seat-input" type="number" min="1" step="1" placeholder="10" />
               <span v-if="errors.seatsPerRow" class="mt-1 block font-mono text-xs font-bold text-marqueeRed">{{ errors.seatsPerRow }}</span>
             </label>
 
             <label class="block">
-              <span class="mb-1.5 block font-mono text-[10px] font-bold uppercase text-paperCream/70">Price in rupees</span>
+              <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Price in rupees</span>
               <input v-model="priceInRupees" class="admin-seat-input" type="number" min="1" step="1" placeholder="500" />
               <span v-if="errors.price" class="mt-1 block font-mono text-xs font-bold text-marqueeRed">{{ errors.price }}</span>
             </label>
           </div>
 
-          <p class="mt-3 font-mono text-[10px] font-bold uppercase text-paperCream/55">
-            Preview: {{ parsedRows.length || 0 }} rows x {{ Number(seatsPerRow || 0) || 0 }} seats
+          <p class="mt-3 text-xs font-medium text-admin-secondary">
+            Preview: {{ parsedRows.length || 0 }} rows × {{ Number(seatsPerRow || 0) || 0 }} seats = {{ previewSeatCount }} seats total
           </p>
 
           <AppButton class="mt-4 w-full" type="submit" icon="mdi:seat" :loading="adminStore.bulkCreating">
@@ -90,13 +98,11 @@
       <section class="space-y-4">
         <SeatLegend />
 
-        <div v-if="adminStore.seatsLoading" class="flex min-h-72 items-center justify-center rounded-md bg-deepPlum">
+        <div v-if="adminStore.seatsLoading" class="admin-panel-dark flex min-h-72 items-center justify-center">
           <LoadingSpinner size="lg" />
         </div>
 
-        <div v-else class="rounded-md border-2 border-paperCream/15 bg-deepPlum p-4">
-          <SeatGrid :seats="adminStore.adminSeats" :selected-seat-ids="[]" @toggle-seat="noop" />
-        </div>
+        <SeatGrid v-else :seats="adminStore.adminSeats" :selected-seat-ids="[]" @toggle-seat="noop" />
       </section>
     </section>
   </div>
@@ -143,6 +149,13 @@ const seatStats = computed(() => ({
   reserved: adminStore.adminSeats.filter((seat) => seat.status === 'RESERVED').length,
   booked: adminStore.adminSeats.filter((seat) => seat.status === 'BOOKED').length,
 }));
+const previewSeatCount = computed(() => uniqueRows.value.length * (Number(seatsPerRow.value) || 0));
+const seatStatCards = computed(() => [
+  { label: 'Total seats', value: seatStats.value.total, className: 'text-midnight-ivory' },
+  { label: 'Available', value: seatStats.value.available, className: 'text-midnight-mint' },
+  { label: 'Reserved', value: seatStats.value.reserved, className: 'text-midnight-stone' },
+  { label: 'Booked', value: seatStats.value.booked, className: 'text-midnight-ember' },
+]);
 
 function validate() {
   const seatsCount = Number(seatsPerRow.value);
@@ -196,10 +209,10 @@ onMounted(async () => {
 
 <style scoped>
 .admin-seat-input {
-  @apply w-full rounded-sm border-2 border-paperCream/25 bg-paperCream px-3 py-2.5 text-stubCharcoal placeholder:text-stubCharcoal/45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+  @apply w-full rounded-md border border-admin-border bg-white px-3 py-2.5 text-sm text-admin-text placeholder:text-admin-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1;
 }
 
 .admin-seat-input:focus-visible {
-  outline-color: #14b8a6;
+  outline-color: #111111;
 }
 </style>

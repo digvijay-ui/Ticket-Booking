@@ -23,7 +23,7 @@ const series = computed<ApexNonAxisChartSeries>(() => [props.data.confirmed, pro
 const totalBookings = computed(() => props.data.confirmed + props.data.cancelled + props.data.refunded);
 
 const options = computed<ApexOptions>(() => ({
-  colors: ['#5eead4', '#fb7185', '#F2CC8F'],
+  colors: ['#3F7652', '#B54747', '#356A9A'],
   dataLabels: {
     enabled: true,
     formatter: (_value, options) => {

@@ -78,6 +78,10 @@ const defaultPagination = (): PaginationMeta => ({
   hasPreviousPage: false,
 });
 
+let analyticsRequestSequence = 0;
+let bookingsRequestSequence = 0;
+let transactionsRequestSequence = 0;
+
 export const useAdminStore = defineStore('admin', {
   state: (): AdminState => ({
     events: [],
@@ -172,6 +176,7 @@ export const useAdminStore = defineStore('admin', {
       this.loading = false;
     },
     async fetchAnalyticsData(range: AnalyticsRange = 'daily') {
+      const requestId = ++analyticsRequestSequence;
       this.analyticsLoading = true;
       this.analyticsError = '';
 
@@ -183,6 +188,8 @@ export const useAdminStore = defineStore('admin', {
         getTopEventsAnalyticsApi(),
         getWalletFlowAnalyticsApi(),
       ]);
+
+      if (requestId !== analyticsRequestSequence) return;
 
       const errors: string[] = [];
 
@@ -229,7 +236,7 @@ export const useAdminStore = defineStore('admin', {
       }
 
       this.analyticsError = Array.from(new Set(errors)).join(' | ');
-      this.analyticsLoading = false;
+      if (requestId === analyticsRequestSequence) this.analyticsLoading = false;
     },
     async fetchEvents() {
       this.eventsLoading = true;
@@ -348,22 +355,25 @@ export const useAdminStore = defineStore('admin', {
       }
     },
     async fetchBookings(filters: AdminBookingFilters = {}) {
+      const requestId = ++bookingsRequestSequence;
       this.bookingsLoading = true;
       this.bookingsError = '';
 
       try {
         const response = await getAdminBookingsApi(filters);
+        if (requestId !== bookingsRequestSequence) return [];
         const bookings = response.data.data.bookings;
         this.bookings = filters.paymentStatus ? bookings.filter((booking) => booking.paymentStatus === filters.paymentStatus) : bookings;
         this.bookingsPagination = response.data.data.pagination || defaultPagination();
         return this.bookings;
       } catch (error) {
+        if (requestId !== bookingsRequestSequence) return [];
         this.bookings = [];
         this.bookingsPagination = defaultPagination();
         this.bookingsError = getApiErrorMessage(error);
         throw error;
       } finally {
-        this.bookingsLoading = false;
+        if (requestId === bookingsRequestSequence) this.bookingsLoading = false;
       }
     },
     async cancelBooking(bookingId: string, filters: AdminBookingFilters = {}) {
@@ -397,11 +407,13 @@ export const useAdminStore = defineStore('admin', {
       }
     },
     async fetchTransactions(filters: AdminTransactionFilters = {}) {
+      const requestId = ++transactionsRequestSequence;
       this.transactionsLoading = true;
       this.transactionsError = '';
 
       try {
         const response = await getAdminTransactionsApi(filters);
+        if (requestId !== transactionsRequestSequence) return [];
         let transactions = response.data.data.transactions;
 
         if (filters.type) {
@@ -416,12 +428,13 @@ export const useAdminStore = defineStore('admin', {
         this.transactionsPagination = response.data.data.pagination || defaultPagination();
         return this.transactions;
       } catch (error) {
+        if (requestId !== transactionsRequestSequence) return [];
         this.transactions = [];
         this.transactionsPagination = defaultPagination();
         this.transactionsError = getApiErrorMessage(error);
         throw error;
       } finally {
-        this.transactionsLoading = false;
+        if (requestId === transactionsRequestSequence) this.transactionsLoading = false;
       }
     },
   },

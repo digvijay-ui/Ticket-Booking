@@ -1,7 +1,6 @@
 <template>
   <span
-    class="inline-flex items-center gap-1 rounded-sm border px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-normal"
-    :class="variantClass"
+    :class="[baseClass, variantClass]"
   >
     <Icon :icon="iconName" class="h-3.5 w-3.5" aria-hidden="true" />
     <slot>{{ label }}</slot>
@@ -10,7 +9,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 type BadgeVariant =
   | 'available'
@@ -34,7 +33,29 @@ const props = withDefaults(
   },
 );
 
+const isAdminUi = inject('adminUi', false);
+const baseClass = computed(() =>
+  isAdminUi
+    ? 'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold'
+    : 'inline-flex items-center gap-1 rounded-sm border px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-normal',
+);
+
 const variantClass = computed(() => {
+  if (isAdminUi) {
+    const adminClasses: Record<BadgeVariant, string> = {
+      available: 'border-admin-success/25 bg-admin-successSoft text-admin-success',
+      reserved: 'border-admin-warning/25 bg-admin-warningSoft text-admin-warning',
+      booked: 'border-admin-error/25 bg-admin-errorSoft text-admin-error',
+      paid: 'border-admin-success/25 bg-admin-successSoft text-admin-success',
+      refunded: 'border-admin-info/25 bg-admin-infoSoft text-admin-info',
+      cancelled: 'border-admin-error/25 bg-admin-errorSoft text-admin-error',
+      draft: 'border-admin-border bg-admin-hover text-admin-secondary',
+      published: 'border-admin-success/25 bg-admin-successSoft text-admin-success',
+      completed: 'border-admin-border bg-admin-hover text-admin-secondary',
+    };
+    return adminClasses[props.variant];
+  }
+
   const classes: Record<BadgeVariant, string> = {
     available: 'border-[#14b8a6] bg-[#14b8a6]/20 text-[#0f766e]',
     reserved: 'border-stubCharcoal/35 bg-stubCharcoal/10 text-stubCharcoal',

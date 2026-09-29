@@ -1,13 +1,18 @@
 <template>
   <div class="space-y-6">
-    <div>
-      <p class="font-mono text-xs font-bold uppercase text-ticketGold">Latest Ledger</p>
-      <h1 class="font-display text-5xl leading-none text-paperCream">TRANSACTION LEDGER</h1>
-      <p class="text-sm text-paperCream/70">Track wallet credits, booking debits, refunds, and balance movement.</p>
-    </div>
+    <header>
+      <p class="admin-kicker">Financial activity</p>
+      <h1 class="admin-page-title">Transactions</h1>
+      <p class="admin-page-copy">Track wallet credits, booking debits, refunds, and resulting balances.</p>
+    </header>
 
-    <form class="rounded-md border-2 border-ticketGold/35 bg-deepPlum p-4" @submit.prevent="loadTransactions(1)">
-      <div class="grid gap-3 md:grid-cols-3">
+    <form class="admin-panel-dark" @submit.prevent="loadTransactions(1)">
+      <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <label class="block">
+          <span class="transaction-filter-label">Search ledger</span>
+          <input v-model.trim="filters.search" class="transaction-filter-input" type="search" placeholder="ID, description, reference, or user" />
+        </label>
+
         <label class="block">
           <span class="transaction-filter-label">Type</span>
           <select v-model="filters.type" class="transaction-filter-input">
@@ -43,15 +48,46 @@
       </div>
     </form>
 
-    <div v-if="adminStore.transactionsLoading" class="flex min-h-56 items-center justify-center rounded-md bg-deepPlum">
+    <div v-if="adminStore.transactionsLoading" class="admin-panel-dark flex min-h-56 items-center justify-center">
       <LoadingSpinner size="lg" />
     </div>
-    <div v-else-if="adminStore.transactionsError" class="rounded-md border border-marqueeRed bg-marqueeRed/10 p-4 text-sm font-semibold text-paperCream">
-      {{ adminStore.transactionsError }}
+    <div v-else-if="adminStore.transactionsError" class="admin-error-state" role="alert">
+      <p class="text-sm font-medium">{{ adminStore.transactionsError }}</p>
     </div>
-    <div v-else-if="transactions.length" class="space-y-3">
-      <article
-        v-for="transaction in transactions"
+    <template v-else-if="transactions.length">
+      <div class="admin-table-wrap hidden lg:block">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th scope="col">User</th>
+              <th scope="col">Type</th>
+              <th scope="col">Amount</th>
+              <th scope="col">Balance after</th>
+              <th scope="col">Description</th>
+              <th scope="col">Reference</th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="transaction in transactions" :key="getTransactionId(transaction)">
+              <td><p class="max-w-48 truncate">{{ userLabel(transaction) }}</p></td>
+              <td><span class="inline-flex rounded-full border px-2 py-1 text-[11px] font-semibold" :class="typeBadgeClass(transaction.type)">{{ transaction.type }}</span></td>
+              <td class="whitespace-nowrap font-semibold" :class="amountClass(transaction.type)">{{ amountPrefix(transaction.type) }}{{ formatINR(transaction.amountInPaise) }}</td>
+              <td class="whitespace-nowrap">{{ formatINR(transaction.balanceAfterInPaise) }}</td>
+              <td><p class="max-w-56 truncate">{{ transaction.description || 'Wallet transaction' }}</p></td>
+              <td>
+                <p class="text-xs font-medium">{{ transaction.referenceType || 'N/A' }}</p>
+                <IdCopy :id="transaction.referenceId || ''" label="Reference ID" />
+              </td>
+              <td class="whitespace-nowrap text-xs text-admin-secondary">{{ formatDateTime(transaction.createdAt) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="space-y-3 lg:hidden">
+        <article
+          v-for="transaction in transactions"
         :key="getTransactionId(transaction)"
         class="relative overflow-hidden admin-card-dark"
       >
@@ -112,10 +148,11 @@
             </p>
           </div>
         </div>
-      </article>
-    </div>
-    <div v-if="!adminStore.transactionsLoading && adminStore.transactionsPagination.totalItems > adminStore.transactionsPagination.limit" class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-paperCream/10 bg-deepPlum px-4 py-3">
-      <p class="font-mono text-xs font-bold uppercase text-paperCream/60">
+        </article>
+      </div>
+    </template>
+    <div v-if="!adminStore.transactionsLoading && adminStore.transactionsPagination.totalItems > adminStore.transactionsPagination.limit" class="admin-pagination">
+      <p class="text-xs font-medium text-admin-secondary">
         Page {{ adminStore.transactionsPagination.page }} of {{ adminStore.transactionsPagination.totalPages }} · {{ adminStore.transactionsPagination.totalItems }} transactions
       </p>
       <div class="flex gap-2">
@@ -128,9 +165,9 @@
       </div>
     </div>
 
-    <div v-else-if="!transactions.length && !adminStore.transactionsError" class="admin-card-dark p-8 text-center">
-      <p class="font-display text-4xl leading-none">No transactions found.</p>
-      <p class="mt-2 text-sm text-paperCream/65">Wallet credits, booking debits, and refunds will appear here.</p>
+    <div v-else-if="!transactions.length && !adminStore.transactionsError" class="admin-empty-state">
+      <p class="text-lg font-bold text-admin-text">No transactions found</p>
+      <p class="mt-1 text-sm text-admin-secondary">Wallet credits, booking debits, and refunds will appear here.</p>
     </div>
   </div>
 </template>
@@ -154,18 +191,32 @@ type AdminTransaction = WalletTransaction & {
 
 const adminStore = useAdminStore();
 const filters = reactive({
+  search: '',
   type: '',
   referenceType: '',
   userQuery: '',
 });
 const PAGE_SIZE = 24;
 
-const transactions = computed(() => [...(adminStore.transactions as AdminTransaction[])].sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()));
+const rawTransactions = computed(() => [...(adminStore.transactions as AdminTransaction[])].sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime()));
+const transactions = computed(() => {
+  const query = filters.search.toLowerCase();
+  if (!query) return rawTransactions.value;
+  return rawTransactions.value.filter((transaction) =>
+    [
+      getTransactionId(transaction),
+      transaction.description,
+      transaction.referenceId || '',
+      transaction.referenceType,
+      userLabel(transaction),
+    ].some((value) => value.toLowerCase().includes(query)),
+  );
+});
 
 const userOptions = computed(() => {
   const users = new Map<string, { id: string; label: string }>();
 
-  transactions.value.forEach((transaction) => {
+  rawTransactions.value.forEach((transaction) => {
     const user = typeof transaction.userId === 'object' ? transaction.userId : transaction.user;
 
     if (user) {
@@ -223,15 +274,15 @@ function amountPrefix(type: WalletTransaction['type']) {
 }
 
 function amountClass(type: WalletTransaction['type']) {
-  if (type === 'DEBIT') return 'text-marqueeRed';
-  if (type === 'REFUND') return 'text-ticketGold';
-  return 'text-[#5eead4]';
+  if (type === 'DEBIT') return 'text-admin-error';
+  if (type === 'REFUND') return 'text-admin-info';
+  return 'text-admin-success';
 }
 
 function typeBadgeClass(type: WalletTransaction['type']) {
-  if (type === 'DEBIT') return 'border-marqueeRed bg-marqueeRed text-paperCream';
-  if (type === 'REFUND') return 'border-ticketGold bg-ticketGold text-stubCharcoal';
-  return 'border-electricTeal bg-electricTeal text-inkNight';
+  if (type === 'DEBIT') return 'border-admin-error/25 bg-admin-errorSoft text-admin-error';
+  if (type === 'REFUND') return 'border-admin-info/25 bg-admin-infoSoft text-admin-info';
+  return 'border-admin-success/25 bg-admin-successSoft text-admin-success';
 }
 
 async function loadTransactions(page = adminStore.transactionsPagination.page) {
@@ -242,10 +293,11 @@ async function loadTransactions(page = adminStore.transactionsPagination.page) {
 }
 
 function resetFilters() {
+  filters.search = '';
   filters.type = '';
   filters.referenceType = '';
   filters.userQuery = '';
-  loadTransactions(1);
+  void loadTransactions(1);
 }
 
 function resolveOptionId(query: string, options: Array<{ id: string; label: string }>) {
@@ -260,14 +312,14 @@ onMounted(() => loadTransactions(1));
 
 <style scoped>
 .transaction-filter-label {
-  @apply mb-1 block font-mono text-[10px] font-bold uppercase text-paperCream/60;
+  @apply mb-1 block text-[11px] font-semibold text-admin-secondary;
 }
 
 .transaction-filter-input {
-  @apply w-full rounded-sm border-2 border-paperCream/20 bg-inkNight px-3 py-2.5 text-paperCream placeholder:text-paperCream/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-dashed;
+  @apply w-full rounded-md border border-admin-border bg-white px-3 py-2.5 text-sm text-admin-text placeholder:text-admin-subtle transition-colors;
 }
 
 .transaction-filter-input:focus-visible {
-  outline-color: #14b8a6;
+  @apply border-admin-black outline-none ring-2 ring-admin-black/10;
 }
 </style>

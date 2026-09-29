@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-6">
-    <div>
-      <p class="font-mono text-xs uppercase text-ticketGold">Admin users</p>
-      <h1 class="font-display text-5xl leading-none text-paperCream">CREATE ADMIN</h1>
-      <p class="text-sm text-paperCream/70">Only a logged-in admin can create another admin account.</p>
-    </div>
+    <header>
+      <p class="admin-kicker">Admin users</p>
+      <h1 class="admin-page-title">Create admin</h1>
+      <p class="admin-page-copy">Create a secure administrator account with access to the operations dashboard.</p>
+    </header>
 
-    <form class="max-w-3xl rounded-md border-2 border-paperCream/20 bg-deepPlum p-5" @submit.prevent="submit">
+    <form class="admin-panel-dark max-w-3xl" @submit.prevent="submit">
       <div class="grid gap-4 md:grid-cols-2">
         <AppInput v-model="name" label="Name" autocomplete="name" placeholder="Admin name" :error="errors.name" />
         <AppInput v-model="email" label="Email" type="email" autocomplete="email" placeholder="admin@example.com" :error="errors.email" />
@@ -21,11 +21,11 @@
         />
       </div>
 
-      <p v-if="submitError" class="mt-4 rounded-sm border border-marqueeRed bg-marqueeRed/15 px-3 py-2 text-sm font-semibold text-paperCream">
+      <p v-if="submitError" class="mt-4 rounded-md border border-admin-error/25 bg-admin-error-soft px-3 py-2 text-sm font-medium text-admin-error" role="alert">
         {{ submitError }}
       </p>
 
-      <p v-if="successMessage" class="mt-4 rounded-sm border border-electricTeal bg-electricTeal/15 px-3 py-2 text-sm font-semibold text-paperCream">
+      <p v-if="successMessage" class="mt-4 rounded-md border border-admin-success/25 bg-admin-success-soft px-3 py-2 text-sm font-medium text-admin-success" role="status">
         {{ successMessage }}
       </p>
 

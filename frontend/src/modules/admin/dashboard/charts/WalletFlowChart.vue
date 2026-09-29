@@ -28,9 +28,9 @@ const series = computed<ApexAxisChartSeries>(() => [
 ]);
 
 const options = computed<ApexOptions>(() => ({
-  colors: ['#5eead4', '#fb7185', '#F2CC8F'],
+  colors: ['#3F7652', '#B54747', '#356A9A'],
   grid: {
-    borderColor: 'rgba(242, 204, 143, 0.18)',
+    borderColor: '#E5E7EB',
     strokeDashArray: 4,
   },
   plotOptions: {

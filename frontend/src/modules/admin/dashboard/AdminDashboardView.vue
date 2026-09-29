@@ -1,22 +1,23 @@
-remo<template>
-  <div class="space-y-6 text-paperCream">
-    <div class="flex flex-wrap items-end justify-between gap-4">
+<template>
+  <div class="space-y-6">
+    <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p class="font-mono text-xs font-bold uppercase text-paperCream/55">Admin desk</p>
-        <h1 class="font-display text-5xl leading-none sm:text-6xl">ADMIN DASHBOARD</h1>
-        <p class="max-w-3xl text-sm text-paperCream/70">Monitor events, bookings, wallet payments, reservations, and refunds.</p>
+        <p class="admin-kicker">{{ currentDate }}</p>
+        <h1 class="admin-page-title">Dashboard overview</h1>
+        <p class="admin-page-copy">A current view of events, bookings, revenue, refunds, and seat inventory.</p>
       </div>
       <RouterLink to="/admin/events/create" class="inline-flex">
-        <AppButton icon="mdi:ticket-plus">Create Event</AppButton>
+        <AppButton icon="mdi:plus">Create event</AppButton>
       </RouterLink>
+    </header>
+
+    <div v-if="dashboardError" class="admin-error-state" role="alert">
+      <p class="text-sm font-medium">{{ dashboardError }}</p>
+      <AppButton variant="ghost" icon="mdi:refresh" @click="refreshDashboard">Retry</AppButton>
     </div>
 
-    <p v-if="dashboardError" class="rounded-sm border border-[#ef4444] bg-[#ef4444]/15 px-3 py-2 text-sm font-semibold text-paperCream">
-      {{ dashboardError }}
-    </p>
-
     <section v-if="adminStore.analyticsLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <div v-for="index in 4" :key="index" class="h-32 admin-card-dark">
+      <div v-for="index in 8" :key="index" class="h-36 admin-card-dark">
         <div class="h-2.5 w-20 animate-pulse rounded-sm bg-paperCream/15" />
         <div class="mt-3 h-8 w-24 animate-pulse rounded-sm bg-paperCream/20" />
         <div class="mt-4 h-5 w-40 animate-pulse rounded-sm bg-paperCream/10" />
@@ -24,21 +25,21 @@ remo<template>
     </section>
 
     <section v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <AdminStatCard v-for="stat in stats" :key="stat.label" v-bind="stat" />
+      <AdminStatCard v-for="(stat, index) in stats" :key="stat.label" v-bind="stat" :index="index" />
     </section>
 
-    <section v-if="!adminStore.loading && !adminStore.analyticsLoading && !hasData" class="admin-card-dark p-8 text-center">
-      <p class="font-display text-4xl leading-none">No admin data yet.</p>
-      <p class="mt-2 text-sm text-paperCream/65">Create events and start bookings.</p>
+    <section v-if="!adminStore.loading && !adminStore.analyticsLoading && !hasData" class="admin-empty-state">
+      <p class="text-lg font-bold text-admin-text">No admin data yet</p>
+      <p class="mt-1 text-sm text-admin-secondary">Create events and start bookings.</p>
     </section>
 
     <section class="space-y-4">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p class="font-mono text-xs font-bold uppercase text-paperCream/55">Analytics board</p>
-          <h2 class="font-display text-4xl leading-none text-paperCream">BOX OFFICE SIGNALS</h2>
+          <p class="admin-kicker">Analytics</p>
+          <h2 class="mt-1 text-xl font-semibold text-admin-text">Performance signals</h2>
         </div>
-        <label class="flex items-center gap-2 font-mono text-[10px] font-bold uppercase text-paperCream/60">
+        <label class="flex items-center gap-2 text-xs font-medium text-admin-secondary">
           Range
           <select
             v-model="revenueRange"
@@ -60,13 +61,13 @@ remo<template>
       </div>
     </section>
 
-    <section class="rounded-md border-2 border-paperCream/15 bg-deepPlum p-4 sm:p-5">
+    <section class="admin-panel-dark">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p class="font-mono text-xs font-bold uppercase text-paperCream/55">Top performers</p>
-          <h2 class="font-display text-4xl leading-none text-paperCream">TOP EVENTS</h2>
+          <p class="admin-kicker">Top performers</p>
+          <h2 class="mt-1 text-xl font-semibold text-admin-text">Top events</h2>
         </div>
-        <span class="rounded-sm border border-paperCream/20 px-2 py-1 font-mono text-[10px] font-bold uppercase text-paperCream/60">
+        <span class="rounded-full border border-admin-border bg-admin-canvas px-2.5 py-1 text-[11px] font-semibold text-admin-secondary">
           By revenue
         </span>
       </div>
@@ -77,21 +78,21 @@ remo<template>
           :key="event.eventId"
           class="relative grid gap-3 overflow-hidden admin-card-dark sm:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] sm:items-center"
         >
-          <span class="font-mono text-xs font-black uppercase text-paperCream/45 tabular-nums">#{{ index + 1 }}</span>
+          <span class="text-xs font-bold text-admin-subtle tabular-nums">#{{ index + 1 }}</span>
           <div class="min-w-0">
-            <h3 class="admin-card-title truncate text-paperCream">{{ event.title }}</h3>
-            <p class="mt-1 flex min-w-0 items-center gap-1 font-mono text-[10px] font-bold uppercase text-paperCream/45">
+            <h3 class="truncate font-semibold text-admin-text">{{ event.title }}</h3>
+            <p class="mt-1 flex min-w-0 items-center gap-1 text-[11px] font-medium text-admin-secondary">
               Event <IdCopy :id="event.eventId" label="Event ID" />
             </p>
           </div>
-          <p class="font-mono text-xs font-bold uppercase text-paperCream/60 tabular-nums">{{ formatCount(event.totalBookings) }} bookings</p>
-          <p class="font-mono text-xs font-bold uppercase text-[#5eead4] tabular-nums">{{ formatINR(event.revenueInPaise) }}</p>
-          <p class="font-mono text-xs font-bold uppercase text-[#fb7185] tabular-nums">{{ formatCount(event.bookedSeats) }} seats</p>
+          <p class="text-xs font-medium text-admin-secondary tabular-nums">{{ formatCount(event.totalBookings) }} bookings</p>
+          <p class="text-xs font-semibold text-admin-success tabular-nums">{{ formatINR(event.revenueInPaise) }}</p>
+          <p class="text-xs font-semibold text-admin-text tabular-nums">{{ formatCount(event.bookedSeats) }} seats</p>
         </article>
       </div>
 
-      <div v-else class="rounded-sm border border-paperCream/15 bg-paperCream/5 p-5 text-center text-paperCream">
-        <p class="font-semibold">No top events yet.</p>
+      <div v-else class="rounded-md border border-admin-border bg-admin-canvas p-5 text-center text-admin-secondary">
+        <p class="font-medium">No top events yet.</p>
       </div>
     </section>
 
@@ -154,6 +155,7 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const RECENT_ROW_LIMIT = 8;
 const adminStore = useAdminStore();
 const revenueRange = ref<AnalyticsRange>('daily');
+const currentDate = new Intl.DateTimeFormat('en-IN', { dateStyle: 'full' }).format(new Date());
 
 const dashboardError = computed(() => [adminStore.error, adminStore.analyticsError].filter(Boolean).join(' | '));
 const summary = computed(() => adminStore.analyticsSummary);
@@ -215,37 +217,69 @@ const transactionRows = computed<ActivityPanelItem[]>(() =>
 
 const stats = computed(() => [
   {
-    label: 'Total Revenue',
-    value: formatINR(summary.value?.totalRevenueInPaise ?? adminStore.totalRevenueInPaise),
-    valueClass: 'text-[#5eead4]',
-    subtitle: 'From confirmed paid bookings',
-    ...moneyDelta(adminStore.transactions, (transaction) => transaction.type === 'DEBIT', 'positive'),
-  },
-  {
-    label: 'Total Bookings',
-    value: formatCount(summary.value?.totalBookings ?? adminStore.totalBookings),
-    valueClass: 'text-paperCream',
-    subtitle: `${formatCount(summary.value?.confirmedBookings ?? adminStore.confirmedBookings)} confirmed`,
-    ...periodDelta(adminStore.bookings, () => true, 'positive'),
+    label: 'Total Events',
+    value: formatCount(summary.value?.totalEvents ?? adminStore.totalEvents),
+    valueClass: 'text-midnight-ivory',
+    subtitle: 'All event records',
+    icon: 'mdi:calendar-multiple',
   },
   {
     label: 'Active Events',
     value: formatCount(summary.value?.activeEvents ?? adminStore.events.filter((event) => event.status === 'PUBLISHED').length),
-    valueClass: 'text-[#5eead4]',
-    subtitle: `${formatCount(summary.value?.totalEvents ?? adminStore.totalEvents)} total events`,
-    ...periodDelta(adminStore.events, (event) => event.status === 'PUBLISHED', 'positive'),
+    valueClass: 'text-midnight-mint',
+    subtitle: 'Currently published',
+    icon: 'mdi:calendar-check',
   },
   {
-    label: 'Seats Booked',
+    label: 'Total Bookings',
+    value: formatCount(summary.value?.totalBookings ?? adminStore.totalBookings),
+    valueClass: 'text-midnight-ivory',
+    subtitle: 'All booking records',
+    icon: 'mdi:ticket-confirmation-outline',
+  },
+  {
+    label: 'Confirmed',
+    value: formatCount(summary.value?.confirmedBookings ?? adminStore.confirmedBookings),
+    valueClass: 'text-midnight-mint',
+    subtitle: 'Paid and confirmed',
+    icon: 'mdi:check-decagram-outline',
+  },
+  {
+    label: 'Refund amount',
+    value: formatINR(summary.value?.refundedAmountInPaise ?? adminStore.refundedAmountInPaise),
+    valueClass: 'text-admin-text',
+    subtitle: 'Returned to user wallets',
+    icon: 'mdi:cash-refund',
+  },
+  {
+    label: 'Total Revenue',
+    value: formatINR(summary.value?.totalRevenueInPaise ?? adminStore.totalRevenueInPaise),
+    valueClass: 'text-midnight-mint',
+    subtitle: 'Confirmed paid bookings',
+    icon: 'mdi:currency-inr',
+  },
+  {
+    label: 'Available Seats',
+    value: formatCount(summary.value?.availableSeats ?? totalAvailableSeatsFromEvents.value),
+    valueClass: 'text-midnight-mint',
+    subtitle: 'Ready to book',
+    icon: 'mdi:seat-outline',
+  },
+  {
+    label: 'Booked Seats',
     value: formatCount(summary.value?.bookedSeats ?? totalBookedSeatsFromEvents.value),
-    valueClass: 'text-[#fb7185]',
-    subtitle: `${formatCount(summary.value?.availableSeats ?? totalAvailableSeatsFromEvents.value)} available seats`,
-    ...periodDelta(adminStore.bookings, (booking) => booking.status === 'CONFIRMED', 'positive'),
+    valueClass: 'text-midnight-ember',
+    subtitle: 'Confirmed inventory',
+    icon: 'mdi:seat-passenger',
   },
 ]);
 
 const totalBookedSeatsFromEvents = computed(() => adminStore.events.reduce((total, event) => total + event.bookedSeats, 0));
 const totalAvailableSeatsFromEvents = computed(() => adminStore.events.reduce((total, event) => total + event.availableSeats, 0));
+const closedBookingsCount = computed(() => {
+  if (summary.value) return Math.max(0, summary.value.totalBookings - summary.value.confirmedBookings);
+  return adminStore.bookings.filter((booking) => booking.status === 'CANCELLED' || booking.status === 'REFUNDED' || booking.paymentStatus === 'REFUNDED').length;
+});
 
 function byCreatedAt(first: { createdAt: string }, second: { createdAt: string }) {
   return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime();
@@ -300,9 +334,9 @@ function transactionVariant(type: WalletTransaction['type']): BadgeVariant {
 }
 
 function transactionAmountClass(type: WalletTransaction['type']) {
-  if (type === 'CREDIT') return 'text-[#5eead4]';
-  if (type === 'REFUND') return 'text-ticketGold';
-  return 'text-[#fb7185]';
+  if (type === 'CREDIT') return 'text-admin-success';
+  if (type === 'REFUND') return 'text-admin-info';
+  return 'text-admin-error';
 }
 
 function periodDelta<T extends { createdAt: string }>(items: T[], filter: (item: T) => boolean, polarity: TrendPolarity) {
@@ -391,7 +425,12 @@ function formatRelativeTime(date: string) {
 }
 
 function refreshAnalytics() {
-  adminStore.fetchAnalyticsData(revenueRange.value);
+  void adminStore.fetchAnalyticsData(revenueRange.value);
+}
+
+function refreshDashboard() {
+  void adminStore.fetchDashboardData();
+  refreshAnalytics();
 }
 
 onMounted(() => {
