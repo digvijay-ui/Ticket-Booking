@@ -6,6 +6,7 @@
     :series="series"
     :options="options"
     :meta="range"
+    :summary="summary"
   />
 </template>
 
@@ -30,6 +31,12 @@ const series = computed<ApexAxisChartSeries>(() => [
 ]);
 
 const maxRevenue = computed(() => Math.max(...props.data.values, 0));
+const summary = computed(() => {
+  const latestIndex = props.data.values.length - 1;
+  if (latestIndex < 0) return 'No revenue data is available for this period.';
+  const label = props.data.labels[latestIndex] || 'the latest period';
+  return `${props.data.values.length} revenue periods. Latest: ${label}, ${formatINR(props.data.values[latestIndex] ?? 0)}.`;
+});
 
 const options = computed<ApexOptions>(() => ({
   colors: ['#111111'],

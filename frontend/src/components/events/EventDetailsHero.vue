@@ -6,7 +6,7 @@
         role="img"
         :aria-label="`Event artwork for ${event.title}`"
       >
-        <img v-if="event.imageUrl && !imageFailed" :src="event.imageUrl" alt="" class="absolute inset-0 h-full w-full object-cover" @error="imageFailed = true" />
+        <img v-if="event.imageUrl && !imageFailed" :src="event.imageUrl" alt="" width="1200" height="900" decoding="async" fetchpriority="high" class="absolute inset-0 h-full w-full object-cover" @error="imageFailed = true" />
         <div class="poster-grid absolute inset-0 opacity-25" aria-hidden="true" />
         <div class="absolute inset-0 bg-midnight-ink/20" aria-hidden="true" />
         <div class="absolute inset-x-6 top-6 flex items-center justify-between gap-4">
@@ -36,7 +36,7 @@
 
         <div class="mt-8 lg:mt-auto">
           <p class="text-[10px] font-extrabold uppercase tracking-[0.19em] text-midnight-mint">One night. Your seat.</p>
-          <h1 class="mt-4 max-w-3xl text-[clamp(3rem,6vw,6.6rem)] font-black leading-[0.88] tracking-[-0.065em] text-midnight-ivory">{{ event.title }}</h1>
+          <h1 class="mt-4 max-w-3xl text-[clamp(3rem,6vw,6.6rem)] break-words font-black leading-[0.88] tracking-[-0.065em] text-midnight-ivory">{{ event.title }}</h1>
           <p class="mt-6 max-w-2xl text-base font-medium leading-7 text-midnight-stone sm:text-lg">{{ event.description }}</p>
         </div>
 

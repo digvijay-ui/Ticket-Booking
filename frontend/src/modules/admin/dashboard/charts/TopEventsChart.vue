@@ -7,6 +7,7 @@
     :series="series"
     :options="options"
     meta="By revenue"
+    :summary="summary"
   >
     <p class="mt-3 text-sm text-admin-secondary">
       {{ summary }}

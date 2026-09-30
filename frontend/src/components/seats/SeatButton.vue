@@ -3,6 +3,7 @@
     type="button"
     class="seat-button group relative flex h-14 min-w-14 flex-col items-center justify-center rounded-xl border px-2 text-xs font-extrabold transition duration-150 sm:h-[60px] sm:min-w-[60px]"
     :class="[seatClass, isAdminUi ? 'admin-focus' : 'focus-midnight']"
+    :disabled="disabled"
     :aria-disabled="disabled"
     :aria-pressed="canSelect ? selected : undefined"
     :aria-label="accessibleLabel"

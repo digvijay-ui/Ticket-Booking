@@ -18,7 +18,7 @@
       {{ successMessage }}
     </p>
 
-    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Seat inventory summary">
+    <section class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Seat inventory summary">
       <article v-for="stat in seatStatCards" :key="stat.label" class="admin-ticket-card min-h-32 p-4">
         <p class="text-xs font-medium text-admin-secondary">{{ stat.label }}</p>
         <p class="mt-2 text-3xl font-bold text-admin-text tabular-nums">{{ stat.value }}</p>
@@ -68,20 +68,20 @@
           <div class="mt-4 space-y-3">
             <label class="block">
               <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Rows</span>
-              <input v-model="rows" class="admin-seat-input" placeholder="A,B,C" />
-              <span v-if="errors.rows" class="mt-1 block font-mono text-xs font-bold text-marqueeRed">{{ errors.rows }}</span>
+              <input id="seat-rows" v-model="rows" name="rows" class="admin-seat-input" placeholder="A,B,C" :aria-invalid="Boolean(errors.rows)" :aria-describedby="errors.rows ? 'seat-rows-error' : undefined" />
+              <span v-if="errors.rows" id="seat-rows-error" class="mt-1 block text-xs font-medium text-admin-error" role="alert">{{ errors.rows }}</span>
             </label>
 
             <label class="block">
               <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Seats per row</span>
-              <input v-model="seatsPerRow" class="admin-seat-input" type="number" min="1" step="1" placeholder="10" />
-              <span v-if="errors.seatsPerRow" class="mt-1 block font-mono text-xs font-bold text-marqueeRed">{{ errors.seatsPerRow }}</span>
+              <input id="seats-per-row" v-model="seatsPerRow" name="seatsPerRow" class="admin-seat-input" type="number" min="1" step="1" placeholder="10" :aria-invalid="Boolean(errors.seatsPerRow)" :aria-describedby="errors.seatsPerRow ? 'seats-per-row-error' : undefined" />
+              <span v-if="errors.seatsPerRow" id="seats-per-row-error" class="mt-1 block text-xs font-medium text-admin-error" role="alert">{{ errors.seatsPerRow }}</span>
             </label>
 
             <label class="block">
               <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Price in rupees</span>
-              <input v-model="priceInRupees" class="admin-seat-input" type="number" min="1" step="1" placeholder="500" />
-              <span v-if="errors.price" class="mt-1 block font-mono text-xs font-bold text-marqueeRed">{{ errors.price }}</span>
+              <input id="seat-price" v-model="priceInRupees" name="price" class="admin-seat-input" type="number" min="1" step="1" placeholder="500" :aria-invalid="Boolean(errors.price)" :aria-describedby="errors.price ? 'seat-price-error' : undefined" />
+              <span v-if="errors.price" id="seat-price-error" class="mt-1 block text-xs font-medium text-admin-error" role="alert">{{ errors.price }}</span>
             </label>
           </div>
 
@@ -179,6 +179,7 @@ function noop() {
 }
 
 async function submitBulkCreate() {
+  if (adminStore.bulkCreating) return;
   successMessage.value = '';
 
   if (!validate()) {

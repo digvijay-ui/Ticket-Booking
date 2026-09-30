@@ -3,6 +3,7 @@
     :type="type"
     :class="[baseClass, variantClass]"
     :disabled="disabled || loading"
+    :aria-busy="loading || undefined"
   >
     <LoadingSpinner v-if="loading" size="sm" />
     <Icon v-else-if="icon" :icon="icon" class="h-5 w-5" aria-hidden="true" />

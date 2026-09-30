@@ -5,14 +5,15 @@
     <div class="mb-4 flex min-w-0 items-start justify-between gap-3">
       <div class="min-w-0">
         <p class="text-xs font-medium text-admin-secondary">{{ eyebrow }}</p>
-        <h2 class="mt-1 truncate text-lg font-semibold tracking-[-0.02em] text-admin-text sm:text-xl">{{ title }}</h2>
+        <h2 :id="`${chartId}-title`" class="mt-1 truncate text-lg font-semibold tracking-[-0.02em] text-admin-text sm:text-xl">{{ title }}</h2>
       </div>
       <span v-if="meta" class="shrink-0 rounded-md border border-admin-border bg-admin-canvas px-2 py-1 text-[10px] font-medium text-admin-secondary">
         {{ meta }}
       </span>
     </div>
 
-    <div ref="chartFrame" class="admin-chart-surface min-h-[220px]">
+    <div ref="chartFrame" class="admin-chart-surface min-h-[220px]" role="img" :aria-labelledby="`${chartId}-title ${chartId}-summary`">
+      <p :id="`${chartId}-summary`" class="sr-only">{{ summary || fallbackSummary }}</p>
       <VueApexCharts
         v-if="canRenderChart"
         class="admin-chart-enter"
@@ -33,22 +34,28 @@
 
 <script setup lang="ts">
 import type { ApexAxisChartSeries, ApexNonAxisChartSeries, ApexOptions } from 'apexcharts';
+import 'apexcharts/bar';
+import 'apexcharts/donut';
+import 'apexcharts/features/legend';
+import 'apexcharts/line';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import VueApexCharts from 'vue3-apexcharts';
+import VueApexCharts from 'vue3-apexcharts/core';
 
 const props = withDefaults(
   defineProps<{
     eyebrow: string;
     title: string;
-    type: 'line' | 'bar' | 'donut' | 'radialBar';
+    type: 'line' | 'bar' | 'donut';
     series: ApexAxisChartSeries | ApexNonAxisChartSeries;
     options: ApexOptions;
     height?: number;
     meta?: string;
+    summary?: string;
   }>(),
   {
     height: 220,
     meta: '',
+    summary: '',
   },
 );
 
@@ -70,6 +77,9 @@ const hasData = computed(() =>
 );
 
 const canRenderChart = computed(() => isMounted.value && hasData.value && Boolean(chartWidth.value));
+const fallbackSummary = computed(() => hasData.value
+  ? `${props.title} visualization. Use the accompanying page totals for exact values.`
+  : `No ${props.title.toLowerCase()} data is available.`);
 
 const mergedOptions = computed<ApexOptions>(() => ({
   ...props.options,

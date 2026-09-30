@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import AppButton from '@/components/common/AppButton.vue';
 import AddMoneyPanel from '@/components/wallet/AddMoneyPanel.vue';
 import WalletSkeleton from '@/components/wallet/WalletSkeleton.vue';
@@ -47,6 +47,7 @@ import { useWalletStore } from '../wallet.store';
 const wallet = useWalletStore();
 const topUpOpen = ref(false);
 const successMessage = ref('');
+let successTimer: number | undefined;
 
 function transactionVisual(type: 'CREDIT' | 'DEBIT' | 'REFUND') {
   if (type === 'CREDIT') return { icon: 'mdi:arrow-down-left', class: 'border-midnight-mint/40 bg-midnight-mint/10 text-midnight-mint', text: 'text-midnight-mint' };
@@ -61,10 +62,14 @@ async function addMoney(amountInPaise: number) {
     if (!transaction) return;
     topUpOpen.value = false;
     successMessage.value = `${formatINR(amountInPaise)} added to your wallet.`;
-    window.setTimeout(() => { successMessage.value = ''; }, 4000);
+    if (successTimer !== undefined) window.clearTimeout(successTimer);
+    successTimer = window.setTimeout(() => { successMessage.value = ''; }, 4000);
   } catch { /* Safe store error remains in the panel. */ }
 }
 onMounted(loadWallet);
+onBeforeUnmount(() => {
+  if (successTimer !== undefined) window.clearTimeout(successTimer);
+});
 </script>
 
 <style scoped>

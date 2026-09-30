@@ -16,7 +16,7 @@
       <AppButton variant="ghost" icon="mdi:refresh" @click="refreshDashboard">Retry</AppButton>
     </div>
 
-    <section v-if="adminStore.analyticsLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section v-if="adminStore.analyticsLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div v-for="index in 8" :key="index" class="h-36 admin-card-dark">
         <div class="h-2.5 w-20 animate-pulse rounded-sm bg-paperCream/15" />
         <div class="mt-3 h-8 w-24 animate-pulse rounded-sm bg-paperCream/20" />
@@ -24,7 +24,7 @@
       </div>
     </section>
 
-    <section v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <AdminStatCard v-for="(stat, index) in stats" :key="stat.label" v-bind="stat" :index="index" />
     </section>
 

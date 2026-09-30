@@ -5,6 +5,7 @@
     type="bar"
     :series="series"
     :options="options"
+    :summary="`Credits ${formatINR(data.creditInPaise)}, debits ${formatINR(data.debitInPaise)}, refunds ${formatINR(data.refundInPaise)}.`"
   />
 </template>
 

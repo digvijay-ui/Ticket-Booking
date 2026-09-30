@@ -4,24 +4,27 @@
       {{ label }}
     </span>
     <input
-      :id="id"
+      :id="resolvedId"
       :class="inputClass"
       :type="type"
       :placeholder="placeholder"
       :value="modelValue"
       :autocomplete="autocomplete"
+      :aria-invalid="Boolean(error)"
+      :aria-describedby="error ? errorId : undefined"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
     />
-    <span v-if="error" :class="errorClass">
+    <span v-if="error" :id="errorId" :class="errorClass" role="alert">
       {{ error }}
     </span>
   </label>
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue';
+import { computed, inject, useId } from 'vue';
 
 const isAdminUi = inject('adminUi', false);
+const generatedId = useId();
 
 const props = withDefaults(
   defineProps<{
@@ -45,6 +48,9 @@ const props = withDefaults(
 defineEmits<{
   'update:modelValue': [value: string];
 }>();
+
+const resolvedId = computed(() => props.id || `field-${generatedId}`);
+const errorId = computed(() => `${resolvedId.value}-error`);
 
 const labelClass = computed(() =>
   isAdminUi

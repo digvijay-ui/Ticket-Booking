@@ -10,7 +10,7 @@
         <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p class="text-[10px] font-extrabold uppercase tracking-[0.18em] text-midnight-mint">Seat selection</p>
-            <h1 class="mt-3 max-w-4xl text-[clamp(2.7rem,6vw,5.8rem)] font-black leading-[0.9] tracking-[-0.06em] text-midnight-ivory">{{ event?.title || 'Choose your view' }}</h1>
+            <h1 class="mt-3 max-w-4xl text-[clamp(2.7rem,6vw,5.8rem)] break-words font-black leading-[0.9] tracking-[-0.06em] text-midnight-ivory">{{ event?.title || 'Choose your view' }}</h1>
           </div>
           <div v-if="event" class="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-midnight-stone">
             <span class="inline-flex items-center gap-2"><Icon icon="mdi:calendar-clock-outline" class="h-4 w-4 text-midnight-mint" aria-hidden="true" />{{ formatDateTime(event.startDate) }}</span>

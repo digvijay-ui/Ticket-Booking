@@ -6,6 +6,8 @@
 
 @layer base {
   html {
+    max-width: 100%;
+    overflow-x: clip;
     scroll-behavior: smooth;
   }
 
@@ -16,6 +18,13 @@
     --midnight-stone: #a8a29e;
     --midnight-ember: #ff5a36;
     --midnight-mint: #78dcca;
+    --layout-max-public: 90rem;
+    --layout-max-admin: 100rem;
+    --radius-control: 0.75rem;
+    --radius-card: 1.625rem;
+    --motion-fast: 160ms;
+    --motion-standard: 220ms;
+    --motion-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
     color: #f7f1e3;
     background: #121221;
     font-family: "Work Sans", system-ui, sans-serif;
@@ -29,6 +38,7 @@
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
+    overflow-x: hidden;
     background:
       linear-gradient(90deg, rgba(242, 204, 143, 0.07) 1px, transparent 1px),
       linear-gradient(rgba(247, 241, 227, 0.04) 1px, transparent 1px),
@@ -41,6 +51,7 @@
   h2,
   h3,
   .font-display {
+    overflow-wrap: break-word;
     font-family: "Anton", sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -69,6 +80,26 @@
   select,
   textarea {
     font: inherit;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+  }
+
+  #app {
+    min-height: 100vh;
+    isolation: isolate;
   }
 
   input,
@@ -293,7 +324,7 @@
   }
 
   .section-title {
-    font-size: clamp(2.75rem, 6vw, 5.8rem);
+    font-size: clamp(2.4rem, 6vw, 5.8rem);
     font-weight: 900;
     line-height: 0.92;
     letter-spacing: -0.06em;
@@ -466,6 +497,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
   .hero-reveal,
   .reveal-item,
   .discovery-enter,

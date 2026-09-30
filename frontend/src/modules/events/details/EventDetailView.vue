@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import EventDetailsHero from '@/components/events/EventDetailsHero.vue';
@@ -55,6 +55,7 @@ const route = useRoute();
 const router = useRouter();
 const eventStore = useEventStore();
 const pageReady = ref(false);
+let revealFrame: number | undefined;
 const event = computed(() => eventStore.selectedEvent);
 const bookingUnavailable = computed(() => !event.value
   || event.value.status !== 'PUBLISHED'
@@ -68,11 +69,23 @@ const unavailableReason = computed(() => {
   return '';
 });
 
+function updateEventMetadata() {
+  if (!event.value) return;
+  const title = `${event.value.title} | EventBooking`;
+  const description = `${event.value.title} at ${event.value.location}. View availability, event details, and ticket pricing.`;
+  document.title = title;
+  document.head.querySelector<HTMLMetaElement>('meta[name="description"]')?.setAttribute('content', description);
+  document.head.querySelector<HTMLMetaElement>('meta[property="og:title"]')?.setAttribute('content', title);
+  document.head.querySelector<HTMLMetaElement>('meta[property="og:description"]')?.setAttribute('content', description);
+}
+
 async function loadEvent() {
   pageReady.value = false;
+  if (revealFrame !== undefined) window.cancelAnimationFrame(revealFrame);
   await eventStore.fetchEventById(String(route.params.eventId));
+  updateEventMetadata();
   await nextTick();
-  window.requestAnimationFrame(() => { pageReady.value = true; });
+  revealFrame = window.requestAnimationFrame(() => { pageReady.value = true; });
 }
 
 function handleErrorAction() {
@@ -83,5 +96,8 @@ function handleErrorAction() {
   loadEvent();
 }
 
-onMounted(loadEvent);
+watch(() => route.params.eventId, loadEvent, { immediate: true });
+onBeforeUnmount(() => {
+  if (revealFrame !== undefined) window.cancelAnimationFrame(revealFrame);
+});
 </script>

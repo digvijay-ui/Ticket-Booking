@@ -19,28 +19,28 @@
 
     <form v-else class="admin-panel-dark mx-auto max-w-5xl p-5" @submit.prevent="submit">
       <div class="grid gap-4 md:grid-cols-2">
-        <FieldBlock label="Title" :error="errors.title">
-          <input v-model="title" class="admin-input" placeholder="Coldplay Concert" />
+        <FieldBlock label="Title" :error="errors.title" error-id="event-title-error">
+          <input id="event-title" v-model="title" name="title" class="admin-input" placeholder="Coldplay Concert" :aria-invalid="Boolean(errors.title)" :aria-describedby="errors.title ? 'event-title-error' : undefined" />
         </FieldBlock>
 
-        <FieldBlock label="Location" :error="errors.location">
-          <input v-model="location" class="admin-input" placeholder="Ahmedabad Stadium" />
+        <FieldBlock label="Location" :error="errors.location" error-id="event-location-error">
+          <input id="event-location" v-model="location" name="location" class="admin-input" placeholder="Ahmedabad Stadium" :aria-invalid="Boolean(errors.location)" :aria-describedby="errors.location ? 'event-location-error' : undefined" />
         </FieldBlock>
 
-        <FieldBlock label="Start Date" :error="errors.startDate">
-          <input v-model="startDate" class="admin-input" type="datetime-local" />
+        <FieldBlock label="Start Date" :error="errors.startDate" error-id="event-start-error">
+          <input id="event-start" v-model="startDate" name="startDate" class="admin-input" type="datetime-local" :aria-invalid="Boolean(errors.startDate)" :aria-describedby="errors.startDate ? 'event-start-error' : undefined" />
         </FieldBlock>
 
-        <FieldBlock label="End Date" :error="errors.endDate">
-          <input v-model="endDate" class="admin-input" type="datetime-local" />
+        <FieldBlock label="End Date" :error="errors.endDate" error-id="event-end-error">
+          <input id="event-end" v-model="endDate" name="endDate" class="admin-input" type="datetime-local" :aria-invalid="Boolean(errors.endDate)" :aria-describedby="errors.endDate ? 'event-end-error' : undefined" />
         </FieldBlock>
 
-        <FieldBlock label="Seat Price in Rupees" :error="errors.price">
-          <input v-model="price" class="admin-input" type="number" min="1" step="1" placeholder="500" />
+        <FieldBlock label="Seat Price in Rupees" :error="errors.price" error-id="event-price-error">
+          <input id="event-price" v-model="price" name="price" class="admin-input" type="number" min="1" step="1" placeholder="500" :aria-invalid="Boolean(errors.price)" :aria-describedby="errors.price ? 'event-price-error' : undefined" />
         </FieldBlock>
 
-        <FieldBlock label="Status" :error="errors.status">
-          <select v-model="status" class="admin-input">
+        <FieldBlock label="Status" :error="errors.status" error-id="event-status-error">
+          <select id="event-status" v-model="status" name="status" class="admin-input" :aria-invalid="Boolean(errors.status)" :aria-describedby="errors.status ? 'event-status-error' : undefined">
             <option value="DRAFT">Draft</option>
             <option value="PUBLISHED" :disabled="!canPublish">Published</option>
             <option value="CANCELLED">Cancelled</option>
@@ -52,14 +52,14 @@
         </FieldBlock>
       </div>
 
-      <FieldBlock class="mt-4" label="Description" :error="errors.description">
-        <textarea v-model="description" class="admin-input min-h-28 resize-y" placeholder="Describe the event" />
+      <FieldBlock class="mt-4" label="Description" :error="errors.description" error-id="event-description-error">
+        <textarea id="event-description" v-model="description" name="description" class="admin-input min-h-28 resize-y" placeholder="Describe the event" :aria-invalid="Boolean(errors.description)" :aria-describedby="errors.description ? 'event-description-error' : undefined" />
       </FieldBlock>
 
-      <p v-if="submitError" class="mt-4 rounded-md border border-admin-error/25 bg-admin-error-soft px-3 py-2 text-sm font-medium text-admin-error" role="alert">
+      <p v-if="submitError" class="mt-4 rounded-md border border-admin-error/25 bg-admin-errorSoft px-3 py-2 text-sm font-medium text-admin-error" role="alert">
         {{ submitError }}
       </p>
-      <p v-if="successMessage" class="mt-4 rounded-md border border-admin-success/25 bg-admin-success-soft px-3 py-2 text-sm font-medium text-admin-success" role="status">
+      <p v-if="successMessage" class="mt-4 rounded-md border border-admin-success/25 bg-admin-successSoft px-3 py-2 text-sm font-medium text-admin-success" role="status">
         {{ successMessage }}
       </p>
 
@@ -90,13 +90,14 @@ const FieldBlock = defineComponent({
   props: {
     label: { type: String, required: true },
     error: { type: String, default: '' },
+    errorId: { type: String, default: '' },
   },
   setup(props, { slots, attrs }) {
     return () =>
       h('label', { class: ['block', attrs.class] }, [
         h('span', { class: 'mb-1.5 block text-xs font-medium text-admin-secondary' }, props.label),
         slots.default?.(),
-        props.error ? h('span', { class: 'mt-1.5 block text-xs font-medium text-admin-error' }, props.error) : null,
+        props.error ? h('span', { id: props.errorId, class: 'mt-1.5 block text-xs font-medium text-admin-error', role: 'alert' }, props.error) : null,
       ]);
   },
 });
@@ -185,6 +186,7 @@ function validate() {
 }
 
 async function submit() {
+  if (adminStore.eventSaving) return;
   submitError.value = '';
   successMessage.value = '';
 

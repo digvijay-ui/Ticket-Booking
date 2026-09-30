@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -28,6 +28,7 @@ const props = withDefaults(
 );
 
 const copied = ref(false);
+let resetTimer: number | undefined;
 
 const displayId = computed(() => {
   if (!props.id) {
@@ -49,11 +50,16 @@ async function copy() {
   try {
     await navigator.clipboard.writeText(props.id);
     copied.value = true;
-    window.setTimeout(() => {
+    if (resetTimer !== undefined) window.clearTimeout(resetTimer);
+    resetTimer = window.setTimeout(() => {
       copied.value = false;
     }, 1200);
   } catch {
     copied.value = false;
   }
 }
+
+onBeforeUnmount(() => {
+  if (resetTimer !== undefined) window.clearTimeout(resetTimer);
+});
 </script>

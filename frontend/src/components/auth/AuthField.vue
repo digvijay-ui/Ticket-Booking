@@ -27,7 +27,7 @@
       </button>
     </div>
     <p v-if="helper && !error" :id="`${id}-helper`" class="mt-2 text-xs font-medium leading-5 text-midnight-stone">{{ helper }}</p>
-    <p v-if="error" :id="`${id}-error`" class="mt-2 flex items-center gap-1.5 text-xs font-bold text-midnight-ember">
+    <p v-if="error" :id="`${id}-error`" class="mt-2 flex items-center gap-1.5 text-xs font-bold text-midnight-ember" role="alert">
       <Icon icon="mdi:alert-circle-outline" class="h-4 w-4 shrink-0" aria-hidden="true" />{{ error }}
     </p>
   </div>

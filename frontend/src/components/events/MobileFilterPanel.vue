@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="filter-panel">
-      <div v-if="open" class="fixed inset-0 z-[70] lg:hidden" @keydown="handleKeydown">
+      <div v-if="open" class="fixed inset-0 z-[70] lg:hidden">
         <button type="button" class="absolute inset-0 cursor-default bg-midnight-ink/80" aria-label="Close filters" @click="$emit('close')" />
         <section ref="panel" role="dialog" aria-modal="true" aria-labelledby="mobile-filter-title" class="absolute inset-x-0 bottom-0 max-h-[88dvh] overflow-y-auto rounded-t-[26px] border-t border-white/15 bg-midnight-surface px-5 pb-7 pt-4 text-midnight-ivory shadow-2xl sm:left-auto sm:h-full sm:max-h-none sm:w-[420px] sm:rounded-none sm:border-l sm:border-t-0 sm:px-7 sm:pt-6">
           <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20 sm:hidden" aria-hidden="true" />
@@ -19,46 +19,21 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
+
+import { useDialogFocus } from '@/composables/useDialogFocus';
 
 const props = defineProps<{ open: boolean; resultCount: number }>();
-defineEmits<{ close: [] }>();
+const emit = defineEmits<{ close: [] }>();
 const panel = ref<HTMLElement | null>(null);
 const closeButton = ref<HTMLButtonElement | null>(null);
-let previouslyFocused: HTMLElement | null = null;
 
-function focusableElements() {
-  return Array.from(panel.value?.querySelectorAll<HTMLElement>('button:not([disabled]), select:not([disabled]), input:not([disabled]), a[href]') ?? []);
-}
-
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape') {
-    event.preventDefault();
-    panel.value?.querySelector<HTMLButtonElement>('[aria-label="Close filters"]')?.click();
-    return;
-  }
-  if (event.key !== 'Tab') return;
-  const focusable = focusableElements();
-  const first = focusable[0];
-  const last = focusable[focusable.length - 1];
-  if (!first || !last) return;
-  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-  if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-}
-
-watch(() => props.open, async (open) => {
-  if (open) {
-    previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    document.body.style.overflow = 'hidden';
-    await nextTick();
-    closeButton.value?.focus();
-  } else {
-    document.body.style.removeProperty('overflow');
-    previouslyFocused?.focus();
-  }
-});
-
-onBeforeUnmount(() => document.body.style.removeProperty('overflow'));
+useDialogFocus(
+  computed(() => props.open),
+  panel,
+  () => emit('close'),
+  { initialFocus: closeButton },
+);
 </script>
 
 <style scoped>

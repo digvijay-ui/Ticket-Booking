@@ -21,4 +21,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('/node_modules/vue3-apexcharts/')) return 'charts-vue';
+          if (id.includes('/node_modules/apexcharts/dist/core.')) return 'charts-core';
+          if (id.includes('/node_modules/apexcharts/dist/')) return 'charts-features';
+          return undefined;
+        },
+      },
+    },
+  },
 });

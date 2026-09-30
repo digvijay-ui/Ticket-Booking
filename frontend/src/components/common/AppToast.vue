@@ -1,11 +1,12 @@
 <template>
-  <div class="fixed right-4 top-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-3">
+  <div class="fixed right-4 top-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-3" role="region" aria-label="Notifications" aria-live="polite" aria-relevant="additions text">
     <button
       v-for="toast in toastStore.toasts"
       :key="toast.id"
       type="button"
       class="focus-ticket rounded-sm border-2 bg-paperCream px-4 py-3 text-left text-sm font-semibold text-stubCharcoal shadow-ticket"
       :class="toastClass(toast.type)"
+      :aria-label="`${toast.type}: ${toast.message}. Dismiss notification`"
       @click="toastStore.dismiss(toast.id)"
     >
       <span class="block font-mono text-[10px] font-bold uppercase">{{ toast.type }}</span>

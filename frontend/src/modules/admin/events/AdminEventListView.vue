@@ -179,7 +179,7 @@
       <p class="mt-1 text-sm text-admin-secondary">Create your first event to begin selling seats.</p>
     </div>
 
-    <div v-if="eventToCancel" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="cancel-event-title" @click.self="closeCancelDialog">
+    <div v-if="eventToCancel" ref="cancelDialog" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-6" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="cancel-event-title" @click.self="closeCancelDialog">
       <section class="w-full max-w-lg rounded-lg border border-admin-border bg-white p-5 text-admin-text shadow-xl">
         <p class="admin-kicker">Event cancellation</p>
         <h2 id="cancel-event-title" class="mt-2 text-xl font-bold">Cancel {{ eventToCancel.title }}?</h2>
@@ -193,7 +193,9 @@
 
     <div
       v-if="eventToDelete"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+      ref="deleteDialog"
+      class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-6"
+      tabindex="-1"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-event-title"
@@ -223,13 +225,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import { Icon } from '@iconify/vue';
 
 import AppBadge from '@/components/common/AppBadge.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import IdCopy from '@/components/common/IdCopy.vue';
+import { useDialogFocus } from '@/composables/useDialogFocus';
 import { useToastStore } from '@/modules/common/toast/toast.store';
 import type { EventItem } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
@@ -242,6 +245,8 @@ const cancellingEventId = ref('');
 const deletingEventId = ref('');
 const eventToDelete = ref<EventItem | null>(null);
 const eventToCancel = ref<EventItem | null>(null);
+const cancelDialog = ref<HTMLElement | null>(null);
+const deleteDialog = ref<HTMLElement | null>(null);
 const searchQuery = ref('');
 const statusFilter = ref('');
 const currentPage = ref(1);
@@ -330,16 +335,10 @@ async function deleteEvent() {
   }
 }
 
-function handleDialogKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Escape') return;
-  if (eventToDelete.value) closeDeleteDialog();
-  else if (eventToCancel.value) closeCancelDialog();
-}
+useDialogFocus(computed(() => Boolean(eventToCancel.value)), cancelDialog, closeCancelDialog);
+useDialogFocus(computed(() => Boolean(eventToDelete.value)), deleteDialog, closeDeleteDialog);
 
 onMounted(() => {
-  window.addEventListener('keydown', handleDialogKeydown);
   adminStore.fetchEvents().catch(() => undefined);
 });
-
-onBeforeUnmount(() => window.removeEventListener('keydown', handleDialogKeydown));
 </script>

@@ -80,6 +80,7 @@ export const useAuthStore = defineStore('auth', {
       finally { this.loading = false; }
     },
     async adminLogin(payload: LoginPayload) {
+      if (this.adminLoading) return null;
       this.adminLoading = true; this.adminError = '';
       try {
         const response = await adminLoginApi(payload);
@@ -91,6 +92,7 @@ export const useAuthStore = defineStore('auth', {
       finally { this.adminLoading = false; }
     },
     async adminSignup(payload: SignupPayload) {
+      if (this.adminLoading) return null;
       this.adminLoading = true; this.adminError = '';
       try {
         const response = await adminSignupApi(payload);

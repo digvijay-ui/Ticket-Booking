@@ -21,11 +21,11 @@
         />
       </div>
 
-      <p v-if="submitError" class="mt-4 rounded-md border border-admin-error/25 bg-admin-error-soft px-3 py-2 text-sm font-medium text-admin-error" role="alert">
+      <p v-if="submitError" class="mt-4 rounded-md border border-admin-error/25 bg-admin-errorSoft px-3 py-2 text-sm font-medium text-admin-error" role="alert">
         {{ submitError }}
       </p>
 
-      <p v-if="successMessage" class="mt-4 rounded-md border border-admin-success/25 bg-admin-success-soft px-3 py-2 text-sm font-medium text-admin-success" role="status">
+      <p v-if="successMessage" class="mt-4 rounded-md border border-admin-success/25 bg-admin-successSoft px-3 py-2 text-sm font-medium text-admin-success" role="status">
         {{ successMessage }}
       </p>
 
@@ -79,6 +79,7 @@ function resetForm() {
 }
 
 async function submit() {
+  if (saving.value) return;
   submitError.value = '';
   successMessage.value = '';
 

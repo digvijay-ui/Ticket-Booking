@@ -2,10 +2,10 @@
   <div id="top" ref="pageRoot" class="landing-page overflow-hidden bg-midnight-ink text-midnight-ivory" :class="{ 'hero-ready': heroReady }">
     <section class="relative isolate min-h-[760px] border-b border-white/10 pt-32 sm:pt-36 xl:flex xl:min-h-[850px] xl:items-center xl:pt-24">
       <div class="hero-spotlight absolute right-[-20%] top-[-12%] -z-10 h-[780px] w-[780px] rounded-full opacity-50" aria-hidden="true" />
-      <div class="mx-auto grid w-full max-w-[1440px] items-center gap-14 px-5 pb-20 sm:px-8 lg:px-12 lg:pb-24 xl:grid-cols-[minmax(0,0.95fr)_minmax(460px,1.05fr)] xl:gap-16">
-        <div class="max-w-[680px]">
-          <p class="hero-reveal hero-delay-1 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.17em] text-midnight-mint"><span class="h-px w-7 bg-midnight-mint" /> Tickets to something unforgettable</p>
-          <h1 class="hero-reveal hero-delay-2 mt-6 max-w-[720px] text-[clamp(3.25rem,6.6vw,6.7rem)] font-extrabold leading-[0.9] tracking-[-0.065em]">Your next <span class="text-midnight-ember">unforgettable</span> moment starts here.</h1>
+      <div class="mx-auto grid min-w-0 w-full max-w-[1440px] items-center gap-14 px-5 pb-20 sm:px-8 lg:px-12 lg:pb-24 xl:grid-cols-[minmax(0,0.95fr)_minmax(460px,1.05fr)] xl:gap-16">
+        <div class="min-w-0 max-w-[680px]">
+          <p class="hero-reveal hero-delay-1 flex max-w-full items-start gap-2 text-xs font-bold uppercase tracking-[0.17em] text-midnight-mint"><span class="mt-[0.45rem] h-px w-7 shrink-0 bg-midnight-mint" /><span>Tickets to something unforgettable</span></p>
+          <h1 class="hero-reveal hero-delay-2 mt-6 max-w-[720px] break-normal text-[clamp(2.5rem,6.2vw,6.1rem)] font-extrabold leading-[0.9] tracking-[-0.065em]">Your next <span class="text-midnight-ember">unforgettable</span> moment starts here.</h1>
           <p class="hero-reveal hero-delay-3 mt-7 max-w-xl text-base leading-7 text-midnight-stone sm:text-lg sm:leading-8">Discover events you’ll love, choose your seats, and book securely—in one simple experience.</p>
           <div class="hero-reveal hero-delay-4 mt-9 flex flex-col gap-3 sm:flex-row">
             <RouterLink to="/events" class="focus-midnight inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-midnight-ember px-7 text-sm font-bold text-white transition hover:brightness-110">Explore Events <Icon icon="mdi:arrow-right" class="h-4 w-4" aria-hidden="true" /></RouterLink>
@@ -70,7 +70,7 @@
     <section class="px-5 pb-24 sm:px-8 lg:px-12 lg:pb-32">
       <div data-reveal class="reveal-item final-cta relative mx-auto max-w-[1340px] overflow-hidden rounded-[28px] border border-white/10 bg-midnight-ember px-6 py-16 text-center sm:px-10 lg:py-24">
         <span class="absolute -left-5 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full bg-midnight-ink" aria-hidden="true" /><span class="absolute -right-5 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full bg-midnight-ink" aria-hidden="true" /><div class="absolute inset-x-10 top-6 border-t border-dashed border-white/30" aria-hidden="true" />
-        <div class="relative mx-auto max-w-3xl"><p class="text-xs font-bold uppercase tracking-[0.18em] text-white/75">Your seat is waiting</p><h2 class="mt-5 text-[clamp(2.8rem,6vw,5.8rem)] font-black leading-[0.9] tracking-[-0.065em] text-white">Ready for something unforgettable?</h2><p class="mx-auto mt-6 max-w-xl text-base leading-7 text-white/80">Find the event that feels like yours, then book it in a few confident steps.</p><RouterLink to="/events" class="focus-midnight mt-8 inline-flex min-h-[52px] items-center gap-2 rounded-full bg-midnight-ink px-7 text-sm font-bold text-midnight-ivory transition hover:bg-midnight-surface">Explore Events <Icon icon="mdi:arrow-up-right" class="h-4 w-4" aria-hidden="true" /></RouterLink></div>
+        <div class="relative mx-auto max-w-3xl"><p class="text-xs font-bold uppercase tracking-[0.18em] text-white/75">Your seat is waiting</p><h2 class="mt-5 text-[clamp(2.4rem,6vw,5.8rem)] font-black leading-[0.9] tracking-[-0.065em] text-white">Ready for something unforgettable?</h2><p class="mx-auto mt-6 max-w-xl text-base leading-7 text-white/80">Find the event that feels like yours, then book it in a few confident steps.</p><RouterLink to="/events" class="focus-midnight mt-8 inline-flex min-h-[52px] items-center gap-2 rounded-full bg-midnight-ink px-7 text-sm font-bold text-midnight-ivory transition hover:bg-midnight-surface">Explore Events <Icon icon="mdi:arrow-up-right" class="h-4 w-4" aria-hidden="true" /></RouterLink></div>
       </div>
     </section>
   </div>

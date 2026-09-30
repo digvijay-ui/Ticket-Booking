@@ -6,6 +6,7 @@
     :height="245"
     :series="series"
     :options="options"
+    :summary="`Available ${data.available}, reserved ${data.reserved}, booked ${data.booked} seats.`"
   >
     <div class="mt-3 grid grid-cols-3 gap-2">
       <div v-for="item in seatItems" :key="item.label" class="rounded-md border border-admin-border bg-admin-canvas px-2 py-2">

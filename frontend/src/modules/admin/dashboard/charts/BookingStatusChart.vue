@@ -5,6 +5,7 @@
     type="donut"
     :series="series"
     :options="options"
+    :summary="`Confirmed ${data.confirmed}, cancelled ${data.cancelled}, refunded ${data.refunded}.`"
   />
 </template>
 

@@ -158,7 +158,7 @@
       </div>
     </template>
 
-    <div v-if="actionBooking" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="booking-action-title" @click.self="closeActionDialog">
+    <div v-if="actionBooking" ref="actionDialog" class="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/50 px-4 py-6" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="booking-action-title" @click.self="closeActionDialog">
       <section class="w-full max-w-lg rounded-lg border border-admin-border bg-white p-5 text-admin-text shadow-xl">
         <p class="admin-kicker">{{ actionKind === 'cancel' ? 'Cancellation' : 'Refund' }}</p>
         <h2 id="booking-action-title" class="mt-2 text-xl font-extrabold">
@@ -208,12 +208,13 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
 import AppBadge from '@/components/common/AppBadge.vue';
 import AppButton from '@/components/common/AppButton.vue';
 import IdCopy from '@/components/common/IdCopy.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import { useDialogFocus } from '@/composables/useDialogFocus';
 import { useToastStore } from '@/modules/common/toast/toast.store';
 import type { Booking, EventItem, Seat, User } from '@/services/apiTypes';
 import { formatDateTime } from '@/utils/date';
@@ -246,6 +247,7 @@ const bookings = computed(() => {
 });
 const actionBooking = ref<AdminBooking | null>(null);
 const actionKind = ref<'cancel' | 'refund'>('cancel');
+const actionDialog = ref<HTMLElement | null>(null);
 const PAGE_SIZE = 24;
 
 const eventOptions = computed(() =>
@@ -386,17 +388,12 @@ function resolveOptionId(query: string, options: Array<{ id: string; label: stri
   return /^[a-f\d]{24}$/i.test(query) ? query : '';
 }
 
-function handleDialogKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && actionBooking.value) closeActionDialog();
-}
+useDialogFocus(computed(() => Boolean(actionBooking.value)), actionDialog, closeActionDialog);
 
 onMounted(() => {
-  window.addEventListener('keydown', handleDialogKeydown);
   adminStore.fetchEvents().catch(() => undefined);
   loadBookings(1);
 });
-
-onBeforeUnmount(() => window.removeEventListener('keydown', handleDialogKeydown));
 </script>
 
 <style scoped>

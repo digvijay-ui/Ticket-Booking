@@ -1,27 +1,30 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import AdminLayout from '@/components/layout/AdminLayout.vue';
-import UserLayout from '@/components/layout/UserLayout.vue';
-import AdminBookingView from '@/modules/admin/bookings/AdminBookingView.vue';
-import AdminAnalyticsView from '@/modules/admin/analytics/AdminAnalyticsView.vue';
-import AdminCreateUserView from '@/modules/admin/create-user/AdminCreateUserView.vue';
-import AdminDashboardView from '@/modules/admin/dashboard/AdminDashboardView.vue';
-import AdminEventFormView from '@/modules/admin/event-form/AdminEventFormView.vue';
-import AdminEventListView from '@/modules/admin/events/AdminEventListView.vue';
-import AdminLoginView from '@/modules/admin/login/AdminLoginView.vue';
-import AdminSeatOverviewView from '@/modules/admin/seats/AdminSeatOverviewView.vue';
-import AdminTransactionView from '@/modules/admin/transactions/AdminTransactionView.vue';
-import LoginView from '@/modules/auth/pages/LoginView.vue';
-import SignupView from '@/modules/auth/pages/SignupView.vue';
-import BookingCheckoutView from '@/modules/booking/pages/BookingCheckoutView.vue';
-import BookingHistoryView from '@/modules/booking/pages/BookingHistoryView.vue';
-import BookingSuccessView from '@/modules/booking/pages/BookingSuccessView.vue';
-import SeatSelectionView from '@/modules/booking/pages/SeatSelectionView.vue';
-import EventDetailView from '@/modules/events/details/EventDetailView.vue';
-import EventListView from '@/modules/events/pages/EventListView.vue';
-import HomeView from '@/modules/events/pages/HomeView.vue';
-import WalletView from '@/modules/wallet/pages/WalletView.vue';
 import { useAuthStore } from '@/modules/auth/auth.store';
+
+const AdminLayout = () => import('@/components/layout/AdminLayout.vue');
+const UserLayout = () => import('@/components/layout/UserLayout.vue');
+const AdminBookingView = () => import('@/modules/admin/bookings/AdminBookingView.vue');
+const AdminAnalyticsView = () => import('@/modules/admin/analytics/AdminAnalyticsView.vue');
+const AdminCreateUserView = () => import('@/modules/admin/create-user/AdminCreateUserView.vue');
+const AdminDashboardView = () => import('@/modules/admin/dashboard/AdminDashboardView.vue');
+const AdminEventFormView = () => import('@/modules/admin/event-form/AdminEventFormView.vue');
+const AdminEventListView = () => import('@/modules/admin/events/AdminEventListView.vue');
+const AdminLoginView = () => import('@/modules/admin/login/AdminLoginView.vue');
+const AdminSeatOverviewView = () => import('@/modules/admin/seats/AdminSeatOverviewView.vue');
+const AdminTransactionView = () => import('@/modules/admin/transactions/AdminTransactionView.vue');
+const LoginView = () => import('@/modules/auth/pages/LoginView.vue');
+const SignupView = () => import('@/modules/auth/pages/SignupView.vue');
+const BookingCheckoutView = () => import('@/modules/booking/pages/BookingCheckoutView.vue');
+const BookingHistoryView = () => import('@/modules/booking/pages/BookingHistoryView.vue');
+const BookingSuccessView = () => import('@/modules/booking/pages/BookingSuccessView.vue');
+const SeatSelectionView = () => import('@/modules/booking/pages/SeatSelectionView.vue');
+const EventDetailView = () => import('@/modules/events/details/EventDetailView.vue');
+const EventListView = () => import('@/modules/events/pages/EventListView.vue');
+const HomeView = () => import('@/modules/events/pages/HomeView.vue');
+const WalletView = () => import('@/modules/wallet/pages/WalletView.vue');
+
+const DEFAULT_DESCRIPTION = 'Discover live events, choose your seats, and book securely with EventBooking.';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,33 +35,33 @@ const router = createRouter({
       path: '/',
       component: UserLayout,
       children: [
-        { path: '', name: 'home', component: HomeView },
-        { path: 'login', name: 'login', component: LoginView },
-        { path: 'signup', name: 'signup', component: SignupView },
-        { path: 'events', name: 'events', component: EventListView },
-        { path: 'events/:eventId', name: 'event-detail', component: EventDetailView },
-        { path: 'events/:eventId/seats', name: 'seat-selection', component: SeatSelectionView, meta: { requiresAuth: true } },
-        { path: 'wallet', name: 'wallet', component: WalletView, meta: { requiresAuth: true } },
+        { path: '', name: 'home', component: HomeView, meta: { title: 'EventBooking | Find your next live event', description: DEFAULT_DESCRIPTION } },
+        { path: 'login', name: 'login', component: LoginView, meta: { title: 'Log in | EventBooking', description: 'Log in to manage your EventBooking tickets and wallet.', noIndex: true } },
+        { path: 'signup', name: 'signup', component: SignupView, meta: { title: 'Create an account | EventBooking', description: 'Create your EventBooking account and start booking live experiences.', noIndex: true } },
+        { path: 'events', name: 'events', component: EventListView, meta: { title: 'Explore events | EventBooking', description: 'Browse upcoming live events by date, location, price, and availability.' } },
+        { path: 'events/:eventId', name: 'event-detail', component: EventDetailView, meta: { title: 'Event details | EventBooking', description: 'View event details, availability, venue information, and ticket pricing.' } },
+        { path: 'events/:eventId/seats', name: 'seat-selection', component: SeatSelectionView, meta: { requiresAuth: true, title: 'Choose seats | EventBooking', noIndex: true } },
+        { path: 'wallet', name: 'wallet', component: WalletView, meta: { requiresAuth: true, title: 'Wallet | EventBooking', noIndex: true } },
         {
           path: 'booking/checkout/:reservationId',
           name: 'booking-checkout',
           component: BookingCheckoutView,
-          meta: { requiresAuth: true },
+          meta: { requiresAuth: true, title: 'Confirm booking | EventBooking', noIndex: true },
         },
         {
           path: 'booking/success/:bookingId',
           name: 'booking-success',
           component: BookingSuccessView,
-          meta: { requiresAuth: true },
+          meta: { requiresAuth: true, title: 'Booking confirmed | EventBooking', noIndex: true },
         },
-        { path: 'bookings', name: 'booking-history', component: BookingHistoryView, meta: { requiresAuth: true } },
+        { path: 'bookings', name: 'booking-history', component: BookingHistoryView, meta: { requiresAuth: true, title: 'My bookings | EventBooking', noIndex: true } },
       ],
     },
-    { path: '/admin/login', name: 'admin-login', component: AdminLoginView },
+    { path: '/admin/login', name: 'admin-login', component: AdminLoginView, meta: { title: 'Admin login | EventBooking', noIndex: true } },
     {
       path: '/admin',
       component: AdminLayout,
-      meta: { requiresAdmin: true },
+      meta: { requiresAdmin: true, noIndex: true },
       children: [
         { path: '', redirect: '/admin/dashboard' },
         { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboardView, meta: { title: 'Dashboard' } },
@@ -73,6 +76,37 @@ const router = createRouter({
       ],
     },
   ],
+});
+
+function setMetaTag(name: string, content: string) {
+  let element = document.head.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    element.name = name;
+    document.head.append(element);
+  }
+  element.content = content;
+}
+
+function setPropertyMetaTag(property: string, content: string) {
+  let element = document.head.querySelector<HTMLMetaElement>(`meta[property="${property}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute('property', property);
+    document.head.append(element);
+  }
+  element.content = content;
+}
+
+router.afterEach((to) => {
+  const title = String(to.meta.title || 'EventBooking');
+  const description = String(to.meta.description || DEFAULT_DESCRIPTION);
+  document.title = title;
+  setMetaTag('description', description);
+  setMetaTag('robots', to.meta.noIndex || to.meta.requiresAdmin ? 'noindex, nofollow' : 'index, follow');
+  setPropertyMetaTag('og:title', title);
+  setPropertyMetaTag('og:description', description);
+  setPropertyMetaTag('og:url', window.location.href);
 });
 
 router.beforeEach((to) => {

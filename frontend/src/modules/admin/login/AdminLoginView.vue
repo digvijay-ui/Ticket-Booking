@@ -16,16 +16,16 @@
           <p class="mt-2 text-sm leading-6 text-admin-secondary">Manage events, bookings, transactions, seats, and refunds.</p>
 
           <div class="mt-6 space-y-4">
-            <label class="block">
+            <label for="admin-email" class="block">
               <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Email address</span>
-              <input v-model.trim="email" class="admin-login-input" :class="{ 'border-admin-error': errors.email }" type="email" autocomplete="email" placeholder="admin@example.com" />
-              <span v-if="errors.email" class="mt-1.5 block text-xs font-medium text-admin-error">{{ errors.email }}</span>
+              <input id="admin-email" v-model.trim="email" name="email" class="admin-login-input" :class="{ 'border-admin-error': errors.email }" type="email" autocomplete="email" placeholder="admin@example.com" :aria-invalid="Boolean(errors.email)" :aria-describedby="errors.email ? 'admin-email-error' : undefined" />
+              <span v-if="errors.email" id="admin-email-error" class="mt-1.5 block text-xs font-medium text-admin-error" role="alert">{{ errors.email }}</span>
             </label>
 
-            <label class="block">
+            <label for="admin-password" class="block">
               <span class="mb-1.5 block text-xs font-medium text-admin-secondary">Password</span>
-              <input v-model="password" class="admin-login-input" :class="{ 'border-admin-error': errors.password }" type="password" autocomplete="current-password" placeholder="Enter your password" />
-              <span v-if="errors.password" class="mt-1.5 block text-xs font-medium text-admin-error">{{ errors.password }}</span>
+              <input id="admin-password" v-model="password" name="password" class="admin-login-input" :class="{ 'border-admin-error': errors.password }" type="password" autocomplete="current-password" placeholder="Enter your password" :aria-invalid="Boolean(errors.password)" :aria-describedby="errors.password ? 'admin-password-error' : undefined" />
+              <span v-if="errors.password" id="admin-password-error" class="mt-1.5 block text-xs font-medium text-admin-error" role="alert">{{ errors.password }}</span>
             </label>
           </div>
 
@@ -83,6 +83,7 @@ function validate() {
 }
 
 async function submit() {
+  if (auth.adminLoading) return;
   submitError.value = '';
 
   if (!validate()) {
@@ -91,7 +92,11 @@ async function submit() {
 
   try {
     await auth.adminLogin({ email: email.value.trim(), password: password.value });
-    router.push(String(route.query.redirect || '/admin/dashboard'));
+    const requestedRedirect = route.query.redirect;
+    const redirect = typeof requestedRedirect === 'string' && requestedRedirect.startsWith('/admin/')
+      ? requestedRedirect
+      : '/admin/dashboard';
+    await router.push(redirect);
   } catch (error) {
     submitError.value = getApiErrorMessage(error) || auth.adminError || 'Invalid admin login or something went wrong';
   }
