@@ -33,8 +33,8 @@ const options = computed<ApexOptions>(() => ({
       return totalBookings.value ? `${Math.round((value / totalBookings.value) * 100)}%` : '0%';
     },
     style: {
-      colors: ['#121221'],
-      fontFamily: 'Space Mono, monospace',
+      colors: ['#FFFFFF'],
+      fontFamily: 'Manrope, sans-serif',
       fontSize: '11px',
       fontWeight: 700,
     },
@@ -45,10 +45,10 @@ const options = computed<ApexOptions>(() => ({
       donut: {
         labels: {
           show: true,
-          name: { color: '#F2CC8F', fontFamily: 'Space Mono, monospace' },
+          name: { color: '#6B7280', fontFamily: 'Manrope, sans-serif' },
           value: {
-            color: '#f7f1e3',
-            fontFamily: 'Space Mono, monospace',
+            color: '#171717',
+            fontFamily: 'Manrope, sans-serif',
             formatter: (value) => formatCount(Number(value)),
           },
         },

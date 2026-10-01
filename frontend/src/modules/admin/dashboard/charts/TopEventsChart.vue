@@ -41,7 +41,6 @@ const summary = computed(() => {
 
 const options = computed<ApexOptions>(() => ({
   colors: ['#111111'],
-  chart: { animations: { enabled: false } },
   grid: { borderColor: '#E5E7EB', strokeDashArray: 4 },
   plotOptions: {
     bar: {

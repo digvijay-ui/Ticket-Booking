@@ -24,3 +24,13 @@
 - Preserve ticket identity only through subtle corner cuts, short perforations, or a 28–36px barcode detail.
 - Keep admin motion short and functional, and disable nonessential motion under `prefers-reduced-motion`.
 - Reuse admin page headers, filters, tables, dialogs, status badges, skeletons, and pagination patterns across modules.
+
+## Visual Tokens and Motion Rules
+
+- Treat orange-red `#FF5A36` as the single public action accent. Use soft mint `#78DCCA` for supportive wayfinding and confirmed or secure states, never as a competing primary action colour.
+- Build ticket graphics from warm ivory stock, ink typography, dashed perforations, clipped circular notches, and compact barcode stripes. Layered tickets may use small rotations and restrained shadows to create depth.
+- Public entrance motion uses the shared `cubic-bezier(0.2, 0.8, 0.2, 1)` curve, 160–620ms durations, and short staggered delays. Idle motion is limited to the hero ticket, with a maximum 9px vertical drift.
+- Pointer response is desktop-only, limited to 3.5 degrees of rotation and 5px of translation. Cards may lift by 2–3px on hover; buttons may compress slightly on press.
+- Admin transitions stay within 120–220ms. Charts may animate once when data loads; filters, disclosure rows, and hover feedback should respond immediately.
+- Under `prefers-reduced-motion: reduce`, remove entrance delays, idle movement, pointer transforms, chart animation, and smooth scrolling.
+- Reuse `.admin-ticket-card`, `.admin-barcode`, `.initial-card-reveal`, `.focus-midnight`, and `.admin-focus` before adding a new visual pattern.

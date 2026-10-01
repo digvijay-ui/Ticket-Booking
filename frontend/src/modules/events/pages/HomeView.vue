@@ -1,14 +1,14 @@
 <template>
   <div id="top" ref="pageRoot" class="landing-page overflow-hidden bg-midnight-ink text-midnight-ivory" :class="{ 'hero-ready': heroReady }">
-    <section class="relative isolate min-h-[760px] border-b border-white/10 pt-32 sm:pt-36 xl:flex xl:min-h-[850px] xl:items-center xl:pt-24">
-      <div class="hero-spotlight absolute right-[-20%] top-[-12%] -z-10 h-[780px] w-[780px] rounded-full opacity-50" aria-hidden="true" />
-      <div class="mx-auto grid min-w-0 w-full max-w-[1440px] items-center gap-14 px-5 pb-20 sm:px-8 lg:px-12 lg:pb-24 xl:grid-cols-[minmax(0,0.95fr)_minmax(460px,1.05fr)] xl:gap-16">
+    <section class="hero-section relative isolate min-h-[720px] border-b border-white/10 pt-28 sm:pt-36 xl:flex xl:min-h-[850px] xl:items-center xl:pt-24">
+      <div class="hero-stage-lines absolute inset-0 -z-10" aria-hidden="true" />
+      <div class="mx-auto grid min-w-0 w-full max-w-[1440px] items-center gap-14 px-5 pb-20 sm:px-8 lg:px-12 lg:pb-24 xl:grid-cols-[minmax(0,0.92fr)_minmax(460px,1.08fr)] xl:gap-20">
         <div class="min-w-0 max-w-[680px]">
           <p class="hero-reveal hero-delay-1 flex max-w-full items-start gap-2 text-xs font-bold uppercase tracking-[0.17em] text-midnight-mint"><span class="mt-[0.45rem] h-px w-7 shrink-0 bg-midnight-mint" /><span>Tickets to something unforgettable</span></p>
-          <h1 class="hero-reveal hero-delay-2 mt-6 max-w-[720px] break-normal text-[clamp(2.5rem,6.2vw,6.1rem)] font-extrabold leading-[0.9] tracking-[-0.065em]">Your next <span class="text-midnight-ember">unforgettable</span> moment starts here.</h1>
+          <h1 class="hero-reveal hero-delay-2 mt-6 max-w-[720px] break-normal text-[clamp(2.65rem,6.2vw,6.1rem)] font-extrabold leading-[0.9] tracking-[-0.065em]">Your next <span class="text-midnight-ember">unforgettable</span> moment starts here.</h1>
           <p class="hero-reveal hero-delay-3 mt-7 max-w-xl text-base leading-7 text-midnight-stone sm:text-lg sm:leading-8">Discover events you’ll love, choose your seats, and book securely—in one simple experience.</p>
           <div class="hero-reveal hero-delay-4 mt-9 flex flex-col gap-3 sm:flex-row">
-            <RouterLink to="/events" class="focus-midnight inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-midnight-ember px-7 text-sm font-bold text-white transition hover:brightness-110">Explore Events <Icon icon="mdi:arrow-right" class="h-4 w-4" aria-hidden="true" /></RouterLink>
+            <RouterLink to="/events" class="focus-midnight hero-primary-action inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-midnight-ember px-7 text-sm font-bold text-white transition">Explore Events <Icon icon="mdi:arrow-right" class="h-4 w-4" aria-hidden="true" /></RouterLink>
             <a href="#how-it-works" class="focus-midnight inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/15 px-7 text-sm font-bold text-midnight-ivory transition hover:border-white/35 hover:bg-white/[0.04]"><Icon icon="mdi:play-circle-outline" class="h-[18px] w-[18px] text-midnight-mint" aria-hidden="true" /> How It Works</a>
           </div>
           <div class="hero-reveal hero-delay-5 mt-9 flex items-center gap-3 text-xs text-midnight-stone">

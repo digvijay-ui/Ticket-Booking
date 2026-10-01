@@ -1,5 +1,5 @@
 <template>
-  <article class="admin-ticket-card p-4 sm:p-5">
+  <article class="admin-chart-card admin-ticket-card p-4 sm:p-5">
     <span class="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-admin-border bg-admin-canvas" aria-hidden="true" />
 
     <div class="mb-4 flex min-w-0 items-start justify-between gap-3">
@@ -63,8 +63,10 @@ const chartFrame = ref<HTMLElement | null>(null);
 const chartWidth = ref<number | null>(null);
 const devicePixelRatio = ref(1);
 const isMounted = ref(false);
+const reduceMotion = ref(false);
 const chartId = `admin-chart-${Math.random().toString(36).slice(2, 10)}`;
 let resizeObserver: ResizeObserver | null = null;
+let motionQuery: MediaQueryList | null = null;
 
 const hasData = computed(() =>
   props.series.some((seriesItem: number | ApexAxisChartSeries[number]) => {
@@ -84,7 +86,13 @@ const fallbackSummary = computed(() => hasData.value
 const mergedOptions = computed<ApexOptions>(() => ({
   ...props.options,
   chart: {
-    animations: { enabled: false },
+    animations: {
+      enabled: !reduceMotion.value,
+      easing: 'easeout',
+      speed: 420,
+      animateGradually: { enabled: !reduceMotion.value, delay: 45 },
+      dynamicAnimation: { enabled: !reduceMotion.value, speed: 260 },
+    },
     background: 'transparent',
     fontFamily: 'Manrope, Work Sans, system-ui, sans-serif',
     parentHeightOffset: 0,
@@ -167,6 +175,9 @@ async function syncChartWidth() {
 
 onMounted(() => {
   isMounted.value = true;
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  reduceMotion.value = motionQuery.matches;
+  motionQuery.addEventListener('change', syncMotionPreference);
   void syncChartWidth();
   resizeObserver = new ResizeObserver(syncChartWidth);
 
@@ -181,7 +192,12 @@ onBeforeUnmount(() => {
   isMounted.value = false;
   resizeObserver?.disconnect();
   window.removeEventListener('resize', syncChartWidth);
+  motionQuery?.removeEventListener('change', syncMotionPreference);
 });
+
+function syncMotionPreference(event: MediaQueryListEvent) {
+  reduceMotion.value = event.matches;
+}
 </script>
 
 <style scoped>

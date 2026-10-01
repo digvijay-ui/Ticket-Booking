@@ -39,7 +39,7 @@ const props = withDefaults(
 const isAdminUi = inject('adminUi', false);
 const baseClass = computed(() =>
   isAdminUi
-    ? 'admin-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3.5 py-2 text-sm font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50'
+    ? 'admin-focus inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3.5 py-2 text-sm font-semibold transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50'
     : 'focus-ticket inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-2 px-4 py-2 font-mono text-sm font-bold uppercase transition duration-150 disabled:cursor-not-allowed disabled:opacity-60',
 );
 

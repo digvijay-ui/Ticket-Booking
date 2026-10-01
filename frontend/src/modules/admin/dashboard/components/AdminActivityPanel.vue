@@ -3,7 +3,7 @@
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <p class="text-xs font-medium text-admin-secondary">{{ eyebrow }}</p>
-        <h2 class="mt-1 text-lg font-semibold text-admin-text">{{ title }}</h2>
+        <h2 class="mt-1 flex items-center gap-2 text-lg font-semibold text-admin-text"><Icon :icon="icon" class="h-4 w-4 text-admin-secondary" aria-hidden="true" />{{ title }}</h2>
       </div>
       <AppBadge variant="draft" :label="String(filteredItems.length)" />
     </div>
@@ -85,8 +85,9 @@
       </article>
     </div>
 
-    <div v-else class="rounded-md border border-dashed border-admin-border bg-admin-canvas p-5 text-center text-admin-text">
-      <p class="font-semibold">{{ emptyText }}</p>
+    <div v-else class="rounded-md border border-dashed border-admin-border bg-admin-canvas p-6 text-center text-admin-text">
+      <span class="mx-auto grid h-10 w-10 place-items-center rounded-md border border-admin-border bg-white text-admin-subtle"><Icon :icon="icon" class="h-5 w-5" aria-hidden="true" /></span>
+      <p class="mt-3 font-semibold">{{ emptyText }}</p>
     </div>
   </section>
 </template>
@@ -115,6 +116,7 @@ interface ActivityPanelItem {
 const props = defineProps<{
   eyebrow: string;
   title: string;
+  icon: string;
   items: ActivityPanelItem[];
   searchPlaceholder: string;
   emptyText: string;

@@ -189,6 +189,81 @@
     background: #f7f7f8;
   }
 
+  .admin-stat-card,
+  .admin-chart-card,
+  .admin-event-row {
+    transition: transform var(--motion-standard) var(--motion-ease), box-shadow var(--motion-standard) var(--motion-ease), border-color var(--motion-fast) ease;
+  }
+
+  .admin-stat-card:hover,
+  .admin-chart-card:hover,
+  .admin-event-row:hover {
+    transform: translateY(-2px);
+    border-color: #d1d5db;
+    box-shadow: 0 10px 24px rgb(17 17 17 / 0.07);
+  }
+
+  .admin-stat-icon {
+    transition: transform var(--motion-fast) var(--motion-ease), background-color var(--motion-fast) ease;
+  }
+
+  .admin-stat-card:hover .admin-stat-icon {
+    transform: translateY(-1px);
+    background: #ffffff;
+  }
+
+  .admin-ticket-mark {
+    position: relative;
+    width: 2.25rem;
+    height: 1.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 2px;
+  }
+
+  .admin-ticket-mark::after {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 9px;
+    content: '';
+    border-left: 1px dashed #d1d5db;
+  }
+
+  .admin-seat-mark {
+    display: flex;
+    align-items: end;
+    gap: 2px;
+    height: 1.25rem;
+  }
+
+  .admin-seat-mark i {
+    width: 7px;
+    height: 12px;
+    border: 1px solid #9ca3af;
+    border-radius: 3px 3px 1px 1px;
+    box-shadow: 0 3px 0 -1px #9ca3af;
+  }
+
+  .admin-calendar-mark {
+    position: relative;
+    width: 1.65rem;
+    height: 1.4rem;
+    border: 1px solid #9ca3af;
+    border-top-width: 5px;
+    border-radius: 2px;
+  }
+
+  .admin-calendar-mark i {
+    position: absolute;
+    top: -8px;
+    width: 1px;
+    height: 5px;
+    background: #6b7280;
+  }
+
+  .admin-calendar-mark i:first-child { left: 5px; }
+  .admin-calendar-mark i:last-child { right: 5px; }
+
   .admin-barcode {
     height: 1.75rem;
     background: repeating-linear-gradient(90deg, rgba(17, 17, 17, 0.72) 0 1px, transparent 1px 4px, rgba(17, 17, 17, 0.42) 4px 6px, transparent 6px 9px);
@@ -330,8 +405,33 @@
     letter-spacing: -0.06em;
   }
 
-  .hero-spotlight {
-    background: radial-gradient(circle, rgba(255, 90, 54, 0.16), rgba(255, 90, 54, 0) 68%);
+  .hero-section::after {
+    position: absolute;
+    right: 3vw;
+    bottom: 0;
+    width: min(38vw, 34rem);
+    height: 1px;
+    content: '';
+    background: var(--midnight-ember);
+    opacity: 0.55;
+  }
+
+  .hero-stage-lines {
+    background-image:
+      linear-gradient(90deg, transparent 0, transparent calc(50% - .5px), rgb(247 243 236 / .055) 50%, transparent calc(50% + .5px)),
+      linear-gradient(180deg, transparent 0, transparent calc(100% - 1px), rgb(247 243 236 / .08) 100%);
+    background-size: 25% 100%, 100% 100%;
+    mask-image: linear-gradient(90deg, transparent, black 22%, black 100%);
+  }
+
+  .hero-primary-action:hover {
+    background-color: #ed4828;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgb(255 90 54 / .18);
+  }
+
+  .hero-primary-action:active {
+    transform: translateY(0) scale(0.985);
   }
 
   .hero-reveal {
@@ -481,6 +581,11 @@
 }
 
 @media (max-width: 767px) {
+  .hero-stage-lines {
+    background-size: 50% 100%, 100% 100%;
+    mask-image: linear-gradient(90deg, transparent, black 38%, black 100%);
+  }
+
   .booking-timeline::before {
     top: 2rem;
     bottom: 2rem;
@@ -521,4 +626,8 @@
   .admin-backdrop-enter-active,
   .admin-backdrop-leave-active { transition: none; }
   .admin-shell * { scroll-behavior: auto !important; }
+  .admin-stat-card:hover,
+  .admin-chart-card:hover,
+  .admin-event-row:hover,
+  .admin-stat-card:hover .admin-stat-icon { transform: none; }
 }

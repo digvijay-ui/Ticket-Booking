@@ -1,14 +1,19 @@
 <template>
-  <div class="space-y-6">
+  <div class="admin-dashboard space-y-7">
     <header class="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p class="admin-kicker">{{ currentDate }}</p>
         <h1 class="admin-page-title">Dashboard overview</h1>
         <p class="admin-page-copy">A current view of events, bookings, revenue, refunds, and seat inventory.</p>
       </div>
-      <RouterLink to="/admin/events/create" class="inline-flex">
-        <AppButton icon="mdi:plus">Create event</AppButton>
-      </RouterLink>
+      <div class="flex items-center gap-3">
+        <span v-if="!adminStore.loading && !adminStore.analyticsLoading && !dashboardError" class="hidden items-center gap-2 text-xs font-medium text-admin-secondary sm:flex">
+          <span class="h-2 w-2 rounded-full bg-admin-success" aria-hidden="true" /> Live data
+        </span>
+        <RouterLink to="/admin/events/create" class="inline-flex">
+          <AppButton icon="mdi:plus">Create event</AppButton>
+        </RouterLink>
+      </div>
     </header>
 
     <div v-if="dashboardError" class="admin-error-state" role="alert">
@@ -17,10 +22,10 @@
     </div>
 
     <section v-if="adminStore.analyticsLoading" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <div v-for="index in 8" :key="index" class="h-36 admin-card-dark">
-        <div class="h-2.5 w-20 animate-pulse rounded-sm bg-paperCream/15" />
-        <div class="mt-3 h-8 w-24 animate-pulse rounded-sm bg-paperCream/20" />
-        <div class="mt-4 h-5 w-40 animate-pulse rounded-sm bg-paperCream/10" />
+      <div v-for="index in 8" :key="index" class="h-36 admin-card-dark" aria-hidden="true">
+        <div class="h-2.5 w-20 animate-pulse rounded-sm bg-admin-border" />
+        <div class="mt-3 h-8 w-24 animate-pulse rounded-sm bg-admin-hover" />
+        <div class="mt-4 h-5 w-40 animate-pulse rounded-sm bg-admin-border" />
       </div>
     </section>
 
@@ -61,7 +66,7 @@
       </div>
     </section>
 
-    <section class="admin-panel-dark">
+    <section class="admin-panel-dark admin-event-panel">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p class="admin-kicker">Top performers</p>
@@ -76,9 +81,9 @@
         <article
           v-for="(event, index) in adminStore.topEvents"
           :key="event.eventId"
-          class="relative grid gap-3 overflow-hidden admin-card-dark sm:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] sm:items-center"
+          class="admin-event-row relative grid gap-3 overflow-hidden admin-card-dark sm:grid-cols-[3rem_minmax(0,1fr)_auto_auto_auto] sm:items-center"
         >
-          <span class="text-xs font-bold text-admin-subtle tabular-nums">#{{ index + 1 }}</span>
+          <span class="grid h-8 w-8 place-items-center rounded-md border border-admin-border bg-admin-canvas text-xs font-bold text-admin-secondary tabular-nums">{{ String(index + 1).padStart(2, '0') }}</span>
           <div class="min-w-0">
             <h3 class="truncate font-semibold text-admin-text">{{ event.title }}</h3>
             <p class="mt-1 flex min-w-0 items-center gap-1 text-[11px] font-medium text-admin-secondary">
@@ -88,6 +93,7 @@
           <p class="text-xs font-medium text-admin-secondary tabular-nums">{{ formatCount(event.totalBookings) }} bookings</p>
           <p class="text-xs font-semibold text-admin-success tabular-nums">{{ formatINR(event.revenueInPaise) }}</p>
           <p class="text-xs font-semibold text-admin-text tabular-nums">{{ formatCount(event.bookedSeats) }} seats</p>
+          <span class="admin-event-meter absolute inset-x-0 bottom-0 h-0.5 bg-admin-hover" aria-hidden="true"><i class="block h-full bg-admin-black" :style="{ width: topEventBarWidth(event.revenueInPaise) }" /></span>
         </article>
       </div>
 
@@ -100,6 +106,7 @@
       <AdminActivityPanel
         eyebrow="Latest ledger"
         title="Recent Bookings"
+        icon="mdi:ticket-confirmation-outline"
         :items="bookingRows"
         search-placeholder="Search booking ID or event"
         empty-text="No bookings match these filters."
@@ -108,6 +115,7 @@
       <AdminActivityPanel
         eyebrow="Wallet flow"
         title="Recent Transactions"
+        icon="mdi:wallet-outline"
         :items="transactionRows"
         search-placeholder="Search transaction ID or reference"
         empty-text="No transactions match these filters."
@@ -134,8 +142,6 @@ import type { AnalyticsRange } from '../admin.api';
 import { useAdminStore } from '../admin.store';
 
 type BadgeVariant = 'available' | 'reserved' | 'booked' | 'paid' | 'refunded' | 'cancelled' | 'draft' | 'published' | 'completed';
-type TrendTone = 'positive' | 'negative' | 'neutral';
-type TrendPolarity = 'positive' | 'negative';
 type DashboardBooking = Omit<Booking, 'eventId'> & {
   eventId?: string | Pick<EventItem, 'id' | 'title' | 'location' | 'startDate'>;
 };
@@ -151,13 +157,12 @@ type ActivityPanelItem = {
   details: Array<{ label: string; value: string }>;
 };
 
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const RECENT_ROW_LIMIT = 8;
 const adminStore = useAdminStore();
 const revenueRange = ref<AnalyticsRange>('daily');
 const currentDate = new Intl.DateTimeFormat('en-IN', { dateStyle: 'full' }).format(new Date());
 
-const dashboardError = computed(() => [adminStore.error, adminStore.analyticsError].filter(Boolean).join(' | '));
+const dashboardError = computed(() => Array.from(new Set([adminStore.error, adminStore.analyticsError].filter(Boolean))).join(' | '));
 const summary = computed(() => adminStore.analyticsSummary);
 const hasData = computed(() =>
   Boolean(
@@ -177,7 +182,7 @@ const bookingRows = computed<ActivityPanelItem[]>(() =>
     id: booking.id,
     name: bookingEventName(booking),
     amount: formatINR(booking.totalAmountInPaise),
-    amountClass: bookingStatusLabel(booking) === 'CONFIRMED' ? 'text-[#5eead4]' : 'text-[#fb7185]',
+    amountClass: bookingStatusLabel(booking) === 'CONFIRMED' ? 'text-admin-success' : 'text-admin-error',
     status: bookingStatusLabel(booking),
     badgeVariant: bookingStatusVariant(booking),
     createdAt: booking.createdAt,
@@ -219,30 +224,34 @@ const stats = computed(() => [
   {
     label: 'Total Events',
     value: formatCount(summary.value?.totalEvents ?? adminStore.totalEvents),
-    valueClass: 'text-midnight-ivory',
+    valueClass: 'text-admin-text',
     subtitle: 'All event records',
     icon: 'mdi:calendar-multiple',
+    graphic: 'event' as const,
   },
   {
     label: 'Active Events',
     value: formatCount(summary.value?.activeEvents ?? adminStore.events.filter((event) => event.status === 'PUBLISHED').length),
-    valueClass: 'text-midnight-mint',
+    valueClass: 'text-admin-success',
     subtitle: 'Currently published',
     icon: 'mdi:calendar-check',
+    graphic: 'event' as const,
   },
   {
     label: 'Total Bookings',
     value: formatCount(summary.value?.totalBookings ?? adminStore.totalBookings),
-    valueClass: 'text-midnight-ivory',
+    valueClass: 'text-admin-text',
     subtitle: 'All booking records',
     icon: 'mdi:ticket-confirmation-outline',
+    graphic: 'ticket' as const,
   },
   {
     label: 'Confirmed',
     value: formatCount(summary.value?.confirmedBookings ?? adminStore.confirmedBookings),
-    valueClass: 'text-midnight-mint',
+    valueClass: 'text-admin-success',
     subtitle: 'Paid and confirmed',
     icon: 'mdi:check-decagram-outline',
+    graphic: 'ticket' as const,
   },
   {
     label: 'Refund amount',
@@ -250,36 +259,36 @@ const stats = computed(() => [
     valueClass: 'text-admin-text',
     subtitle: 'Returned to user wallets',
     icon: 'mdi:cash-refund',
+    graphic: 'ticket' as const,
   },
   {
     label: 'Total Revenue',
     value: formatINR(summary.value?.totalRevenueInPaise ?? adminStore.totalRevenueInPaise),
-    valueClass: 'text-midnight-mint',
+    valueClass: 'text-admin-text',
     subtitle: 'Confirmed paid bookings',
     icon: 'mdi:currency-inr',
+    graphic: 'ticket' as const,
   },
   {
     label: 'Available Seats',
     value: formatCount(summary.value?.availableSeats ?? totalAvailableSeatsFromEvents.value),
-    valueClass: 'text-midnight-mint',
+    valueClass: 'text-admin-success',
     subtitle: 'Ready to book',
     icon: 'mdi:seat-outline',
+    graphic: 'seat' as const,
   },
   {
     label: 'Booked Seats',
     value: formatCount(summary.value?.bookedSeats ?? totalBookedSeatsFromEvents.value),
-    valueClass: 'text-midnight-ember',
+    valueClass: 'text-admin-text',
     subtitle: 'Confirmed inventory',
     icon: 'mdi:seat-passenger',
+    graphic: 'seat' as const,
   },
 ]);
 
 const totalBookedSeatsFromEvents = computed(() => adminStore.events.reduce((total, event) => total + event.bookedSeats, 0));
 const totalAvailableSeatsFromEvents = computed(() => adminStore.events.reduce((total, event) => total + event.availableSeats, 0));
-const closedBookingsCount = computed(() => {
-  if (summary.value) return Math.max(0, summary.value.totalBookings - summary.value.confirmedBookings);
-  return adminStore.bookings.filter((booking) => booking.status === 'CANCELLED' || booking.status === 'REFUNDED' || booking.paymentStatus === 'REFUNDED').length;
-});
 
 function byCreatedAt(first: { createdAt: string }, second: { createdAt: string }) {
   return new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime();
@@ -339,57 +348,10 @@ function transactionAmountClass(type: WalletTransaction['type']) {
   return 'text-admin-error';
 }
 
-function periodDelta<T extends { createdAt: string }>(items: T[], filter: (item: T) => boolean, polarity: TrendPolarity) {
-  return formatDelta(countInWindow(items, filter, 7, 0), countInWindow(items, filter, 14, 7), polarity);
-}
-
-function moneyDelta(items: WalletTransaction[], filter: (item: WalletTransaction) => boolean, polarity: TrendPolarity) {
-  return formatDelta(sumInWindow(items, filter, 7, 0), sumInWindow(items, filter, 14, 7), polarity);
-}
-
-function countInWindow<T extends { createdAt: string }>(items: T[], filter: (item: T) => boolean, startDaysAgo: number, endDaysAgo: number) {
-  const now = Date.now();
-  const start = now - startDaysAgo * DAY_IN_MS;
-  const end = now - endDaysAgo * DAY_IN_MS;
-
-  return items.filter((item) => filter(item) && isWithinWindow(item.createdAt, start, end)).length;
-}
-
-function sumInWindow(items: WalletTransaction[], filter: (item: WalletTransaction) => boolean, startDaysAgo: number, endDaysAgo: number) {
-  const now = Date.now();
-  const start = now - startDaysAgo * DAY_IN_MS;
-  const end = now - endDaysAgo * DAY_IN_MS;
-
-  return items
-    .filter((item) => filter(item) && isWithinWindow(item.createdAt, start, end))
-    .reduce((total, item) => total + item.amountInPaise, 0);
-}
-
-function isWithinWindow(createdAt: string, start: number, end: number) {
-  const created = new Date(createdAt).getTime();
-  return created >= start && created < end;
-}
-
-function formatDelta(current: number, previous: number, polarity: TrendPolarity): { deltaLabel: string; tone: TrendTone } {
-  if (previous === 0 && current === 0) {
-    return {
-      deltaLabel: '',
-      tone: 'neutral',
-    };
-  }
-
-  const percent = previous === 0 ? (current > 0 ? 100 : 0) : Math.round(((current - previous) / previous) * 100);
-  const sign = percent > 0 ? '+' : '';
-  let tone: TrendTone = 'neutral';
-
-  if (percent !== 0) {
-    tone = polarity === 'positive' ? (percent > 0 ? 'positive' : 'negative') : percent > 0 ? 'negative' : 'positive';
-  }
-
-  return {
-    deltaLabel: `${sign}${percent}% vs last week`,
-    tone,
-  };
+function topEventBarWidth(revenueInPaise: number) {
+  const leaderRevenue = adminStore.topEvents[0]?.revenueInPaise ?? 0;
+  if (leaderRevenue <= 0) return '0%';
+  return `${Math.max(4, Math.round((revenueInPaise / leaderRevenue) * 100))}%`;
 }
 
 function formatRelativeTime(date: string) {

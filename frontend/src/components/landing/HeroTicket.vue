@@ -5,10 +5,18 @@
     @pointermove="moveTicket"
     @pointerleave="resetTicket"
   >
-    <div class="ticket-shadow absolute inset-8 translate-x-5 translate-y-6 rounded-[28px] border border-white/10 bg-midnight-surface" aria-hidden="true" />
+    <div class="ticket-layer ticket-layer--back absolute inset-x-10 inset-y-5 rounded-[26px] border border-white/10 bg-midnight-surface" aria-hidden="true">
+      <span class="absolute left-7 top-7 h-2 w-24 rounded-full bg-white/10" />
+      <span class="absolute bottom-7 right-7 h-8 w-20 opacity-30 barcode-light" />
+    </div>
+    <div class="ticket-layer ticket-layer--middle absolute inset-x-6 inset-y-4 rounded-[26px] border border-midnight-ember/30 bg-[#21191a]" aria-hidden="true">
+      <span class="absolute left-7 top-7 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">Live admission</span>
+      <span class="absolute bottom-7 right-7 h-px w-20 border-t border-dashed border-white/20" />
+    </div>
 
-    <div class="hero-ticket relative overflow-hidden rounded-[26px] bg-midnight-ivory text-midnight-ink shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
-      <div class="grid md:grid-cols-[1fr_136px]">
+    <div class="ticket-float relative">
+      <div class="hero-ticket relative overflow-hidden rounded-[26px] bg-midnight-ivory text-midnight-ink shadow-[0_30px_80px_rgba(0,0,0,0.38)]">
+        <div class="grid md:grid-cols-[1fr_136px]">
         <div class="min-w-0 p-3 sm:p-4">
           <div class="ticket-art relative aspect-[16/9] overflow-hidden rounded-[18px] bg-[#28232d]">
             <svg viewBox="0 0 520 290" class="absolute inset-0 h-full w-full" role="img" aria-label="Abstract concert stage under a warm spotlight">
@@ -53,7 +61,7 @@
           </div>
         </div>
 
-        <aside class="ticket-stub relative flex min-h-32 items-center border-t border-dashed border-midnight-ink/25 p-4 md:min-h-0 md:border-l md:border-t-0">
+          <aside class="ticket-stub relative flex min-h-32 items-center border-t border-dashed border-midnight-ink/25 p-4 md:min-h-0 md:border-l md:border-t-0">
           <span class="stub-notch absolute -left-3 -top-3 h-6 w-6 rounded-full bg-midnight-ink md:top-auto md:-translate-y-[98px]" aria-hidden="true" />
           <span class="stub-notch absolute -left-3 -bottom-3 h-6 w-6 rounded-full bg-midnight-ink md:translate-y-[98px]" aria-hidden="true" />
           <div class="grid w-full grid-cols-[1fr_auto] items-center gap-4 md:block">
@@ -63,7 +71,8 @@
             </div>
             <div class="barcode h-14 w-32 md:absolute md:bottom-8 md:left-1/2 md:h-20 md:w-12 md:-translate-x-1/2" aria-label="Decorative ticket barcode" role="img" />
           </div>
-        </aside>
+          </aside>
+        </div>
       </div>
     </div>
 
@@ -109,13 +118,28 @@ function resetTicket() {
 
 <style scoped>
 .ticket-scene { perspective: 1200px; --ticket-rotate-x: 0deg; --ticket-rotate-y: 0deg; --ticket-shift-x: 0px; --ticket-shift-y: 0px; }
+.ticket-float { animation: ticket-float 6.5s ease-in-out infinite; }
 .hero-ticket { transform: rotateX(var(--ticket-rotate-x)) rotateY(var(--ticket-rotate-y)) translate(var(--ticket-shift-x), var(--ticket-shift-y)) rotate(1.4deg); transition: transform 220ms cubic-bezier(.2,.8,.2,1); transform-style: preserve-3d; }
-.ticket-shadow { transform: translate(20px, 24px) rotate(-2deg); }
+.ticket-layer { transform-origin: center; box-shadow: 0 24px 60px rgb(0 0 0 / .18); }
+.ticket-layer--back { transform: translate(38px, 28px) rotate(5deg); }
+.ticket-layer--middle { transform: translate(-24px, 18px) rotate(-4deg); }
 .ticket-label { font-size: 9px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; color: rgb(9 9 11 / .45); }
 .ticket-value { margin-top: 2px; font-size: 12px; font-weight: 800; }
 .barcode { background: repeating-linear-gradient(90deg, #09090b 0 2px, transparent 2px 5px, #09090b 5px 9px, transparent 9px 12px, #09090b 12px 13px, transparent 13px 17px); }
+.barcode-light { background: repeating-linear-gradient(90deg, #f7f3ec 0 2px, transparent 2px 5px, #f7f3ec 5px 8px, transparent 8px 11px); }
 .float-chip { transition: transform 220ms cubic-bezier(.2,.8,.2,1); }
 .ticket-scene:hover .float-chip--seat { transform: translate(-3px, -2px); }
 .ticket-scene:hover .float-chip--secure { transform: translate(3px, 2px); }
-@media (prefers-reduced-motion: reduce) { .hero-ticket, .float-chip { transition: none; } }
+@keyframes ticket-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+@media (max-width: 639px) {
+  .ticket-layer--back { transform: translate(16px, 16px) rotate(3deg); }
+  .ticket-layer--middle { transform: translate(-10px, 10px) rotate(-2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticket-float { animation: none; }
+  .hero-ticket, .float-chip { transition: none; }
+}
 </style>
