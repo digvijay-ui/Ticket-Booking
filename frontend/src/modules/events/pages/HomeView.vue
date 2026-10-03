@@ -43,17 +43,37 @@
       </div>
     </section>
 
-    <section id="experience" class="px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
-      <div class="mx-auto grid max-w-[1320px] items-center gap-16 lg:grid-cols-[1.08fr_0.92fr] lg:gap-24">
-        <div data-reveal class="reveal-item relative min-h-[490px]">
-          <div class="experience-frame absolute inset-x-0 top-0 overflow-hidden rounded-[24px] border border-white/10 bg-midnight-surface p-5 sm:inset-x-8 sm:p-7">
-            <div class="flex items-center justify-between border-b border-white/10 pb-5"><div><p class="text-[10px] font-bold uppercase tracking-[0.16em] text-midnight-mint">Booking preview</p><p class="mt-1 text-lg font-bold">Your seats are ready</p></div><span class="rounded-full bg-midnight-mint/10 px-3 py-1 text-xs font-bold text-midnight-mint">Reserved</span></div>
-            <div class="grid gap-4 py-6 sm:grid-cols-[1fr_auto] sm:items-center"><div><p class="text-[10px] font-bold uppercase tracking-[0.14em] text-midnight-stone">Live experience</p><p class="mt-2 text-3xl font-black leading-none tracking-[-0.04em]">A NIGHT TO<br />REMEMBER</p><p class="mt-3 text-xs text-midnight-stone">Friday · 8:30 PM · Grand Hall</p></div><div class="grid grid-cols-2 gap-2"><span v-for="seat in ['B11', 'B12']" :key="seat" class="grid h-14 w-14 place-items-center rounded-xl border border-midnight-mint/40 bg-midnight-mint/10 text-xs font-black text-midnight-mint">{{ seat }}</span></div></div>
-            <div class="flex items-center justify-between border-t border-dashed border-white/15 pt-5"><span class="text-xs text-midnight-stone">2 tickets · secure hold</span><span class="font-bold">Ready to confirm</span></div>
+    <section id="experience" aria-labelledby="experience-heading" class="border-t border-white/10 px-5 py-20 sm:px-8 lg:px-12 lg:py-24">
+      <div class="mx-auto max-w-[1440px]">
+        <div data-reveal class="reveal-item flex flex-col gap-7 sm:flex-row sm:items-end sm:justify-between">
+          <div class="max-w-5xl">
+            <p class="section-kicker">CURATED FOR YOU</p>
+            <h2 id="experience-heading" class="section-title experience-heading mt-4">Experiences worth showing up for.</h2>
+            <p class="mt-5 max-w-2xl text-base leading-7 text-midnight-stone">Discover live music, sports, theatre and unforgettable events happening near you.</p>
           </div>
-          <div class="absolute bottom-0 left-0 rounded-[18px] border border-white/10 bg-midnight-ivory p-5 text-midnight-ink shadow-2xl sm:w-[290px]"><Icon icon="mdi:check-decagram" class="h-7 w-7 text-[#168674]" aria-hidden="true" /><p class="mt-4 text-xs font-bold uppercase tracking-[0.14em] text-midnight-ink/50">Booking confirmed</p><p class="mt-1 text-lg font-black">You’re on the list.</p><div class="mt-4 h-8 barcode-dark" aria-hidden="true" /></div>
+          <RouterLink to="/events" class="focus-midnight experience-all-action group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 self-start rounded-full bg-midnight-ember px-6 text-sm font-bold text-white sm:self-auto">Explore All Events <Icon icon="mdi:arrow-right" class="experience-all-arrow h-4 w-4" aria-hidden="true" /></RouterLink>
         </div>
-        <div data-reveal class="reveal-item"><p class="section-kicker">Designed around you</p><h2 class="section-title mt-4">Less friction.<br /><span class="text-midnight-stone">More anticipation.</span></h2><p class="mt-6 max-w-lg text-base leading-7 text-midnight-stone">From the first event you spot to the ticket in your bookings, every step keeps the important details clear and the momentum moving.</p><div class="mt-9 grid gap-6"><div v-for="benefit in experienceBenefits" :key="benefit.title" class="flex gap-4"><span class="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-white/10 bg-white/[0.03] text-midnight-mint"><Icon :icon="benefit.icon" class="h-5 w-5" aria-hidden="true" /></span><div><h3 class="font-bold">{{ benefit.title }}</h3><p class="mt-1 text-sm leading-6 text-midnight-stone">{{ benefit.copy }}</p></div></div></div></div>
+
+        <div v-if="eventStore.loading" class="mt-10 grid gap-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]" aria-live="polite" aria-label="Loading featured events">
+          <div class="skeleton min-h-[370px] rounded-[20px] border border-white/10 lg:min-h-[512px]" />
+          <div class="grid gap-4"><div v-for="index in 2" :key="index" class="skeleton min-h-[248px] rounded-[20px] border border-white/10" /></div>
+        </div>
+        <div v-else-if="eventStore.error" class="mt-10 rounded-[20px] border border-white/10 bg-midnight-surface px-6 py-12 text-center" role="alert">
+          <h3 class="text-xl font-bold">Featured events are unavailable.</h3>
+          <p class="mt-2 text-sm text-midnight-stone">{{ eventStore.error }}</p>
+          <button type="button" class="focus-midnight mt-5 min-h-11 rounded-full border border-white/20 px-5 text-sm font-bold hover:border-white/40" @click="eventStore.fetchEvents()">Try again</button>
+        </div>
+        <div v-else-if="experienceEvents.length" class="mt-10 grid gap-4" :class="{ 'lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]': experienceEvents.length > 1 }">
+          <div data-reveal class="reveal-item"><ExperienceEventCard :event="experienceEvents[0]!" featured /></div>
+          <div v-if="experienceEvents.length > 1" class="grid gap-4">
+            <div v-for="event in experienceEvents.slice(1)" :key="event.id" data-reveal class="reveal-item experience-secondary-reveal"><ExperienceEventCard :event="event" /></div>
+          </div>
+        </div>
+        <div v-else class="mt-10 rounded-[20px] border border-dashed border-white/15 bg-midnight-surface px-6 py-12 text-center">
+          <h3 class="text-xl font-bold">No upcoming events right now.</h3>
+          <p class="mt-2 text-sm text-midnight-stone">Check back for the next lineup.</p>
+          <RouterLink to="/events" class="focus-midnight mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 px-5 text-sm font-bold hover:border-white/40">Explore Events <Icon icon="mdi:arrow-right" class="h-4 w-4" aria-hidden="true" /></RouterLink>
+        </div>
       </div>
     </section>
 
@@ -68,9 +88,10 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import FeaturedEventCard from '@/components/landing/FeaturedEventCard.vue';
+import ExperienceEventCard from '@/components/landing/ExperienceEventCard.vue';
 import HeroTicket from '@/components/landing/HeroTicket.vue';
 import { useEventStore } from '../event.store';
 
@@ -79,6 +100,10 @@ const pageRoot = ref<HTMLElement | null>(null);
 const heroReady = ref(false);
 let revealObserver: IntersectionObserver | null = null;
 const featuredEvents = computed(() => eventStore.events.slice(0, 3));
+const experienceEvents = computed(() => eventStore.events
+  .filter((event) => event.status === 'PUBLISHED' && Number.isFinite(Date.parse(event.startDate)) && Date.parse(event.startDate) > Date.now())
+  .sort((a, b) => Date.parse(a.startDate) - Date.parse(b.startDate))
+  .slice(0, 3));
 const attendeeColors = ['#78DCCA', '#F7F3EC', '#FF9B75'];
 const trustBenefits = [
   { icon: 'mdi:shield-lock-outline', label: 'Secure payments' },
@@ -86,12 +111,6 @@ const trustBenefits = [
   { icon: 'mdi:tag-outline', label: 'Transparent pricing' },
   { icon: 'mdi:seat-outline', label: 'Easy seat selection' },
 ];
-const experienceBenefits = [
-  { icon: 'mdi:eye-outline', title: 'Clarity at every step', copy: 'Dates, venues, prices, and availability stay easy to scan.' },
-  { icon: 'mdi:timer-sand-complete', title: 'A focused seat flow', copy: 'Choose from real seat availability before confirming your booking.' },
-  { icon: 'mdi:wallet-outline', title: 'One connected journey', copy: 'Your wallet, reservations, and booking history work together.' },
-];
-
 function setupReveal() {
   const elements = pageRoot.value?.querySelectorAll<HTMLElement>('[data-reveal]');
   if (!elements?.length) return;
@@ -99,14 +118,14 @@ function setupReveal() {
     elements.forEach((element) => element.classList.add('is-visible'));
     return;
   }
-  revealObserver = new IntersectionObserver((entries) => {
+  if (!revealObserver) revealObserver = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add('is-visible');
       revealObserver?.unobserve(entry.target);
     });
   }, { threshold: 0.14 });
-  elements.forEach((element) => revealObserver?.observe(element));
+  elements.forEach((element) => { if (!element.classList.contains('is-visible')) revealObserver?.observe(element); });
 }
 
 onMounted(async () => {
@@ -116,5 +135,21 @@ onMounted(async () => {
   setupReveal();
 });
 
+watch(() => eventStore.loading, async (loading) => {
+  if (!loading) { await nextTick(); setupReveal(); }
+});
+
 onBeforeUnmount(() => revealObserver?.disconnect());
 </script>
+
+<style scoped>
+.experience-heading { font-size: clamp(2.4rem, 5vw, 4.75rem); }
+.experience-all-action { transition: background-color 180ms ease, transform 180ms ease; }
+.experience-all-action:hover { background-color: #ed4828; }
+.experience-all-action:active { transform: scale(.985); }
+.experience-all-arrow { transition: transform 180ms cubic-bezier(.2,.8,.2,1); }
+.experience-all-action:hover .experience-all-arrow { transform: translateX(3px); }
+.experience-secondary-reveal { transition-delay: 90ms; }
+.experience-secondary-reveal:last-child { transition-delay: 170ms; }
+@media (prefers-reduced-motion: reduce) { .experience-all-action, .experience-all-arrow, .experience-secondary-reveal { transition: none; transition-delay: 0ms; } .experience-all-action:active, .experience-all-action:hover .experience-all-arrow { transform: none; } }
+</style>

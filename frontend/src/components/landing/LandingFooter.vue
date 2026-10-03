@@ -27,7 +27,7 @@
       </div>
       <div class="flex flex-col gap-2 pt-6 text-xs text-midnight-stone sm:flex-row sm:items-center sm:justify-between">
         <p>© {{ currentYear }} EventBooking. All rights reserved.</p>
-        <p>Made for moments worth remembering.</p>
+        <p></p>
       </div>
     </div>
   </footer>

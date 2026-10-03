@@ -469,10 +469,6 @@
     animation: skeleton-shift 1.4s ease-in-out infinite;
   }
 
-  .experience-frame {
-    background-image: radial-gradient(circle at 92% 8%, rgba(120, 220, 202, 0.1), transparent 36%);
-  }
-
   .barcode-dark {
     background: repeating-linear-gradient(90deg, #09090b 0 2px, transparent 2px 5px, #09090b 5px 9px, transparent 9px 12px, #09090b 12px 13px, transparent 13px 17px);
   }
