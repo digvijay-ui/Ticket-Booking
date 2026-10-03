@@ -66,9 +66,11 @@ export interface Booking {
   status: 'CONFIRMED' | 'CANCELLED' | 'REFUNDED';
   paymentStatus: 'PAID' | 'REFUNDED';
   totalAmountInPaise: number;
+  refundedAmountInPaise?: number;
   walletTransactionId?: string;
   idempotencyKey?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WalletTransaction {

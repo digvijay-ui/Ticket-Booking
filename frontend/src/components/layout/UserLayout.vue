@@ -17,6 +17,6 @@ import Footer from './Footer.vue';
 import Navbar from './Navbar.vue';
 
 const route = useRoute();
-const midnightRoutes = new Set(['home', 'events', 'event-detail', 'seat-selection', 'login', 'signup', 'wallet', 'booking-checkout', 'booking-success']);
+const midnightRoutes = new Set(['home', 'events', 'event-detail', 'seat-selection', 'login', 'signup', 'wallet', 'booking-checkout', 'booking-success', 'booking-history']);
 const usesMidnightShell = computed(() => midnightRoutes.has(String(route.name)));
 </script>

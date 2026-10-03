@@ -14,7 +14,6 @@
           <nav class="mt-4 grid gap-3 text-sm" aria-label="Footer product links">
             <RouterLink to="/events" class="focus-midnight w-fit !bg-transparent !text-midnight-ivory hover:!text-midnight-ember">Explore Events</RouterLink>
             <RouterLink to="/bookings" class="focus-midnight w-fit hover:text-midnight-ember">My Bookings</RouterLink>
-            <RouterLink :to="{ path: '/', hash: '#how-it-works' }" class="focus-midnight w-fit !bg-transparent !text-midnight-ivory hover:!text-midnight-ember">How It Works</RouterLink>
           </nav>
         </div>
         <div>

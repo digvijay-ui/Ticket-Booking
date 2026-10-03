@@ -13,8 +13,7 @@
       <nav class="hidden items-center gap-7 text-[13px] font-semibold text-midnight-stone lg:flex" aria-label="Primary navigation">
         <RouterLink to="/" class="focus-midnight nav-link !bg-transparent" :class="route.name === 'home' ? '!text-midnight-ivory' : '!text-midnight-stone'">Home</RouterLink>
         <RouterLink to="/events" class="focus-midnight nav-link !bg-transparent" :class="route.name === 'events' ? '!text-midnight-ivory' : '!text-midnight-stone'">Explore Events</RouterLink>
-        <RouterLink :to="{ path: '/', hash: '#how-it-works' }" class="focus-midnight nav-link !bg-transparent !text-midnight-stone">How It Works</RouterLink>
-        <RouterLink to="/bookings" class="focus-midnight nav-link">My Bookings</RouterLink>
+        <RouterLink to="/bookings" class="focus-midnight nav-link !bg-transparent" :class="route.name === 'booking-history' ? '!text-midnight-ivory' : '!text-midnight-stone'">My Bookings</RouterLink>
       </nav>
 
       <div class="hidden items-center gap-3 lg:flex">
@@ -45,8 +44,7 @@
         <nav class="mx-auto grid max-w-[1440px] gap-1" aria-label="Mobile navigation">
           <RouterLink to="/" class="focus-midnight mobile-link !bg-transparent !text-midnight-ivory" @click="closeMenu">Home</RouterLink>
           <RouterLink to="/events" class="focus-midnight mobile-link !bg-transparent !text-midnight-ivory" @click="closeMenu">Explore Events</RouterLink>
-          <RouterLink :to="{ path: '/', hash: '#how-it-works' }" class="focus-midnight mobile-link !bg-transparent !text-midnight-ivory" @click="closeMenu">How It Works</RouterLink>
-          <RouterLink to="/bookings" class="focus-midnight mobile-link" @click="closeMenu">My Bookings</RouterLink>
+          <RouterLink to="/bookings" class="focus-midnight mobile-link !bg-transparent !text-midnight-ivory" @click="closeMenu">My Bookings</RouterLink>
           <div class="mt-3 grid grid-cols-2 gap-3 border-t border-white/10 pt-4">
             <button v-if="auth.isAuthenticated" type="button" class="focus-midnight min-h-11 rounded-full border border-white/15 text-sm font-bold" @click="logout">Log out</button>
             <RouterLink v-else to="/login" class="focus-midnight grid min-h-11 place-items-center rounded-full border border-white/15 text-sm font-bold" @click="closeMenu">Log in</RouterLink>

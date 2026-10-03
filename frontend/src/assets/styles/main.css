@@ -469,16 +469,6 @@
     animation: skeleton-shift 1.4s ease-in-out infinite;
   }
 
-  .booking-timeline::before {
-    position: absolute;
-    top: 2rem;
-    right: 16.66%;
-    left: 16.66%;
-    height: 1px;
-    content: '';
-    background: repeating-linear-gradient(90deg, rgba(247, 243, 236, 0.22) 0 6px, transparent 6px 12px);
-  }
-
   .experience-frame {
     background-image: radial-gradient(circle at 92% 8%, rgba(120, 220, 202, 0.1), transparent 36%);
   }
@@ -495,6 +485,47 @@
 .midnight-shell {
   font-family: "Manrope", "Work Sans", system-ui, sans-serif;
 }
+
+.bookings-page h1,
+.bookings-page h2,
+.bookings-page h3,
+.ticket-dialog h2 {
+  font-family: "Manrope", "Work Sans", system-ui, sans-serif;
+  text-transform: none;
+}
+
+.bookings-page .ticket-label,
+.bookings-page .reservation-label,
+.ticket-dialog .ticket-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.bookings-page .ticket-label,
+.ticket-dialog .ticket-label { color: rgba(9, 9, 11, .58); }
+.bookings-page .reservation-label { color: var(--midnight-stone); }
+.bookings-page .ticket-barcode,
+.ticket-dialog .ticket-barcode {
+  background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 5px, currentColor 5px 9px, transparent 9px 12px, currentColor 12px 13px, transparent 13px 17px);
+}
+.bookings-page .booking-ticket .ticket-divider::before,
+.bookings-page .booking-ticket .ticket-divider::after,
+.ticket-dialog .ticket-divider::before,
+.ticket-dialog .ticket-divider::after {
+  position: absolute;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--midnight-ink);
+  content: '';
+}
+.bookings-page .booking-ticket .ticket-divider::before,
+.ticket-dialog .ticket-divider::before { left: -7px; }
+.bookings-page .booking-ticket .ticket-divider::after,
+.ticket-dialog .ticket-divider::after { right: -7px; }
 
 .event-discovery h1,
 .event-discovery h2,
@@ -586,18 +617,6 @@
     mask-image: linear-gradient(90deg, transparent, black 38%, black 100%);
   }
 
-  .booking-timeline::before {
-    top: 2rem;
-    bottom: 2rem;
-    left: 50%;
-    width: 1px;
-    height: auto;
-    background: repeating-linear-gradient(180deg, rgba(247, 243, 236, 0.18) 0 6px, transparent 6px 12px);
-  }
-
-  .booking-timeline article {
-    background: #141318;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

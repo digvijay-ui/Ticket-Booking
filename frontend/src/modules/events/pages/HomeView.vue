@@ -9,7 +9,6 @@
           <p class="hero-reveal hero-delay-3 mt-7 max-w-xl text-base leading-7 text-midnight-stone sm:text-lg sm:leading-8">Discover events you’ll love, choose your seats, and book securely—in one simple experience.</p>
           <div class="hero-reveal hero-delay-4 mt-9 flex flex-col gap-3 sm:flex-row">
             <RouterLink to="/events" class="focus-midnight hero-primary-action inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-midnight-ember px-7 text-sm font-bold text-white transition">Explore Events <Icon icon="mdi:arrow-right" class="h-4 w-4" aria-hidden="true" /></RouterLink>
-            <a href="#how-it-works" class="focus-midnight inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/15 px-7 text-sm font-bold text-midnight-ivory transition hover:border-white/35 hover:bg-white/[0.04]"><Icon icon="mdi:play-circle-outline" class="h-[18px] w-[18px] text-midnight-mint" aria-hidden="true" /> How It Works</a>
           </div>
           <div class="hero-reveal hero-delay-5 mt-9 flex items-center gap-3 text-xs text-midnight-stone">
             <span class="flex -space-x-2" aria-hidden="true"><span v-for="color in attendeeColors" :key="color" class="grid h-8 w-8 place-items-center rounded-full border-2 border-midnight-ink text-[9px] font-black text-midnight-ink" :style="{ backgroundColor: color }">★</span></span>
@@ -41,15 +40,6 @@
         <div v-else-if="featuredEvents.length" class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3"><FeaturedEventCard v-for="(event, index) in featuredEvents" :key="event.id" :event="event" :index="index" /></div>
         <div v-else class="mt-10 flex min-h-64 flex-col items-center justify-center rounded-[20px] border border-dashed border-white/15 bg-midnight-surface/50 p-8 text-center"><span class="grid h-12 w-12 place-items-center rounded-full bg-white/5 text-midnight-stone"><Icon icon="mdi:ticket-outline" class="h-6 w-6" aria-hidden="true" /></span><h3 class="mt-4 text-xl font-bold">The next lineup is taking shape.</h3><p class="mt-2 max-w-sm text-sm text-midnight-stone">There are no published events right now. Check back soon for fresh experiences.</p></div>
         <RouterLink to="/events" class="focus-midnight mt-6 inline-flex items-center gap-2 text-sm font-bold sm:hidden">View all events <Icon icon="mdi:arrow-right" class="h-4 w-4" aria-hidden="true" /></RouterLink>
-      </div>
-    </section>
-
-    <section id="how-it-works" class="border-y border-white/10 bg-midnight-surface px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
-      <div class="mx-auto max-w-[1280px]">
-        <div data-reveal class="reveal-item mx-auto max-w-2xl text-center"><p class="section-kicker">From discovery to entry</p><h2 class="section-title mt-4">Three steps. <span class="text-midnight-ember">One great night.</span></h2><p class="mt-5 text-base leading-7 text-midnight-stone">Booking should build anticipation, not add friction.</p></div>
-        <div data-reveal class="reveal-item booking-timeline relative mt-16 grid gap-10 md:grid-cols-3 md:gap-8">
-          <article v-for="(step, index) in bookingSteps" :key="step.title" class="relative text-center md:px-5"><div class="relative z-10 mx-auto grid h-16 w-16 place-items-center rounded-full border border-white/15 bg-midnight-ink text-midnight-mint"><Icon :icon="step.icon" class="h-7 w-7" aria-hidden="true" /><span class="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-midnight-ember text-[10px] font-black text-white">{{ index + 1 }}</span></div><h3 class="mt-6 text-xl font-bold tracking-[-0.025em]">{{ step.title }}</h3><p class="mx-auto mt-3 max-w-xs text-sm leading-6 text-midnight-stone">{{ step.copy }}</p></article>
-        </div>
       </div>
     </section>
 
@@ -95,11 +85,6 @@ const trustBenefits = [
   { icon: 'mdi:check-circle-outline', label: 'Instant confirmation' },
   { icon: 'mdi:tag-outline', label: 'Transparent pricing' },
   { icon: 'mdi:seat-outline', label: 'Easy seat selection' },
-];
-const bookingSteps = [
-  { icon: 'mdi:compass-outline', title: 'Discover your event', copy: 'Browse the latest published experiences and open the details that catch your eye.' },
-  { icon: 'mdi:seat-outline', title: 'Choose your seats', copy: 'See live availability and select the seats that fit your perfect night.' },
-  { icon: 'mdi:ticket-confirmation-outline', title: 'Confirm your booking', copy: 'Complete a secure checkout and find your confirmed tickets in one place.' },
 ];
 const experienceBenefits = [
   { icon: 'mdi:eye-outline', title: 'Clarity at every step', copy: 'Dates, venues, prices, and availability stay easy to scan.' },
