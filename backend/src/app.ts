@@ -11,7 +11,8 @@ import { walletRoutes } from "./modules/wallet/wallet.routes";
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = process.env.CORS_ORIGIN?.split(",").map((origin) => origin.trim()).filter(Boolean);
+app.use(cors({ origin: allowedOrigins?.length ? allowedOrigins : true }));
 app.use(express.json());
 
 app.use("/api/health", healthRoutes);

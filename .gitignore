@@ -1,0 +1,9 @@
+# Local configuration and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local build artifacts
+**/node_modules/
+**/dist/
+backend/mongo-data/
